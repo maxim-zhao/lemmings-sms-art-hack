@@ -80,10 +80,17 @@ LevelLoaderHack:
 .endif
 .endm
 
-.macro PatchAt(offset, label)
+.macro PatchW(offset, value)
   ROMPosition offset
   .section "Patch@\1" overwrite
-  .dw label
+  .dw value
+  .ends
+.endm
+
+.macro PatchB(offset, value)
+  ROMPosition offset
+  .section "Patch@\1" overwrite
+  .db value
   .ends
 .endm
 
@@ -98,7 +105,33 @@ LevelLoaderHack:
 .ends
 .endm
 
-  ;          From   To     File
-  ReplaceArt(font, $4b7d, $5b9c, "font.8x16.bin")
-  PatchAt($07a6, font)
-  
+; Main font
+; This has a leading 8x8 blank that is a bit annoying...
+.unbackground $4b7d, $5b9c
+.bank 0 slot 0
+.section "Font tiles" free
+font:
+.dsb 32 0
+.incbin "font.8x16.bin"
+.ends
+  PatchW($07a6, font)
+
+; Intro: Sega logo
+.unbackground $37852 $37efb ; Tiles
+.slot 2
+.section "Sega logo tiles" superfree
+intro_segalogo:
+.incbin "intro-segalogo.lemmingscompr"
+.ends
+  PatchB($4698, :intro_segalogo)
+  PatchW($46BE, intro_segalogo)
+; and palette
+.unbackground $1be7e $1be8d
+.bank 6 ; Banked palettes must be here
+.section "Sega logo palette" free
+intro_segalogo_palette:
+.incbin "intro-segalogo.palette"
+.ends
+  PatchW($46B5, intro_segalogo_palette)
+; TODO: the rest of the intro screen is uncompressed tiles. 
+; The tilemap refers to both compressed and uncompressed, is it possible to join them up?

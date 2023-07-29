@@ -646,8 +646,8 @@ _RAM_DBA3_ db
 _RAM_DBA4_ db
 _RAM_DBA5_ dw
 _RAM_DBA7_ db
-_RAM_DBA8_ dw
-_RAM_DBAA_ dw
+_RAM_DBA8_TilemapDestination dw
+_RAM_DBAA_TilemapSourceData dw
 _RAM_DBAC_ dsb $8
 .ende
 
@@ -1090,7 +1090,7 @@ _LABEL_4F4_:
 	call _LABEL_4D8_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	xor a
 	call _LABEL_736_
 	ret
@@ -1420,7 +1420,7 @@ _LABEL_7B4_:
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_1B986_
 	ld ix, $2000
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_1BB5E_
 	ld de, $3800
 	ld bc, $0300
@@ -1773,7 +1773,7 @@ _LABEL_9ED_:
 	ei
 	ret
 
-_LABEL_A31_:
+_LABEL_A31_LoadPalette:
 	di
 	ld a, (_RAM_FFFF_)
 	push af
@@ -8065,7 +8065,7 @@ _LABEL_3CE4_:
 	ld c, l
 	ret
 
-_LABEL_3CFD_:
+_LABEL_3CFD_DecompressTiles:
 	ld a, (de)
 	ld b, a
 	inc de
@@ -8287,7 +8287,7 @@ _LABEL_3E7D_:
 	call _LABEL_1DB3_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_1E0F_
 	ld hl, (_RAM_DAD4_)
 -:
@@ -8300,7 +8300,7 @@ _LABEL_3E7D_:
 	ld (_RAM_DBA4_), a
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_2206_
 	call _LABEL_26E1_
 	call _LABEL_1ADD_
@@ -8536,7 +8536,7 @@ _LABEL_40FC_:
 	call _LABEL_1293_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 -:
 	ld e, $01
 	in a, (Port_IOPort1)
@@ -8649,7 +8649,7 @@ _LABEL_4166_:
 	call _LABEL_12D2_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_
 -:
 	ld b, $02
@@ -8685,7 +8685,7 @@ _LABEL_4255_:
 	call _LABEL_7A2_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_
 	ld bc, $0002
 	call _LABEL_829_
@@ -8742,7 +8742,7 @@ _LABEL_42D8_:
 	call _LABEL_7A2_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_7B4_
 	call _LABEL_4C5_
 	ld a, $40
@@ -8908,7 +8908,7 @@ _LABEL_4432_:
 	ld (_RAM_FFFF_), a
 	ld hl, _DATA_1BE6E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	ld hl, $0000
 	ld (_RAM_DBB6_), hl
 	ld a, $A9
@@ -8921,7 +8921,7 @@ _LABEL_4432_:
 	call _LABEL_736_
 	ld de, _DATA_38606_
 	ld ix, $0000
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_38006_
 	ld de, $3800
 	ld bc, $0600
@@ -8930,13 +8930,13 @@ _LABEL_4432_:
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_3A546_
 	ld ix, $2700
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld de, _DATA_3AA71_
 	ld ix, $2F00
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld de, _DATA_3AE5E_
 	ld ix, $3300
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	call _LABEL_19B7_
 	ld a, $01
 	ld (_RAM_DBC5_), a
@@ -9163,9 +9163,9 @@ _LABEL_4639_:
 	ld a, (_RAM_DBA7_)
 	and $07
 	jp nz, _LABEL_467E_
-	ld de, (_RAM_DBA8_)
+	ld de, (_RAM_DBA8_TilemapDestination)
 	set 6, d
-	ld hl, (_RAM_DBAA_)
+	ld hl, (_RAM_DBAA_TilemapSourceData)
 	ld b, $18
 	ld c, Port_VDPAddress
 -:
@@ -9187,16 +9187,16 @@ _LABEL_4639_:
 	ex de, hl
 	pop bc
 	djnz -
-	ld hl, (_RAM_DBAA_)
+	ld hl, (_RAM_DBAA_TilemapSourceData)
 	dec hl
-	ld (_RAM_DBAA_), hl
-	ld hl, (_RAM_DBA8_)
+	ld (_RAM_DBAA_TilemapSourceData), hl
+	ld hl, (_RAM_DBA8_TilemapDestination)
 	dec l
 	dec l
 	ld a, l
 	and $3F
 	ld l, a
-	ld (_RAM_DBA8_), hl
+	ld (_RAM_DBA8_TilemapDestination), hl
 _LABEL_467E_:
 	ld a, (_RAM_DBA7_)
 	inc a
@@ -9220,6 +9220,7 @@ _LABEL_467E_:
 _LABEL_4697_:
 	ld a, $0D
 	ld (_RAM_FFFF_), a
+  ; Set load address
 	di
 	ld a, $36
 	out (Port_VDPAddress), a
@@ -9236,24 +9237,24 @@ _LABEL_4697_:
 	ei
 	call _LABEL_6F2_
 	call _LABEL_4C5_
-	ld hl, _DATA_1BE7E_
+	ld hl, _DATA_1BE7E_Intro1_Palette
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
-	ld de, _DATA_37852_
+	call _LABEL_A31_LoadPalette
+	ld de, _DATA_37852_Intro1_Tiles
 	ld ix, $0000
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld a, $05
 	ld (_RAM_FFFF_), a
-	ld hl, _DATA_179D0_
-	ld (_RAM_DBAA_), hl
-	ld hl, $3800
-	ld (_RAM_DBA8_), hl
+	ld hl, _DATA_179D0_Intro1_Tilemap
+	ld (_RAM_DBAA_TilemapSourceData), hl
+	ld hl, $3800 ; Start of tilemap
+	ld (_RAM_DBA8_TilemapDestination), hl
 	xor a
 	ld (_RAM_DBA7_), a
 	call _LABEL_47FE_
 	call _LABEL_47C4_
 	ld ix, _DATA_47B6_
-_LABEL_46E6_:
+_LABEL_46E6_Intro1Loop:
 	push ix
 	ld hl, (_RAM_DAD4_)
 -:
@@ -9297,7 +9298,7 @@ _LABEL_46E6_:
 +:
 	ld a, (_RAM_DBA7_)
 	cp $F8
-	jp nz, _LABEL_46E6_
+	jp nz, _LABEL_46E6_Intro1Loop
 	call +
 	ld b, $50
 	call _LABEL_ADD_
@@ -9428,11 +9429,11 @@ _LABEL_4824_:
 	ld (_RAM_FFFF_), a
 	ld hl, _DATA_1BE8E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_5BC_
 	ld de, _DATA_3A2B9_
 	ld ix, $0000
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_39FB8_
 	ld de, $3800
 	ld bc, $0300
@@ -9441,7 +9442,7 @@ _LABEL_4824_:
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_35EE6_
 	ld ix, $0800
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld a, $01
 	call _LABEL_95F_
 	ld a, $01
@@ -9489,7 +9490,7 @@ _LABEL_48A2_:
 	call _LABEL_4B2_
 	ld hl, _DATA_1BE5E_
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_7A2_
 	call _LABEL_7B4_
 	ld bc, $0506
@@ -9673,7 +9674,7 @@ _LABEL_4A14_:
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_2DEFC_
 	ld ix, $0000
-	call _LABEL_3CFD_
+	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_2F731_
 	ld de, $3800
 	ld bc, $0600
@@ -9713,10 +9714,10 @@ _LABEL_4A14_:
 	ld (_RAM_FFFF_), a
 	ld ix, $29C0
 	ld de, _DATA_1F8B7_
-	call _LABEL_3CFD_
-	ld hl, _DATA_1BE9E_
+	call _LABEL_3CFD_DecompressTiles
+	ld hl, _DATA_1BE9E_intro2_palette
 	ld (_RAM_DBA5_), hl
-	call _LABEL_A31_
+	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_
 	ld a, $4C
 	call _LABEL_95F_
@@ -13095,7 +13096,7 @@ _DATA_C200_:
 .incbin "Lemmings.sms_DATA_14000_.inc"
 
 ; Data from 179D0 to 17CB0 (737 bytes)
-_DATA_179D0_:
+_DATA_179D0_Intro1_Tilemap:
 .dsb 200, $00
 .db $01 $02 $03 $04 $01 $02 $03 $04 $01 $02 $03 $04 $00 $01 $05 $06
 .db $07 $08
@@ -13250,7 +13251,7 @@ _DATA_1BE6E_:
 .db $00 $3F $2A $15 $16 $02 $01 $00 $1C $18 $04 $24 $20 $0B $10 $2B
 
 ; Data from 1BE7E to 1BE8D (16 bytes)
-_DATA_1BE7E_:
+_DATA_1BE7E_Intro1_Palette:
 .db $00 $2B $08 $34 $15 $2A $38 $20 $03 $0B $06 $04 $01 $07 $02 $00
 
 ; Data from 1BE8E to 1BE9D (16 bytes)
@@ -13258,7 +13259,7 @@ _DATA_1BE8E_:
 .db $00 $33 $3F $2A $15 $16 $02 $00 $1C $18 $04 $34 $20 $0F $10 $27
 
 ; Data from 1BE9E to 1BFFF (354 bytes)
-_DATA_1BE9E_:
+_DATA_1BE9E_intro2_palette:
 .db $00 $3F $3A $35 $07 $02 $01 $00 $1C $08 $04 $25 $30 $0F $10 $2B
 .dsb 338, $00
 
@@ -14674,8 +14675,8 @@ _DATA_35EE6_:
 .incbin "Lemmings.sms_DATA_35EE6_.inc"
 
 ; Data from 37852 to 37FFF (1966 bytes)
-_DATA_37852_:
-.incbin "Lemmings.sms_DATA_37852_.inc"
+_DATA_37852_Intro1_Tiles:
+.incbin "Lemmings.sms_DATA_37852_Intro1_Tiles.inc"
 
 .BANK 14
 .ORG $0000
