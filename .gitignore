@@ -1,0 +1,5 @@
+/disassembly/*.inc
+*.bin
+*.sms
+*.o
+*.sym
