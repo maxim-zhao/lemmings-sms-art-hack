@@ -133,5 +133,30 @@ intro_segalogo_palette:
 .incbin "intro-segalogo.palette"
 .ends
   PatchW($46B5, intro_segalogo_palette)
-; TODO: the rest of the intro screen is uncompressed tiles. 
-; The tilemap refers to both compressed and uncompressed, is it possible to join them up?
+; And wheel and walking lemming
+.unbackground $322db $3365a
+.slot 2
+.section "Intro animation wheel" superfree
+; These have to be in the same bank as each other
+intro_wheel:
+.incbin "intro-wheel.bin"
+intro_lemming:
+.incbin "intro-lemming.bin"
+.ends
+  ; Pointer tables
+  PatchW($47e8 +  0, intro_lemming + 32 * 15 * 0)
+  PatchW($47e8 +  2, intro_lemming + 32 * 15 * 1) ; 15 tiles per frame
+  PatchW($47e8 +  4, intro_lemming + 32 * 15 * 2)
+  PatchW($47e8 +  6, intro_lemming + 32 * 15 * 3)
+  PatchW($47e8 +  8, intro_lemming + 32 * 15 * 4)
+  PatchW($47e8 + 10, intro_lemming + 32 * 15 * 5)
+  PatchW($47e8 + 12, intro_lemming + 32 * 15 * 6)
+  PatchW($47e8 + 14, intro_lemming + 32 * 15 * 7)
+  PatchW($47f8 + 0, intro_wheel + 32 * 12 * 0)
+  PatchW($47f8 + 2, intro_wheel + 32 * 12 * 1) ; 12 tiles per frame
+  PatchW($47f8 + 4, intro_wheel + 32 * 12 * 2)
+  ; Paging
+  PatchB($481b, :intro_wheel)
+  PatchB($481d, :intro_wheel)
+; The tilemap refers to both compressed and uncompressed, is it possible to join them up? 
+; Otherwise the art is a bit hard to change.

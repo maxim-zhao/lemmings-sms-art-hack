@@ -663,7 +663,7 @@ _RAM_DBBE_ db
 _RAM_DBBF_ db
 _RAM_DBC0_ db
 _RAM_DBC1_ db
-_RAM_DBC2_ db
+_RAM_DBC2_Intro1WheelAnimationCounter db
 _RAM_DBC3_ dw
 _RAM_DBC5_ db
 _RAM_DBC6_ dsb $8
@@ -9381,7 +9381,7 @@ _LABEL_47C4_:
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_47E8_
+	ld hl, _DATA_47E8_Intro1LemmingFrames
 	add hl, de
 	ld e, (hl)
 	inc hl
@@ -9394,25 +9394,25 @@ _LABEL_47C4_:
 	jp _LABEL_8B4_
 
 ; Pointer Table from 47E8 to 47F7 (8 entries, indexed by _RAM_DAD9_)
-_DATA_47E8_:
-.dw _DATA_3275B_ _DATA_3293B_ _DATA_32B1B_ _DATA_32CFB_ _DATA_32EDB_ _DATA_330BB_ _DATA_3329B_ _DATA_3347B_
+_DATA_47E8_Intro1LemmingFrames:
+.dw _DATA_3275B_Intro1Lemming1 _DATA_3293B_Intro1Lemming2 _DATA_32B1B_Intro1Lemming3 _DATA_32CFB_ _DATA_32EDB_ _DATA_330BB_ _DATA_3329B_ _DATA_3347B_
 
-; Pointer Table from 47F8 to 47FD (3 entries, indexed by _RAM_DBC2_)
-_DATA_47F8_:
-.dw _DATA_322DB_ _DATA_3245B_ _DATA_325DB_
+; Pointer Table from 47F8 to 47FD (3 entries, indexed by _RAM_DBC2_Intro1WheelAnimationCounter)
+_DATA_47F8_Intro1WheelFrames:
+.dw _DATA_322DB_Intro1Wheel1 _DATA_3245B_Intro1Wheel2 _DATA_325DB_Intro1Wheel3
 
 _LABEL_47FE_:
-	ld a, (_RAM_DBC2_)
+	ld a, (_RAM_DBC2_Intro1WheelAnimationCounter)
 	inc a
 	cp $03
 	jr c, +
 	ld a, $00
 +:
-	ld (_RAM_DBC2_), a
+	ld (_RAM_DBC2_Intro1WheelAnimationCounter), a
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_47F8_
+	ld hl, _DATA_47F8_Intro1WheelFrames
 	add hl, de
 	ld e, (hl)
 	inc hl
@@ -13735,9 +13735,9 @@ _DATA_2F731_:
 ; Data from 30000 to 322DA (8923 bytes)
 .incbin "Lemmings.sms_DATA_30000_.inc"
 
-; 1st entry of Pointer Table from 47F8 (indexed by _RAM_DBC2_)
+; 1st entry of Pointer Table from 47F8 (indexed by _RAM_DBC2_Intro1WheelAnimationCounter)
 ; Data from 322DB to 3245A (384 bytes)
-_DATA_322DB_:
+_DATA_322DB_Intro1Wheel1:
 .db $12 $CD $FF $FF $00 $11 $FF $FF $24 $3A $FF $FF $F5 $E1 $FF $FB
 .db $47 $57 $FB $FB $27 $BE $FF $FE $E5 $F4 $FF $FC $E6 $F4 $FF $FC
 .db $4A $B5 $FF $FF $8F $40 $FF $F0 $77 $C0 $FF $C7 $D0 $8F $FF $9F
@@ -13762,9 +13762,9 @@ _DATA_322DB_:
 .db $FA $F8 $FE $F8 $A4 $40 $FC $E0 $98 $00 $F8 $00 $E0 $00 $E0
 .dsb 49, $00
 
-; 2nd entry of Pointer Table from 47F8 (indexed by _RAM_DBC2_)
+; 2nd entry of Pointer Table from 47F8 (indexed by _RAM_DBC2_Intro1WheelAnimationCounter)
 ; Data from 3245B to 325DA (384 bytes)
-_DATA_3245B_:
+_DATA_3245B_Intro1Wheel2:
 .db $12 $CD $FF $FF $00 $11 $FF $FF $24 $3A $FF $FF $F5 $E1 $FF $FB
 .db $47 $57 $FB $FB $27 $BE $FF $FE $E5 $F4 $FF $FC $E6 $F4 $FF $FC
 .db $4A $B5 $FF $FF $8F $40 $FF $F0 $71 $C3 $FF $C7 $C0 $9F $FF $9F
@@ -13789,9 +13789,9 @@ _DATA_3245B_:
 .db $3A $C8 $FE $F8 $84 $60 $FC $E0 $98 $00 $F8 $00 $E0 $00 $E0
 .dsb 49, $00
 
-; 3rd entry of Pointer Table from 47F8 (indexed by _RAM_DBC2_)
+; 3rd entry of Pointer Table from 47F8 (indexed by _RAM_DBC2_Intro1WheelAnimationCounter)
 ; Data from 325DB to 3275A (384 bytes)
-_DATA_325DB_:
+_DATA_325DB_Intro1Wheel3:
 .db $12 $CD $FF $FF $00 $11 $FF $FF $24 $3A $FF $FF $F5 $E1 $FF $FB
 .db $47 $57 $FB $FB $27 $BE $FF $FE $E5 $F4 $FF $FC $E6 $F4 $FF $FC
 .db $4A $B5 $FF $FF $8F $40 $FF $F0 $71 $C5 $FF $C7 $C1 $95 $FF $9F
@@ -13818,7 +13818,7 @@ _DATA_325DB_:
 
 ; 1st entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
 ; Data from 3275B to 3293A (480 bytes)
-_DATA_3275B_:
+_DATA_3275B_Intro1Lemming1:
 .dsb 16, $00
 .db $01 $01 $01 $01 $02 $02 $02 $02 $01 $01 $01 $01 $03 $03 $02 $03
 .db $00 $00 $00 $00 $14 $14 $14 $14 $3B $3F $3B $3B $69 $7F $60 $69
@@ -13853,7 +13853,7 @@ _DATA_3275B_:
 
 ; 2nd entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
 ; Data from 3293B to 32B1A (480 bytes)
-_DATA_3293B_:
+_DATA_3293B_Intro1Lemming2:
 .dsb 16, $00
 .db $01 $01 $01 $01 $06 $07 $04 $06 $0A $0B $0A $0A $06 $07 $04 $06
 .db $00 $00 $00 $00 $00 $00 $00 $00 $50 $50 $50 $50 $EE $FE $EE $EE
@@ -13888,7 +13888,7 @@ _DATA_3293B_:
 
 ; 3rd entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
 ; Data from 32B1B to 32CFA (480 bytes)
-_DATA_32B1B_:
+_DATA_32B1B_Intro1Lemming3:
 .dsb 12, $00
 .db $03 $03 $02 $03 $05 $05 $05 $05 $03 $03 $02 $03 $07 $07 $04 $07
 .db $0C $0F $0C $0C $28 $28 $28 $28 $77 $7F $77 $77 $D2 $FF $C0 $D2
