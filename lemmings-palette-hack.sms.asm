@@ -31,8 +31,7 @@ banks 14
 .bank 0 slot 0
 .section "Palettes" free
 LevelPalettes:
-;.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00 $3f $00 $3f $00 $3f $00 $3f $00 $3f $00 $3f $00 $3f $00 $3f 
+.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
 .db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
 .db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
 .db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
@@ -160,3 +159,48 @@ intro_lemming:
   PatchB($481d, :intro_wheel)
 ; The tilemap refers to both compressed and uncompressed, is it possible to join them up? 
 ; Otherwise the art is a bit hard to change.
+
+; Intro: Lemmings title
+; 1. Palette
+.unbackground $1be9e $1bead
+.bank 6 ; Banked palettes must be here
+.section "Lemmings title palette" free
+intro_lemmings_background_palette:
+.incbin "intro-lemmings-background.lemmingscompr.palette"
+.ends
+  PatchW($4A84, intro_lemmings_background_palette)
+; 2. Tiles, tilemap, dot all share a bank
+.unbackground $2defc $2ffff
+.slot 2
+.section "Lemmings title data" superfree
+intro_lemmings_background:
+.incbin "intro-lemmings-background.lemmingscompr"
+intro_lemmings_tilemap:
+.incbin "intro-lemmings-background.lemmingscompr.tilemap.bin"
+intro_lemmings_dot:
+.incbin "intro-lemmings-dot.8x16.bin"
+.ends
+  PatchB($4A18, :intro_lemmings_background)
+  PatchW($4A1D, intro_lemmings_background)
+  PatchW($4A27, intro_lemmings_tilemap)
+  PatchW($4A6A, intro_lemmings_dot)
+; 3. We patch out the "TM" loaded afterwards.
+.unbackground $49d4 $4a13 ; "TM" tiles
+.unbackground $4A32 $4A68 ; Code to load it
+.bank 0 slot 0
+.org $4A32
+.section "TM tile load skip" force
+  jp $4A69
+.ends
+; 4. Falling lemming
+.unbackground $1F8B7 $1FFFF
+.slot 2
+.section "Lemmings title lemming" superfree
+intro_lemmings_lemming:
+; We hack the data here to make it work with the game.
+.db 9 ; First byte is the total tile count divided by 8. The art is 5x8 and 4x8 tiles.
+.incbin "intro-lemmings-lemming1.lemmingscompr" skip 1
+.incbin "intro-lemmings-lemming2.lemmingscompr" skip 1
+.ends
+  PatchB($4A75, :intro_lemmings_lemming)
+  PatchW($4A7E, intro_lemmings_lemming)

@@ -1553,7 +1553,7 @@ _LABEL_8B4_:
 	nop
 --:
 	push bc
-	ld b, $40
+	ld b, $40 ; 64
 -:
 	outi
 	nop
@@ -8925,7 +8925,7 @@ _LABEL_4432_:
 	ld hl, _DATA_38006_
 	ld de, $3800
 	ld bc, $0600
-	call _LABEL_49B3_
+	call _LABEL_49B3_LoadTilemap
 	ld a, $0E
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_3A546_
@@ -9636,7 +9636,7 @@ _LABEL_4989_:
 	ei
 	ret
 
-_LABEL_49B3_:
+_LABEL_49B3_LoadTilemap:
 	di
 	set 6, d
 	push bc
@@ -9662,7 +9662,7 @@ _LABEL_49B3_:
 	ret
 
 ; Data from 49D4 to 4A13 (64 bytes)
-_DATA_49D4_:
+_DATA_49D4_LemmingsTextTM:
 .db $F9 $F9 $FF $FF $F9 $F9 $FF $FF $21 $21 $FF $FF $21 $21 $FF $FF
 .db $21 $21 $FF $FF $21 $21 $FF $FF $00 $00 $FF $FF $00 $00 $FF $FF
 .db $B0 $B0 $FF $FF $B0 $B0 $FF $FF $50 $50 $FF $FF $50 $50 $FF $FF
@@ -9672,14 +9672,15 @@ _LABEL_4A14_:
 	call _LABEL_4B2_
 	ld a, $0B
 	ld (_RAM_FFFF_), a
-	ld de, _DATA_2DEFC_
+	ld de, _DATA_2DEFC_LemmingsTextTiles
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
-	ld hl, _DATA_2F731_
+	ld hl, _DATA_2F731_LemmingsTextTilemap
 	ld de, $3800
 	ld bc, $0600
-	call _LABEL_49B3_
-	ld hl, _DATA_49D4_
+	call _LABEL_49B3_LoadTilemap
+  ; The game loads extra tiles and manually draws them over the top for the "TM"
+	ld hl, _DATA_49D4_LemmingsTextTM
 	ld de, $2900
 	ld b, $02
 	call _LABEL_8B4_
@@ -9693,12 +9694,12 @@ _LABEL_4A14_:
 	nop
 	ld ($0007), a
 	dec c
-	ld hl, $0148
+	ld hl, $0148 ; "T"
 	out (c), l
 	push ix
 	pop ix
 	out (c), h
-	inc l
+	inc l ; "M"
 	nop
 	ld ($0007), a
 	out (c), l
@@ -9713,7 +9714,7 @@ _LABEL_4A14_:
 	ld a, $07
 	ld (_RAM_FFFF_), a
 	ld ix, $29C0
-	ld de, _DATA_1F8B7_
+	ld de, _DATA_1F8B7_LemmingsTextLemmingTiles
 	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_1BE9E_intro2_palette
 	ld (_RAM_DBA5_), hl
@@ -13410,8 +13411,8 @@ _DATA_1F6D7_:
 .db $47 $57 $FF $FF $47 $D7 $FF $FF $07 $17 $FF $FF $87 $87 $FF $FF
 
 ; Data from 1F8B7 to 1FFFF (1865 bytes)
-_DATA_1F8B7_:
-.incbin "Lemmings.sms_DATA_1F8B7_.inc"
+_DATA_1F8B7_LemmingsTextLemmingTiles:
+.incbin "Lemmings.sms_DATA_1F8B7_LemmingsTextLemmingTiles.inc"
 
 .BANK 8
 .ORG $0000
@@ -13711,8 +13712,8 @@ _DATA_2BBCC_:
 .incbin "Lemmings.sms_DATA_2C000_.inc"
 
 ; Data from 2DEFC to 2F6B0 (6069 bytes)
-_DATA_2DEFC_:
-.incbin "Lemmings.sms_DATA_2DEFC_.inc"
+_DATA_2DEFC_LemmingsTextTiles:
+.incbin "Lemmings.sms_DATA_2DEFC_LemmingsTextTiles.inc"
 
 ; Data from 2F6B1 to 2F730 (128 bytes)
 _DATA_2F6B1_:
@@ -13726,8 +13727,8 @@ _DATA_2F6B1_:
 .dsb 17, $00
 
 ; Data from 2F731 to 2FFFF (2255 bytes)
-_DATA_2F731_:
-.incbin "Lemmings.sms_DATA_2F731_.inc"
+_DATA_2F731_LemmingsTextTilemap:
+.incbin "Lemmings.sms_DATA_2F731_LemmingsTextTilemap.inc"
 
 .BANK 12
 .ORG $0000
