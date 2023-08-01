@@ -199,8 +199,8 @@ intro_lemmings_dot:
 intro_lemmings_lemming:
 ; We hack the data here to make it work with the game.
 .db 9 ; First byte is the total tile count divided by 8. The art is 5x8 and 4x8 tiles.
-.incbin "intro-lemmings-lemming1.lemmingscompr" skip 1
-.incbin "intro-lemmings-lemming2.lemmingscompr" skip 1
+.incbin "intro-lemmings-lemming1.8x16.lemmingscompr" skip 1
+.incbin "intro-lemmings-lemming2.8x16.lemmingscompr" skip 1
 .ends
   PatchB($4A75, :intro_lemmings_lemming)
   PatchW($4A7E, intro_lemmings_lemming)
