@@ -226,3 +226,12 @@ intro_lemmings_lemming:
   ; Index 5 is not used
   LevelArt(6, "level-pillar2",  $E0, $24006) ; Original game over-reads by 4 tiles
   LevelArt(7, "level-sega",     $BF, $2c006)
+
+
+
+; The Lemmings themselves. We don't try to relocate them.
+.unbackground $c000 $ffff
+  ROMPosition $c000
+.section "Lemming sprites" force
+lemming-sprites: .incbin "lemmings.8x16.bin"
+.ends

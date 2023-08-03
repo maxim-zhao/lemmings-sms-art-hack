@@ -7048,7 +7048,7 @@ _LABEL_35B0_:
 	ld e, (hl)
 	inc h
 	ld d, (hl)
-	ld hl, _DATA_C000_
+	ld hl, _DATA_C000_LemmingSprites
 	add hl, de
 	ld de, $2000
 	ld b, $02
@@ -13057,7 +13057,7 @@ _DATA_BED1_:
 .ORG $0000
 
 ; Data from C000 to C1FF (512 bytes)
-_DATA_C000_:
+_DATA_C000_LemmingSprites:
 .dsb 29, $00
 .db $3C $00 $00 $08 $30 $00 $00 $1C $00 $00 $00 $18 $08 $00 $00 $18
 .db $08 $00 $00 $18 $08 $00 $00 $18 $18 $00 $00 $38 $18 $00 $00 $18

@@ -15,3 +15,4 @@ bmp2tile png\level-crystal.bin.png                          -noremovedupes      
 bmp2tile png\level-marble.bin.png                           -noremovedupes        -savetiles level-marble.bin                           -smspalette -fullpalette -savepalette level-marble.palette
 bmp2tile png\level-pillar2.bin.png                          -noremovedupes        -savetiles level-pillar2.bin                          -smspalette -fullpalette -savepalette level-pillar2.palette
 bmp2tile png\level-sega.bin.png                             -noremovedupes        -savetiles level-sega.bin                             -smspalette -fullpalette -savepalette level-sega.palette  
+bmp2tile png\lemmings.8x16.bin.png                          -noremovedupes -8x16  -savetiles lemmings.8x16.bin
