@@ -566,13 +566,13 @@ _RAM_DB06_ dw
 _RAM_DB08_ db
 _RAM_DB09_ db
 _RAM_DB0A_ db
-_RAM_DB0B_ db
-_RAM_DB0C_ db
-_RAM_DB0D_ dw
-_RAM_DB0F_ db
-_RAM_DB10_ dw
-_RAM_DB12_ db
-_RAM_DB13_ db
+_RAM_DB0B_LevelType db ; Following 3 must be together
+_RAM_DB0C_MapLayoutBank db
+_RAM_DB0D_MapLayoutAddress dw
+_RAM_DB0F_MaximumSafeFallDistance db
+_RAM_DB10_TilesetAddress dw ; Following two must be together
+_RAM_DB12_TilesetTileCount db
+_RAM_DB13_TilesetBank db
 _RAM_DB14_ db
 _RAM_DB15_ db
 _RAM_DB16_ db
@@ -640,7 +640,7 @@ _RAM_DB9B_ db
 _RAM_DB9C_ db
 _RAM_DB9D_ db
 _RAM_DB9E_ db
-_RAM_DB9F_ dw
+_RAM_DB9F_MapDescriptorAddress dw
 _RAM_DBA1_ dw
 _RAM_DBA3_ db
 _RAM_DBA4_ db
@@ -4019,7 +4019,7 @@ _LABEL_1E0F_:
 	ldir
 	ld de, _RAM_DB56_
 	ldi
-	ld de, _RAM_DB9F_
+	ld de, _RAM_DB9F_MapDescriptorAddress
 	ldi
 	ldi
 	ld de, _RAM_DBA1_
@@ -4233,20 +4233,14 @@ _LABEL_1FE3_:
 	djnz _LABEL_1FE3_
 	ret
 
-; Data from 2035 to 2038 (4 bytes)
-.db $1E $13 $21 $1E
-
-; Pointer Table from 2039 to 203A (1 entries, indexed by _RAM_DB0B_)
-_DATA_2039_:
-.dw _DATA_6C25_
-
-; Data from 203B to 203C (2 bytes)
-.db $2D $0B
+; Data from 2035 to 2038 (8 bytes, indexed by _RAM_DB0B_LevelType)
+_DATA_2035:
+.db $1E $13 $21 $1E $25 $6c $2d $0b
 
 _LABEL_203D_:
-	ld de, (_RAM_DB0B_)
+	ld de, (_RAM_DB0B_LevelType)
 	ld d, $00
-	ld hl, $2035
+	ld hl, _DATA_2035
 	add hl, de
 	ld e, (hl)
 	ld d, $CD
@@ -4304,7 +4298,7 @@ _LABEL_203D_:
 	ld (_RAM_DB0A_), a
 	ret
 
-; Pointer Table from 20A0 to 20A7 (4 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 20A0 to 20A7 (4 entries, indexed by _RAM_DB0B_LevelType)
 _DATA_20A0_:
 .dw _DATA_5B4A_ _DATA_5E57_ _DATA_662F_ _DATA_7681_
 
@@ -4312,7 +4306,7 @@ _DATA_20A0_:
 .db $FF
 
 _LABEL_20A9_:
-	ld de, (_RAM_DB0B_)
+	ld de, (_RAM_DB0B_LevelType)
 	ld d, $00
 	ld hl, _DATA_20A0_
 	add hl, de
@@ -4338,7 +4332,7 @@ _LABEL_20C3_:
 	add hl, hl
 	add hl, hl
 	ld de, $0010
-	ld a, (_RAM_DB0B_)
+	ld a, (_RAM_DB0B_LevelType)
 	cp $02
 	jr nz, +
 	ld e, $14
@@ -4509,33 +4503,36 @@ _DATA_21F2_:
 .dw _DATA_1F6D7_ _DATA_F_
 
 _LABEL_2206_:
+  ; Clear some memory
 	ld hl, _RAM_DC00_
 	ld de, _RAM_DC00_ + 1
 	ld bc, $00FF
 	ld (hl), $00
 	ldir
-	ld hl, (_RAM_DB9F_)
-	ld de, _RAM_DB0B_
+  ; Load map descriptor to RAM
+	ld hl, (_RAM_DB9F_MapDescriptorAddress)
+	ld de, _RAM_DB0B_LevelType
 	ldi
 	ldi
 	ldi
 	ldi
 	ldi
-	ld a, (_RAM_DB0B_)
+  ; Then load something
+	ld a, (_RAM_DB0B_LevelType)
 	add a, a
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_733B_
+	ld hl, _DATA_733B_LevelTilesetData
 	add hl, de
-	ld de, _RAM_DB10_
+	ld de, _RAM_DB10_TilesetAddress
 	ldi
 	ldi
 	ldi
 	ldi
-	ld a, (_RAM_DB0C_)
+	ld a, (_RAM_DB0C_MapLayoutBank)
 	ld (_RAM_FFFF_), a
-	ld hl, (_RAM_DB0D_)
+	ld hl, (_RAM_DB0D_MapLayoutAddress)
 	call _LABEL_3536_
 	ld a, (_RAM_DB9E_)
 	cp $01
@@ -4898,7 +4895,7 @@ _LABEL_247E_:
 	ld de, _RAM_CD00_
 	ld bc, $0100
 	ldir
-	ld a, (_RAM_DB13_)
+	ld a, (_RAM_DB13_TilesetBank)
 	ld (_RAM_FFFF_), a
 	ld b, $FF
 	ld iy, _RAM_C400_
@@ -4920,7 +4917,7 @@ _LABEL_247E_:
 	add hl, hl
 	add hl, hl
 	add hl, hl
-	ld bc, (_RAM_DB10_)
+	ld bc, (_RAM_DB10_TilesetAddress)
 	add hl, bc
 	push de
 	ld de, _RAM_DA8B_
@@ -4996,12 +4993,12 @@ _LABEL_2660_:
 	ldir
 	ld hl, _RAM_C300_
 	ld de, _RAM_C301_
-	ld bc, (_RAM_DB12_)
+	ld bc, (_RAM_DB12_TilesetTileCount)
 	ld b, $00
 	dec c
 	ld (hl), $04
 	ldir
-	ld a, (_RAM_DB0B_)
+	ld a, (_RAM_DB0B_LevelType)
 	add a, a
 	add a, a
 	add a, a
@@ -5130,7 +5127,7 @@ _LABEL_276B_:
 	ld (_RAM_DAD6_), a
 	ld a, $0D
 	ld (_RAM_FFFF_), a
-	ld a, (_RAM_DB0B_)
+	ld a, (_RAM_DB0B_LevelType)
 	and a
 	jp z, _LABEL_27CD_
 	cp $01
@@ -6097,7 +6094,7 @@ _LABEL_2E46_:
 +:
 	dec e
 	jp nz, -
-	ld a, (_RAM_DB0B_)
+	ld a, (_RAM_DB0B_LevelType)
 	cp $03
 	jp nz, +
 	ld a, d
@@ -6193,7 +6190,7 @@ _LABEL_2F15_:
 
 +:
 	ld (ix+5), b
-	ld a, (_RAM_DB0F_)
+	ld a, (_RAM_DB0F_MaximumSafeFallDistance)
 	cp (ix+9)
 	jp nc, +
 	ld (ix+0), $10
@@ -9707,7 +9704,7 @@ _LABEL_4A14_:
 	pop ix
 	out (c), h
 	ei
-	ld hl, _DATA_2F6B1_
+	ld hl, _DATA_2F6B1_LemmingsScreenDot
 	ld de, $2940
 	ld b, $04
 	call _LABEL_8B4_
@@ -10168,10 +10165,19 @@ _DATA_72C3_:
 .db $1C $00 $00 $00 $18 $00 $00 $00 $24 $00 $00 $00 $24 $00 $00 $00
 .db $24 $00 $00 $00 $18 $00 $00 $00
 
-; Data from 733B to 735A (32 bytes)
-_DATA_733B_:
-.db $06 $80 $D0 $06 $86 $9C $FA $08 $06 $9A $FC $06 $06 $80 $E4 $08
-.db $06 $9C $E8 $09 $06 $80 $A9 $0B $06 $80 $E4 $09 $06 $80 $BF $0B
+; Data from 733B to 735A (32 bytes, 4 bytes per entry, indexed by _RAM_DB0B_LevelType)
+_DATA_733B_LevelTilesetData:
+; dw Address
+; db TileCount
+; db Bank
+.db $06 $80 $D0 $06 ; 208 tiles @ $18006, dirt
+.db $86 $9C $FA $08 ; 250 tiles @ $21c86, pillar 1
+.db $06 $9A $FC $06 ; 252 tiles @ $19a06, fire
+.db $06 $80 $E4 $08 ; 228 tiles @ $20006, crystal
+.db $06 $9C $E8 $09 ; 232 tiles @ $25c06, marble (data is only enough for 231)
+.db $06 $80 $A9 $0B ; 169 tiles - points to Sega tiles with a lower count
+.db $06 $80 $E4 $09 ; 228 tiles @ $24006, pillar 2 (data is only enough for 224)
+.db $06 $80 $BF $0B ; 191 tiles @ $2c006, Sega
 
 ; Data from 735B to 73DC (130 bytes)
 _DATA_735B_:
@@ -13512,56 +13518,56 @@ _DATA_23CEA_:
 ; Data from 24000 to 27D6C (15725 bytes)
 .incbin "Lemmings.sms_DATA_24000_.inc"
 
-; Pointer Table from 27D6D to 27D6E (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27D6D to 27D6E (1 entries, indexed by _RAM_DB0B_LevelType)
 _DATA_27D6D_:
 .dw _DATA_27DED_
 
 ; Data from 27D6F to 27D7C (14 bytes)
 .db $0A $BE $1C $BE $21 $BE $22 $BE $24 $BE $00 $00 $00 $00
 
-; Pointer Table from 27D7D to 27D7E (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27D7D to 27D7E (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27E26_
 
 ; Data from 27D7F to 27D8C (14 bytes)
 .db $3F $BE $49 $BE $4C $BE $4D $BE $4E $BE $00 $00 $00 $00
 
-; Pointer Table from 27D8D to 27D8E (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27D8D to 27D8E (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27E80_
 
 ; Data from 27D8F to 27D9C (14 bytes)
 .db $A9 $BE $B5 $BE $B6 $BE $C2 $BE $C3 $BE $00 $00 $00 $00
 
-; Pointer Table from 27D9D to 27D9E (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27D9D to 27D9E (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27EC5_
 
 ; Data from 27D9F to 27DAC (14 bytes)
 .db $DE $BE $E8 $BE $EB $BE $EC $BE $ED $BE $00 $00 $00 $00
 
-; Pointer Table from 27DAD to 27DAE (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27DAD to 27DAE (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27EF2_
 
 ; Data from 27DAF to 27DBC (14 bytes)
 .db $13 $BF $1D $BF $20 $BF $29 $BF $2B $BF $00 $00 $00 $00
 
-; Pointer Table from 27DBD to 27DBE (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27DBD to 27DBE (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27E4F_
 
 ; Data from 27DBF to 27DCC (14 bytes)
 .db $50 $BE $51 $BE $52 $BE $53 $BE $54 $BE $00 $00 $00 $00
 
-; Pointer Table from 27DCD to 27DCE (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27DCD to 27DCE (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27E55_
 
 ; Data from 27DCF to 27DDC (14 bytes)
 .db $72 $BE $7A $BE $7D $BE $7E $BE $7F $BE $00 $00 $00 $00
 
-; Pointer Table from 27DDD to 27DDE (1 entries, indexed by _RAM_DB0B_)
+; Pointer Table from 27DDD to 27DDE (1 entries, indexed by _RAM_DB0B_LevelType)
 .dw _DATA_27F2D_
 
 ; Data from 27DDF to 27DEC (14 bytes)
 .db $4E $BF $58 $BF $5B $BF $5C $BF $5D $BF $00 $00 $00 $00
 
-; 1st entry of Pointer Table from 27D6D (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27D6D (indexed by _RAM_DB0B_LevelType)
 ; Data from 27DED to 27E25 (57 bytes)
 _DATA_27DED_:
 .db $67 $68 $5D $6F $2C $2D $1E $1F $20 $21 $22 $24 $25 $26 $27 $28
@@ -13569,26 +13575,26 @@ _DATA_27DED_:
 .db $A4 $A5 $A6 $A7 $A8 $6B $6C $72 $73 $90 $91 $92 $93 $94 $00 $6D
 .db $74 $AC $AD $00 $00 $AE $00 $A9 $00
 
-; 1st entry of Pointer Table from 27D7D (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27D7D (indexed by _RAM_DB0B_LevelType)
 ; Data from 27E26 to 27E4E (41 bytes)
 _DATA_27E26_:
 .db $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 $65 $66 $13 $14 $15 $16
 .db $17 $18 $19 $1A $1B $1C $20 $21 $00 $86 $87 $8C $8D $8E $8F $90
 .db $97 $A0 $00 $A3 $A4 $00 $00 $00 $00
 
-; 1st entry of Pointer Table from 27DBD (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27DBD (indexed by _RAM_DB0B_LevelType)
 ; Data from 27E4F to 27E54 (6 bytes)
 _DATA_27E4F_:
 .db $00 $00 $00 $00 $00 $00
 
-; 1st entry of Pointer Table from 27DCD (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27DCD (indexed by _RAM_DB0B_LevelType)
 ; Data from 27E55 to 27E7F (43 bytes)
 _DATA_27E55_:
 .db $2D $2E $2F $30 $31 $3F $40 $41 $42 $43 $81 $82 $83 $84 $87 $88
 .db $89 $8A $8D $8E $8F $90 $47 $48 $E3 $E1 $E0 $95 $00 $85 $86 $8B
 .db $8C $92 $93 $BE $00 $91 $94 $00 $00 $00 $00
 
-; 1st entry of Pointer Table from 27D8D (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27D8D (indexed by _RAM_DB0B_LevelType)
 ; Data from 27E80 to 27EC4 (69 bytes)
 _DATA_27E80_:
 .db $43 $44 $45 $4B $4C $4D $4E $4F $50 $52 $53 $54 $55 $56 $57 $58
@@ -13597,14 +13603,14 @@ _DATA_27E80_:
 .db $6A $6B $6C $6D $00 $00 $70 $71 $8B $29 $2A $2B $2C $35 $36 $37
 .db $38 $00 $00 $D7 $00
 
-; 1st entry of Pointer Table from 27D9D (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27D9D (indexed by _RAM_DB0B_LevelType)
 ; Data from 27EC5 to 27EF1 (45 bytes)
 _DATA_27EC5_:
 .db $5E $5F $60 $61 $63 $64 $65 $66 $68 $69 $6A $6B $1E $1F $20 $21
 .db $22 $23 $24 $25 $26 $27 $2D $2E $00 $54 $78 $55 $59 $7D $5A $5C
 .db $7F $5D $00 $7E $80 $00 $00 $00 $00 $30 $2F $1C $00
 
-; 1st entry of Pointer Table from 27DAD (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27DAD (indexed by _RAM_DB0B_LevelType)
 ; Data from 27EF2 to 27F2C (59 bytes)
 _DATA_27EF2_:
 .db $2F $30 $31 $32 $35 $36 $37 $38 $3B $3C $3D $3E $D5 $68 $D6 $E7
@@ -13612,7 +13618,7 @@ _DATA_27EF2_:
 .db $00 $5C $64 $65 $06 $07 $12 $13 $1C $1D $00 $66 $67 $00 $98 $99
 .db $9A $9B $9C $9D $9F $A0 $00 $E6 $00 $C6 $00
 
-; 1st entry of Pointer Table from 27DDD (indexed by _RAM_DB0B_)
+; 1st entry of Pointer Table from 27DDD (indexed by _RAM_DB0B_LevelType)
 ; Data from 27F2D to 27FFF (211 bytes)
 _DATA_27F2D_:
 .db $66 $67 $68 $69 $76 $77 $78 $79 $7F $80 $81 $82 $8B $8C $8D $8E
@@ -13716,7 +13722,7 @@ _DATA_2DEFC_LemmingsTextTiles:
 .incbin "Lemmings.sms_DATA_2DEFC_LemmingsTextTiles.inc"
 
 ; Data from 2F6B1 to 2F730 (128 bytes)
-_DATA_2F6B1_:
+_DATA_2F6B1_LemmingsScreenDot:
 .db $07 $07 $07 $00 $0B $0C $0F $00 $16 $18 $1F $00 $26 $38 $3F $00
 .db $4D $70 $7F $00 $46 $78 $7F $00 $4D $70 $7F $00 $47 $78 $7F $00
 .db $4B $74 $7F $00 $45 $7A $7F $00 $20 $3F $3F $00 $1F $1F $1F

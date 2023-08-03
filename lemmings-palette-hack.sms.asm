@@ -24,22 +24,8 @@ banks 14
 .define RAM_LevelType $db0b 
 .define LoadPalette   $0a31 
 
-; We seem to have free space at $7ff0-7fef inclusive.
+; We seem to have free space at $7ff0-7fef inclusive for code injection.
 .unbackground $7f00 $7fef
-
-; We put palettes there. These are the original Lemmings ones.
-.bank 0 slot 0
-.section "Palettes" free
-LevelPalettes:
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00 ; Unused
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.db $00	$3f	$08	$24	$15	$2a	$38	$20	$03	$0b	$07	$04	$01	$07	$02	$00
-.ends
 
 ; Then we hack the level loader just after it's read the level header to RAM
 .orga $2223
@@ -74,8 +60,8 @@ LevelLoaderHack:
 .bank 0 slot 0
 .org offset
 .else
-.bank offset / $4000 - 2 slot 2
-.org offset % $4000
+.bank offset / $4000 slot 2
+.org offset & $3fff
 .endif
 .endm
 
@@ -93,16 +79,7 @@ LevelLoaderHack:
   .ends
 .endm
 
-.macro ReplaceArt(label, start, end, file)
-; First free up the original space...
-.unbackground start end
-  ROMPosition start
-; Then make a free section for it so WLA DX can pick the placement. This might not work...
-.section "Replacement art \@ (\1)" free
-\1:
-.incbin file
-.ends
-.endm
+
 
 ; Main font
 ; This has a leading 8x8 blank that is a bit annoying...
@@ -114,6 +91,8 @@ font:
 .incbin "font.8x16.bin"
 .ends
   PatchW($07a6, font)
+
+
 
 ; Intro: Sega logo
 .unbackground $37852 $37efb ; Tiles
@@ -160,6 +139,8 @@ intro_lemming:
 ; The tilemap refers to both compressed and uncompressed, is it possible to join them up? 
 ; Otherwise the art is a bit hard to change.
 
+
+
 ; Intro: Lemmings title
 ; 1. Palette
 .unbackground $1be9e $1bead
@@ -204,3 +185,44 @@ intro_lemmings_lemming:
 .ends
   PatchB($4A75, :intro_lemmings_lemming)
   PatchW($4A7E, intro_lemmings_lemming)
+
+
+
+; Level art
+; WLA DX doesn't do a good job of packing these back into the space available :(
+; so we tell it to put them at their original locations.
+.unbackground $18006 $1b985 ; Dirt, Fire
+.unbackground $20006 $23bc5 ; Crystal, Pillar 1
+.unbackground $24006 $278e5 ; Pillar 2, Marble
+.unbackground $2c006 $2d7e5 ; Sega
+
+; Palettes are all in bank 6. We free up some room in there.
+.unbackground $1beae $1bfff
+.define LevelPalettes $1beae
+
+.macro LevelArt(index, name, count, offset)
+  ROMPosition offset
+.section "Level art: {name}" force
+{name}: .incbin {"{name}.bin"} read count*32
+.ends
+; Using original offsets no need to rewrite pointers
+;  PatchW($733b + 4 * index + 0, {name})
+;  PatchB($733b + 4 * index + 3, :{name})
+; We also inject the palettes, in the palette bank. See above for the hack to load them.
+  ROMPosition LevelPalettes + index * 16
+.section "Level palette: {name}" force
+{name}_palette: 
+  ; Force first colour to black
+  .db 0
+  .incbin {"{name}.palette"} skip 1 read 15
+.ends
+.endm
+
+  LevelArt(0, "level-dirt",     $D0, $18006) ; 208 tiles
+  LevelArt(1, "level-pillar1",  $FA, $21c86)
+  LevelArt(2, "level-fire",     $FC, $19a06)
+  LevelArt(3, "level-crystal",  $E4, $20006)
+  LevelArt(4, "level-marble",   $E7, $25c06) ; Original game over-reads by 1 tile
+  ; Index 5 is not used
+  LevelArt(6, "level-pillar2",  $E0, $24006) ; Original game over-reads by 4 tiles
+  LevelArt(7, "level-sega",     $BF, $2c006)
