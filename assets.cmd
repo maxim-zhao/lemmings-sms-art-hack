@@ -16,3 +16,8 @@ bmp2tile png\level-marble.bin.png                           -noremovedupes      
 bmp2tile png\level-pillar2.bin.png                          -noremovedupes        -savetiles level-pillar2.bin                          -smspalette -fullpalette -savepalette level-pillar2.palette
 bmp2tile png\level-sega.bin.png                             -noremovedupes        -savetiles level-sega.bin                             -smspalette -fullpalette -savepalette level-sega.palette  
 bmp2tile png\lemmings.8x16.bin.png                          -noremovedupes -8x16  -savetiles lemmings.8x16.bin
+bmp2tile png\hud-skills.8x16.bin.png                        -noremovedupes -8x16  -savetiles hud-skills.8x16.bin
+bmp2tile png\hud-nuke.bin.png                               -noremovedupes        -savetiles hud-nuke.bin
+bmp2tile png\hud-numbers.bin.png                            -noremovedupes        -savetiles hud-numbers.bin
+bmp2tile png\hud-selection.8x16.bin.png                     -noremovedupes -8x16  -savetiles hud-selection.8x16.bin
+bmp2tile png\hud-lemming-states.bin.png                     -noremovedupes        -savetiles hud-lemming-states.bin

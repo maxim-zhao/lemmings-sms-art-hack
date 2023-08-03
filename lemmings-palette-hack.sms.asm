@@ -233,5 +233,23 @@ intro_lemmings_lemming:
 .unbackground $c000 $ffff
   ROMPosition $c000
 .section "Lemming sprites" force
-lemming-sprites: .incbin "lemmings.8x16.bin"
+.incbin "lemmings.8x16.bin"
+.ends
+
+
+
+
+; The HUD. This is in many parts. We do not change locations.
+.unbackground $5b9d $62dc
+.unbackground $645d $713c
+  ROMPosition $5b9d
+.section "hud art part 1" force
+.incbin "hud-skills.8x16.bin"
+.incbin "hud-nuke.bin"
+.incbin "hud-numbers.bin"
+.ends
+  ROMPosition $645d
+.section "hud art part 2" force
+.incbin "hud-selection.8x16.bin"
+.incbin "hud-lemming-states.bin"
 .ends
