@@ -21,4 +21,5 @@ bmp2tile png\hud-nuke.bin.png                               -noremovedupes      
 bmp2tile png\hud-numbers.bin.png                            -noremovedupes        -savetiles hud-numbers.bin
 bmp2tile png\hud-selection.8x16.bin.png                     -noremovedupes -8x16  -savetiles hud-selection.8x16.bin
 bmp2tile png\hud-lemming-states.bin.png                     -noremovedupes        -savetiles hud-lemming-states.bin
+bmp2tile png\hud-rate-control.bin.png                       -nomirroring          -savetiles hud-rate-control.bin
 bmp2tile png\title-screen-font.1bpp.png                     -noremovedupes        -savetiles title-screen-font.1bpp
