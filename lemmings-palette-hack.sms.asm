@@ -253,3 +253,30 @@ intro_lemmings_lemming:
 .incbin "hud-selection.8x16.bin"
 .incbin "hud-lemming-states.bin"
 .ends
+
+
+
+; Title screen
+.unbackground $0bed1 $0bfe8
+  ROMPosition $0bed1
+.section "Title screen scroller font" force
+.incbin "title-screen-font.1bpp"
+.ends
+
+; Title screen scroller text
+.unbackground $0f20 $103a
+  ROMPosition $f20
+.section "Title screen scroller text" force
+TitleScreenText:
+.stringmaptable TitleScreen "TitleScreen.tbl"
+.stringmap TitleScreen "  PUBLISHED UNDER LICENCE FROM PSYGNOSIS LIMITED."
+.stringmap TitleScreen "  © 1991, 1992 PSYGNOSIS LIMITED. ALL RIGHTS RESERVED."
+.stringmap TitleScreen "  REPROGRAMMED GAME ©1992 SEGA."
+.stringmap TitleScreen "  CONVERSION BY PROBE SOFTWARE LIMITED."
+.stringmap TitleScreen "  PSYGNOSIS AND LEMMINGS ARE TRADEMARKS OF PSYGNOSIS LIMITED AND ARE USED WITH PERMISSION."
+.stringmap TitleScreen "                  🛑"
+.ends
+
+  PatchW($19BC, TitleScreenText)
+  PatchW($1A46, TitleScreenText + 1)
+  

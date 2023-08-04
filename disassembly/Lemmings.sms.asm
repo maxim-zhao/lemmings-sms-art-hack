@@ -541,8 +541,8 @@ _RAM_DADF_ dw
 _RAM_DAE1_ dw
 _RAM_DAE3_ db
 _RAM_DAE4_ db
-_RAM_DAE5_ dw
-_RAM_DAE7_ dw
+_RAM_DAE5_TextLocationTilemapAddress dw
+_RAM_DAE7_TextLocationYX dw
 .ende
 
 .enum $DAEB export
@@ -1362,53 +1362,53 @@ _LABEL_745_:
 	jp nz, -
 +:
 	pop ix
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	ret
 
-_LABEL_768_:
+_LABEL_768_PrintStringAtBCSpaced:
 	push bc
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	pop bc
 	inc b
 	inc b
 	inc b
 	ret
 
-_LABEL_774_:
+_LABEL_774_PrintString:
 	ld a, (ix+0)
 	inc ix
 	and a
-	ret z
-	cp $20
+	ret z ; 0 = end of string
+	cp $20 ; space = skip write, leave existing tile
 	jp z, +
 	ld l, a
-	ld h, $7B
+	ld h, $7B ; $7bxx = lookup for ASCII to tilemap
 	ld e, (hl)
 	ld a, (_RAM_DB99_)
 	ld d, a
 	sla e
 	inc e
-	call _LABEL_7D0_
-	jp _LABEL_774_
+	call _LABEL_7D0_WriteOneLetter
+	jp _LABEL_774_PrintString
 
 +:
-	ld hl, (_RAM_DAE5_)
+	ld hl, (_RAM_DAE5_TextLocationTilemapAddress)
 	inc hl
 	inc hl
-	ld (_RAM_DAE5_), hl
-	ld a, (_RAM_DAE7_)
+	ld (_RAM_DAE5_TextLocationTilemapAddress), hl
+	ld a, (_RAM_DAE7_TextLocationYX)
 	inc a
-	ld (_RAM_DAE7_), a
-	jr _LABEL_774_
+	ld (_RAM_DAE7_TextLocationYX), a
+	jr _LABEL_774_PrintString
 
 _LABEL_7A2_:
 	ld de, $0000
 -:
 	ld hl, _DATA_4B7D_
 	ld b, $85
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ret
 
 _LABEL_7AE_:
@@ -1427,9 +1427,9 @@ _LABEL_7B4_:
 	call _LABEL_4989_
 	ret
 
-_LABEL_7D0_:
+_LABEL_7D0_WriteOneLetter:
 	di
-	ld hl, (_RAM_DAE5_)
+	ld hl, (_RAM_DAE5_TextLocationTilemapAddress)
 	set 6, h
 	ld c, Port_VDPAddress
 	out (c), l
@@ -1466,11 +1466,11 @@ _LABEL_7D0_:
 	ld ($0007), a
 	out (c), d
 	ei
-	ld hl, (_RAM_DAE5_)
+	ld hl, (_RAM_DAE5_TextLocationTilemapAddress)
 	inc hl
 	inc hl
-	ld (_RAM_DAE5_), hl
-	ld bc, (_RAM_DAE7_)
+	ld (_RAM_DAE5_TextLocationTilemapAddress), hl
+	ld bc, (_RAM_DAE7_TextLocationYX)
 	inc c
 	ld a, c
 	cp $20
@@ -1479,11 +1479,11 @@ _LABEL_7D0_:
 	inc b
 	inc b
 +:
-	ld (_RAM_DAE7_), bc
+	ld (_RAM_DAE7_TextLocationYX), bc
 	ret
 
-_LABEL_829_:
-	ld (_RAM_DAE7_), bc
+_LABEL_829_SetTextLocationToBC:
+	ld (_RAM_DAE7_TextLocationYX), bc
 	ld l, b
 	ld h, $00
 	add hl, hl
@@ -1496,39 +1496,39 @@ _LABEL_829_:
 	ld e, c
 	sla e
 	add hl, de
-	ld (_RAM_DAE5_), hl
+	ld (_RAM_DAE5_TextLocationTilemapAddress), hl
 	ret
 
 _LABEL_840_:
 	ld hl, $0000
 	ld bc, $0000
 	in a, (Port_IOPort1)
-	bit 2, a
+	bit 2, a ; Left
 	jr nz, +
-	ld l, $FF
+	ld l, $FF ; -1
 +:
 	in a, (Port_IOPort1)
-	bit 3, a
+	bit 3, a ; Right
 	jr nz, +
-	ld l, $01
+	ld l, $01 ; +1
 +:
 	in a, (Port_IOPort1)
-	bit 0, a
+	bit 0, a ; Up
 	jr nz, +
-	ld h, $FF
+	ld h, $FF ; -1
 +:
 	in a, (Port_IOPort1)
-	bit 1, a
+	bit 1, a ; Down
 	jr nz, +
-	ld h, $01
+	ld h, $01 ; +1
 +:
 	in a, (Port_IOPort1)
-	bit 4, a
+	bit 4, a ; Button 1
 	jr nz, +
 	ld c, $01
 +:
 	in a, (Port_IOPort1)
-	bit 5, a
+	bit 5, a ; Button 2
 	jr nz, +
 	ld b, $01
 +:
@@ -1542,7 +1542,7 @@ _LABEL_840_:
 .db $00 $80 $11 $00 $00 $06 $00 $CD $B4 $08 $21 $00 $A0 $11 $00 $20
 .db $06 $80 $CD $B4 $08 $C9
 
-_LABEL_8B4_:
+_LABEL_8B4_Load64BytesToVRAM:
 	di
 	ld c, Port_VDPAddress
 	out (c), e
@@ -1857,9 +1857,9 @@ _LABEL_AB5_:
 	add a, a
 	ld e, a
 	ld d, $00
-	ld ix, _DATA_EF8_
+	ld ix, _DATA_EF8_DifficultyLevelsText
 	add ix, de
-	jp _LABEL_774_
+	jp _LABEL_774_PrintString
 
 ; Data from AC7 to ADC (22 bytes)
 .db $DB $DC $CB $67 $CA $C7 $0A $DB $DC $CB $67 $C2 $CE $0A $DB $DC
@@ -2019,7 +2019,14 @@ _LABEL_B90_:
 	ret
 
 ; Data from BB5 to C33 (127 bytes)
-_DATA_BB5_:
+_DATA_BB5_LevelIntroStatsText:
+; "  NUMBER OF LEMMINGS",0
+; "       % TO BE SAVED",0
+; "    RELEASE RATE =",0
+; "    TIME  ="
+; "     RATING =",0
+; "       LEVEL =",0
+; " 1 TO PREVIEW  2 TO PLAY",0
 .db $20 $20 $4E $55 $4D $42 $45 $52 $20 $4F $46 $20 $4C $45 $4D $4D
 .db $49 $4E $47 $53 $00 $20 $20 $20 $20 $20 $20 $20 $25 $20 $54 $4F
 .db $20 $42 $45 $20 $53 $41 $56 $45 $44 $00 $20 $20 $20 $20 $52 $45
@@ -2030,15 +2037,20 @@ _DATA_BB5_:
 .db $49 $45 $57 $20 $20 $32 $20 $54 $4F $20 $50 $4C $41 $59 $00
 
 ; Data from C34 to C3B (8 bytes)
-_DATA_C34_:
+_DATA_C34_MinuteText:
+; " MINUTE",0
 .db $20 $4D $49 $4E $55 $54 $45 $00
 
 ; Data from C3C to C44 (9 bytes)
-_DATA_C3C_:
+_DATA_C3C_MinutesText:
+; " MINUTES",0
 .db $20 $4D $49 $4E $55 $54 $45 $53 $00
 
 ; Data from C45 to C8B (71 bytes)
-_DATA_C45_:
+_DATA_C45_LevelFinishedStatsText:
+; "ALL LEMMINGS ACCOUNTED FOR",0
+; "     YOU RESCUED    %",0
+; "     YOU NEEDED     %",0
 .db $41 $4C $4C $20 $4C $45 $4D $4D $49 $4E $47 $53 $20 $41 $43 $43
 .db $4F $55 $4E $54 $45 $44 $20 $46 $4F $52 $00 $20 $20 $20 $20 $20
 .db $59 $4F $55 $20 $52 $45 $53 $43 $55 $45 $44 $20 $20 $20 $20 $25
@@ -2046,7 +2058,11 @@ _DATA_C45_:
 .db $20 $20 $20 $20 $20 $25 $00
 
 ; Data from C8C to CEE (99 bytes)
-_DATA_C8C_:
+_DATA_C8C_LevelFailedRockBottomText:
+; " ROCK BOTTOM! I HOPE YOU",0
+; "     NUKED THAT LEVEL",0,0
+; " PRESS BUTTON 1 FOR MENU",0
+; " PRESS BUTTON 2 TO REPLAY",0
 .db $20 $52 $4F $43 $4B $20 $42 $4F $54 $54 $4F $4D $21 $20 $49 $20
 .db $48 $4F $50 $45 $20 $59 $4F $55 $00 $20 $20 $20 $20 $20 $4E $55
 .db $4B $45 $44 $20 $54 $48 $41 $54 $20 $4C $45 $56 $45 $4C $00 $00
@@ -2056,7 +2072,10 @@ _DATA_C8C_:
 .db $41 $59 $00
 
 ; Data from CEF to D36 (72 bytes)
-_DATA_CEF_:
+_DATA_CEF_LevelFailedTryHarderText:
+; "        TRY HARDER",0,0,0
+; " PRESS BUTTON 1 FOR MENU",0
+; " PRESS BUTTON 2 TO REPLAY",0
 .db $20 $20 $20 $20 $20 $20 $20 $20 $54 $52 $59 $20 $48 $41 $52 $44
 .db $45 $52 $00 $00 $00 $20 $50 $52 $45 $53 $53 $20 $42 $55 $54 $54
 .db $4F $4E $20 $31 $20 $46 $4F $52 $20 $4D $45 $4E $55 $00 $20 $50
@@ -2064,13 +2083,24 @@ _DATA_CEF_:
 .db $20 $52 $45 $50 $4C $41 $59 $00
 
 ; Data from D37 to D66 (48 bytes)
-_DATA_D37_:
+_DATA_D37_PasswordScreenText:
+; 0
+; "    CODE FOR LEVEL",0,0
+; " PRESS BUTTON TO CONTINUE",0,0
 .db $00 $20 $20 $20 $20 $43 $4F $44 $45 $20 $46 $4F $52 $20 $4C $45
 .db $56 $45 $4C $00 $00 $20 $50 $52 $45 $53 $53 $20 $42 $55 $54 $54
 .db $4F $4E $20 $54 $4F $20 $43 $4F $4E $54 $49 $4E $55 $45 $00 $00
 
 ; Data from D67 to D68 (2 bytes)
-_DATA_D67_:
+_DATA_D67_LevelSelectText:
+; "LEMMINGS  SEGA MASTER SYSTEM",0
+; "CONVERSION BY PROBE SOFTWARE",0
+; "   PROGRAM BY DOMINIC WOOD",0
+; "   ARTWORK BY MARK KNOWLES",0
+; "     PRODUCER NEIL YOUNG",0
+; "      ROM SUBMISSION 26",0
+; "    ALL LEVELS INSTALLED",0
+; "  RATING          LEVEL ",0
 .db $4C $45
 
 ; Pointer Table from D69 to D6C (2 entries, indexed by unknown)
@@ -2093,7 +2123,11 @@ _DATA_D67_:
 .db $4C $45 $56 $45 $4C $20 $00
 
 ; Data from E3A to E7E (69 bytes)
-_DATA_E3A_:
+_DATA_E3A_PasswordEntryText:
+; "ENTER CODE",0
+; " ........",0
+; "  USE JOYPAD TO SELECT",0
+; "PRESS BUTTON TO CONTINUE",0
 .db $45 $4E $54 $45 $52 $20 $43 $4F $44 $45 $00 $20 $2E $2E $2E $2E
 .db $2E $2E $2E $2E $00 $20 $20 $55 $53 $45 $20 $4A $4F $59 $50 $41
 .db $44 $20 $54 $4F $20 $53 $45 $4C $45 $43 $54 $00 $50 $52 $45 $53
@@ -2101,15 +2135,23 @@ _DATA_E3A_:
 .db $49 $4E $55 $45 $00
 
 ; Data from E7F to E8E (16 bytes)
-_DATA_E7F_:
+_DATA_E7F_PasswordCorrectText:
+; "LEVEL  ",0
+; "RATING ",0
 .db $4C $45 $56 $45 $4C $20 $20 $00 $52 $41 $54 $49 $4E $47 $20 $00
 
 ; Data from E8F to E99 (11 bytes)
-_DATA_E8F_:
+_DATA_E8F_PasswordWrongText:
+; "WRONG CODE",0
 .db $57 $52 $4F $4E $47 $20 $43 $4F $44 $45 $00
 
 ; Data from E9A to EF7 (94 bytes)
-_DATA_E9A_:
+_DATA_E9A_EndingText:
+; "   SEGA LEMMINGS",0
+; "   THE PROBE TEAM",0
+; " CODE DOMINIC WOOD ",0
+; "  ART MARK KNOWLES",0
+; "PRODUCER NEIL YOUNG",0
 .db $20 $20 $20 $53 $45 $47 $41 $20 $4C $45 $4D $4D $49 $4E $47 $53
 .db $00 $20 $20 $20 $54 $48 $45 $20 $50 $52 $4F $42 $45 $20 $54 $45
 .db $41 $4D $00 $20 $43 $4F $44 $45 $20 $44 $4F $4D $49 $4E $49 $43
@@ -2118,7 +2160,12 @@ _DATA_E9A_:
 .db $45 $52 $20 $4E $45 $49 $4C $20 $59 $4F $55 $4E $47 $00
 
 ; Pointer Table from EF8 to EF9 (1 entries, indexed by _RAM_DB9E_)
-_DATA_EF8_:
+_DATA_EF8_DifficultyLevelsText:
+; "FUN   ",0,0
+; "TRICKY",0,0
+; "TAXING",0,0
+; "MAYHEM",0,0
+; "SEGA  ",0,0
 .dw _DATA_5546_
 
 ; Data from EFA to F1F (38 bytes)
@@ -2127,7 +2174,13 @@ _DATA_EF8_:
 .db $47 $41 $20 $20 $00 $00
 
 ; Data from F20 to 103A (283 bytes)
-_DATA_F20_:
+_DATA_F20_TitleScreenScrollerText:
+; "  PUBLISHED UNDER LICENCE FROM PSYGNOSIS LIMITED."
+; "  © 1991, 1992 PSYGNOSIS LIMITED. ALL RIGHTS RESERVED."
+; "  REPROGRAMMED GAME ©1992 SEGA."
+; "  CONVERSION BY PROBE SOFTWARE LIMITED."
+; "  PSYGNOSIS AND LEMMINGS ARE TRADEMARKS OF PSYGNOSIS LIMITED AND ARE USED WITH PERMISSION."
+; "                  "
 .db $20 $20 $50 $55 $42 $4C $49 $53 $48 $45 $44 $20 $55 $4E $44 $45
 .db $52 $20 $4C $49 $43 $45 $4E $43 $45 $20 $46 $52 $4F $4D $20 $50
 .db $53 $59 $47 $4E $4F $53 $49 $53 $20 $4C $49 $4D $49 $54 $45 $44
@@ -2149,7 +2202,8 @@ _DATA_F20_:
 .db $00
 
 ; Data from 103B to 105F (37 bytes)
-_DATA_103B_:
+_DATA_103B_PressButtonText:
+; "      PRESS BUTTON TO PLAY      "
 .db $20 $20 $20 $20 $20 $20 $50 $52 $45 $53 $53 $20 $42 $55 $54 $54
 .db $4F $4E $20 $54 $4F $20 $50 $4C $41 $59 $20 $20 $20 $20 $20 $20
 .db $00 $16 $C3 $1A $C9
@@ -2514,7 +2568,7 @@ _LABEL_1289_:
 	ld e, a
 	ld d, $00
 	inc e
-	jp _LABEL_7D0_
+	jp _LABEL_7D0_WriteOneLetter
 
 _LABEL_1293_:
 	cp $64
@@ -2532,25 +2586,25 @@ _LABEL_1293_:
 	ld e, a
 	ld d, $00
 	inc e
-	call _LABEL_7D0_
+	call _LABEL_7D0_WriteOneLetter
 	pop af
 	add a, $1A
 	add a, a
 	ld e, a
 	ld d, $00
 	inc e
-	jp _LABEL_7D0_
+	jp _LABEL_7D0_WriteOneLetter
 
 +:
-	ld bc, (_RAM_DAE7_)
+	ld bc, (_RAM_DAE7_TextLocationYX)
 	dec c
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld de, $0037
-	call _LABEL_7D0_
+	call _LABEL_7D0_WriteOneLetter
 	ld de, $0035
-	call _LABEL_7D0_
+	call _LABEL_7D0_WriteOneLetter
 	ld de, $0035
-	jp _LABEL_7D0_
+	jp _LABEL_7D0_WriteOneLetter
 
 _LABEL_12D2_:
 	ld c, $FF
@@ -2566,14 +2620,14 @@ _LABEL_12D2_:
 	ld e, a
 	ld d, $00
 	inc e
-	call _LABEL_7D0_
+	call _LABEL_7D0_WriteOneLetter
 	pop af
 	add a, $1A
 	add a, a
 	ld e, a
 	ld d, $00
 	inc e
-	jp _LABEL_7D0_
+	jp _LABEL_7D0_WriteOneLetter
 
 _LABEL_12F2_:
 	ld a, (_RAM_DB51_)
@@ -2615,7 +2669,7 @@ _LABEL_12F2_:
 	add hl, de
 	ld de, $2AA0
 	ld b, $09
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ret
 
 ; Data from 1346 to 138B (70 bytes)
@@ -3434,7 +3488,7 @@ _LABEL_1988_:
 _LABEL_19B7_:
 	xor a
 	ld (_RAM_DAD9_), a
-	ld hl, _DATA_F20_
+	ld hl, _DATA_F20_TitleScreenScrollerText
 	ld (_RAM_DBC3_), hl
 	ld hl, _RAM_CE00_
 	ld de, _RAM_CE00_ + 1
@@ -3511,7 +3565,7 @@ _LABEL_1A24_:
 	and a
 	inc ix
 	jr nz, +
-	ld ix, _DATA_F20_ + 1
+	ld ix, _DATA_F20_TitleScreenScrollerText + 1
 	ld a, (ix-1)
 +:
 	cp $20
@@ -3596,39 +3650,39 @@ _LABEL_1AF1_:
 	ld hl, _DATA_62DD_
 	ld de, $3E00
 	ld b, $08
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld hl, _DATA_645D_
 	ld de, $3580
 	ld b, $04
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld a, $05
 	ld (_RAM_FFFF_), a
 	ld hl, _DATA_17CB1_
 	ld de, $1EC0
 	ld b, $0A
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld hl, _DATA_5F9D_
 	ld de, $2BC0
 	ld b, $06
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld hl, _DATA_5B9D_
 	ld de, $2C80
 	ld b, $20
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld hl, _DATA_605D_
 	ld de, $3080
 	ld b, $14
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld a, $0A
 	ld (_RAM_FFFF_), a
 	ld hl, _DATA_2B9CC_
 	ld de, $3600
 	ld b, $10
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld hl, _DATA_2BBCC_
 	ld de, $3300
 	ld b, $14
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	di
 	ld de, $7D8E
 	ld hl, $0164
@@ -4491,7 +4545,7 @@ _LABEL_217A_:
 	ld de, $1CC0
 	ld a, $07
 	ld (_RAM_FFFF_), a
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld a, (_RAM_DB15_)
 	inc a
 	ld (_RAM_DB15_), a
@@ -4926,7 +4980,7 @@ _LABEL_247E_:
 	pop de
 	ld hl, _RAM_DA8B_
 	ld b, $01
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	res 6, d
 	ld hl, $0020
 	add hl, de
@@ -5312,7 +5366,7 @@ _LABEL_290F_:
 	ld b, $00
 	add hl, bc
 	ld b, $01
-	jp _LABEL_8B4_
+	jp _LABEL_8B4_Load64BytesToVRAM
 
 _LABEL_292B_:
 	ld d, $04
@@ -5333,7 +5387,7 @@ _LABEL_292B_:
 	ld h, a
 	ld l, c
 	ld b, $01
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 +:
 	pop bc
 	ld hl, $0020
@@ -5366,7 +5420,7 @@ _LABEL_2955_:
 	ld h, a
 	ld l, c
 	ld b, $01
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 +:
 	pop bc
 	ld hl, $0020
@@ -7052,7 +7106,7 @@ _LABEL_35B0_:
 	add hl, de
 	ld de, $2000
 	ld b, $02
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld a, (_RAM_DADA_)
 	xor $07
 	ld l, a
@@ -7065,7 +7119,7 @@ _LABEL_35B0_:
 	add hl, de
 	ld de, $2040
 	ld b, $02
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ret
 
 _LABEL_35E9_:
@@ -8054,7 +8108,7 @@ _LABEL_3CE4_:
 	ld h, b
 	ld l, c
 	ld b, $01
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld hl, $0020
 	pop bc
 	add hl, bc
@@ -8184,9 +8238,9 @@ _LABEL_3D9D_:
 	ld l, $14
 	call _LABEL_B90_
 	ld bc, $1300
-	call _LABEL_829_
-	ld ix, _DATA_103B_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	ld ix, _DATA_103B_PressButtonText
+	call _LABEL_774_PrintString
 	call _LABEL_9ED_
 	call _LABEL_4C5_
 _LABEL_3DCB_:
@@ -8444,34 +8498,34 @@ _LABEL_403A_:
 	ld a, $CF
 	ld (_RAM_FFFF_), a
 	ld bc, $0103
-	call _LABEL_829_
-	ld ix, _DATA_C45_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
+	call _LABEL_829_SetTextLocationToBC
+	ld ix, _DATA_C45_LevelFinishedStatsText
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
 	ld d, $4C
-	ld ix, _DATA_D37_
+	ld ix, _DATA_D37_PasswordScreenText
 	ld hl, (_RAM_DB55_)
 	ld a, (_RAM_DB5C_)
 	cp l
 	jp nc, +
 	ld d, $4D
-	ld ix, _DATA_CEF_
+	ld ix, _DATA_CEF_LevelFailedTryHarderText
 	add a, a
 	cp l
 	jp nc, +
-	ld ix, _DATA_C8C_
+	ld ix, _DATA_C8C_LevelFailedRockBottomText
 +:
 	ld a, d
 	ld (_RAM_DBA7_), a
 	call _LABEL_95F_
 	ld a, $01
 	ld (_RAM_DBA4_), a
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
 	ld a, (_RAM_DBA7_)
 	cp $4C
 	jr nz, _LABEL_40FC_
@@ -8483,7 +8537,7 @@ _LABEL_403A_:
 	jp z, _LABEL_412F_
 +:
 	ld bc, $100C
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld hl, (_RAM_DB9D_)
 	ld h, $00
 	add hl, hl
@@ -8512,9 +8566,9 @@ _LABEL_403A_:
 	ld bc, $0008
 	ldir
 	ld ix, _RAM_DBAC_
-	call _LABEL_774_
+	call _LABEL_774_PrintString
 	ld bc, $0D17
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB9D_)
 	add a, $02
 	cp $1F
@@ -8524,11 +8578,11 @@ _LABEL_403A_:
 	call _LABEL_12D2_
 _LABEL_40FC_:
 	ld bc, $0415
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB5C_)
 	call _LABEL_1293_
 	ld bc, $0715
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB55_)
 	call _LABEL_1293_
 	ld hl, _DATA_1BE5E_
@@ -8589,22 +8643,22 @@ _LABEL_4166_:
 	ld ix, (_RAM_DBA1_)
 	call _LABEL_745_
 	ld bc, $0304
-	call _LABEL_829_
-	ld ix, _DATA_BB5_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
+	call _LABEL_829_SetTextLocationToBC
+	ld ix, _DATA_BB5_LevelIntroStatsText
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
 	ld bc, $0319
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB54_)
 	call _LABEL_12D2_
 	ld bc, $0609
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB9C_)
 	and a
 	jr z, +
@@ -8618,29 +8672,29 @@ _LABEL_4166_:
 	ld a, (_RAM_DB55_)
 ++:
 	push af
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	pop af
 	call _LABEL_1293_
 	ld bc, $0917
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB5F_)
 	call _LABEL_12D2_
 	ld bc, $0C10
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DAD1_)
 	call _LABEL_1289_
-	ld ix, _DATA_C34_
+	ld ix, _DATA_C34_MinuteText
 	ld a, (_RAM_DAD1_)
 	cp $01
 	jr z, +
-	ld ix, _DATA_C3C_
+	ld ix, _DATA_C3C_MinutesText
 +:
-	call _LABEL_774_
+	call _LABEL_774_PrintString
 	ld bc, $0F12
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	call _LABEL_AB5_
 	ld bc, $1213
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB9D_)
 	inc a
 	call _LABEL_12D2_
@@ -8685,25 +8739,25 @@ _LABEL_4255_:
 	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_
 	ld bc, $0002
-	call _LABEL_829_
-	ld ix, _DATA_D67_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
+	call _LABEL_829_SetTextLocationToBC
+	ld ix, _DATA_D67_LevelSelectText
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
 	xor a
 	ld (_RAM_DB9D_), a
 --:
 	call _LABEL_840_
 	ld bc, $150D
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	call _LABEL_AB5_
 	ld bc, $151A
-	call _LABEL_829_
+	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB9D_)
 	inc a
 	call _LABEL_12D2_
@@ -8746,17 +8800,17 @@ _LABEL_42D8_:
 	call _LABEL_95F_
 	ld a, $01
 	ld (_RAM_DBA4_), a
-	ld ix, _DATA_E3A_
+	ld ix, _DATA_E3A_PasswordEntryText
 	ld bc, $030B
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	ld bc, $060B
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	ld bc, $0F04
-	call _LABEL_829_
-	call _LABEL_768_
-	call _LABEL_768_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
 	ld hl, _RAM_DBC6_
 	ld de, _RAM_DBAC_
 	ld bc, $0008
@@ -8804,8 +8858,8 @@ _LABEL_4329_:
 +:
 	ld ix, _RAM_DBAC_
 	ld bc, $060C
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	pop af
 	pop hl
 	ld (hl), a
@@ -8867,16 +8921,16 @@ _LABEL_4398_:
 	add a, $1E
 	ld c, a
 	ld (_RAM_DB9D_), bc
-	ld ix, _DATA_E7F_
+	ld ix, _DATA_E7F_PasswordCorrectText
 	ld bc, $090C
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	ld a, (_RAM_DB9D_)
 	inc a
 	call _LABEL_12D2_
 	ld bc, $0C0A
-	call _LABEL_829_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	call _LABEL_774_PrintString
 	call _LABEL_AB5_
 	ld hl, _RAM_DBAC_
 	ld de, _RAM_DBC6_
@@ -8888,9 +8942,9 @@ _LABEL_4398_:
 
 _LABEL_4412_:
 	ld bc, $090B
-	call _LABEL_829_
-	ld ix, _DATA_E8F_
-	call _LABEL_774_
+	call _LABEL_829_SetTextLocationToBC
+	ld ix, _DATA_E8F_PasswordWrongText
+	call _LABEL_774_PrintString
 	ld hl, _RAM_DBAC_
 	ld de, _RAM_DBC6_
 	ld bc, $0008
@@ -9388,7 +9442,7 @@ _LABEL_47C4_:
 	ld a, $0C
 	ld (_RAM_FFFF_), a
 	ld b, $0F
-	jp _LABEL_8B4_
+	jp _LABEL_8B4_Load64BytesToVRAM
 
 ; Pointer Table from 47E8 to 47F7 (8 entries, indexed by _RAM_DAD9_)
 _DATA_47E8_Intro1LemmingFrames:
@@ -9419,25 +9473,25 @@ _LABEL_47FE_:
 	ld b, $0C
 	ld a, $0C
 	ld (_RAM_FFFF_), a
-	jp _LABEL_8B4_
+	jp _LABEL_8B4_Load64BytesToVRAM
 
 _LABEL_4824_:
 	ld a, $CE
 	ld (_RAM_FFFF_), a
-	ld hl, _DATA_1BE8E_
+	ld hl, _DATA_1BE8E_EndingPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_5BC_
-	ld de, _DATA_3A2B9_
+	ld de, _DATA_3A2B9_EndingTiles
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
-	ld hl, _DATA_39FB8_
+	ld hl, _DATA_39FB8_EndingTilemap
 	ld de, $3800
 	ld bc, $0300
 	call _LABEL_4965_
 	ld a, $0D
 	ld (_RAM_FFFF_), a
-	ld de, _DATA_35EE6_
+	ld de, _DATA_35EE6_EndingTiles2
 	ld ix, $0800
 	call _LABEL_3CFD_DecompressTiles
 	ld a, $01
@@ -9476,11 +9530,12 @@ _LABEL_4824_:
 	jr +
 
 _LABEL_48A2_:
+  ; Wait for 1 and 2 buttons to not be pressed
 	in a, (Port_IOPort1)
-	bit 4, a
+	bit 4, a ; Button 1
 	jp z, _LABEL_48A2_
 	in a, (Port_IOPort1)
-	bit 5, a
+	bit 5, a ; Button 2
 	jp z, _LABEL_48A2_
 +:
 	call _LABEL_AF5_
@@ -9491,13 +9546,13 @@ _LABEL_48A2_:
 	call _LABEL_7A2_
 	call _LABEL_7B4_
 	ld bc, $0506
-	call _LABEL_829_
-	ld ix, _DATA_E9A_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
-	call _LABEL_768_
+	call _LABEL_829_SetTextLocationToBC
+	ld ix, _DATA_E9A_EndingText
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
+	call _LABEL_768_PrintStringAtBCSpaced
 	call _LABEL_4C5_
 	ld b, $05
 	call _LABEL_AEB_
@@ -9680,7 +9735,7 @@ _LABEL_4A14_:
 	ld hl, _DATA_49D4_LemmingsTextTM
 	ld de, $2900
 	ld b, $02
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	di
 	ld de, $79B0
 	ld c, Port_VDPAddress
@@ -9707,7 +9762,7 @@ _LABEL_4A14_:
 	ld hl, _DATA_2F6B1_LemmingsScreenDot
 	ld de, $2940
 	ld b, $04
-	call _LABEL_8B4_
+	call _LABEL_8B4_Load64BytesToVRAM
 	ld a, $07
 	ld (_RAM_FFFF_), a
 	ld ix, $29C0
@@ -10269,12 +10324,12 @@ _DATA_755B_:
 .db $00 $00 $FF $80
 
 _LABEL_75EF_:
-	ld hl, _DATA_3D902_
+	ld hl, _DATA_3D902_OhNoSample
 	ld de, $1522
 	jr +
 
 _LABEL_75F7_:
-	ld hl, _DATA_3C000_
+	ld hl, _DATA_3C000_LetsGoSample
 	ld de, $1902
 +:
 	ld a, $01
@@ -10414,6 +10469,7 @@ _DATA_7681_:
 .ORG $0000
 
 ; Data from 7FF0 to 7FFF (16 bytes)
+; Sega header
 .db $54 $4D $52 $20 $53 $45 $47 $41 $20 $20 $41 $34 $08 $71 $50 $40
 
 .BANK 2
@@ -13262,7 +13318,7 @@ _DATA_1BE7E_Intro1_Palette:
 .db $00 $2B $08 $34 $15 $2A $38 $20 $03 $0B $06 $04 $01 $07 $02 $00
 
 ; Data from 1BE8E to 1BE9D (16 bytes)
-_DATA_1BE8E_:
+_DATA_1BE8E_EndingPalette:
 .db $00 $33 $3F $2A $15 $16 $02 $00 $1C $18 $04 $34 $20 $0F $10 $27
 
 ; Data from 1BE9E to 1BFFF (354 bytes)
@@ -14678,8 +14734,8 @@ _DATA_35E86_:
 .db $00 $FF $FF $FF $00 $55 $FF $FF $00 $00 $FF $FF $AA $AA $FF $FF
 
 ; Data from 35EE6 to 37851 (6508 bytes)
-_DATA_35EE6_:
-.incbin "Lemmings.sms_DATA_35EE6_.inc"
+_DATA_35EE6_EndingTiles2:
+.incbin "Lemmings.sms_DATA_35EE6_EndingTiles2.inc"
 
 ; Data from 37852 to 37FFF (1966 bytes)
 _DATA_37852_Intro1_Tiles:
@@ -14700,7 +14756,7 @@ _DATA_38606_:
 .incbin "Lemmings.sms_DATA_38606_.inc"
 
 ; Data from 39FB8 to 3A2B8 (769 bytes)
-_DATA_39FB8_:
+_DATA_39FB8_EndingTilemap:
 .db $00 $00 $01 $02 $03 $02 $04 $05 $03 $02 $03 $04 $02 $02 $03 $02
 .db $04 $05 $03 $02 $03 $02 $04 $05 $03 $02 $03 $04 $02 $06 $07 $05
 .db $08 $09 $01 $0A $0B $0A $0B $0A $0B $0A $0B $0A $0B $0A $0B $0A
@@ -14746,7 +14802,7 @@ _DATA_39FB8_:
 .dsb 97, $08
 
 ; Data from 3A2B9 to 3A545 (653 bytes)
-_DATA_3A2B9_:
+_DATA_3A2B9_EndingTiles:
 .db $05 $17 $00 $10 $08 $10 $08 $10 $08 $14 $0A $0E $0D $0B $0F $0D
 .db $0E $0B $18 $28 $18 $28 $18 $28 $18 $28 $87 $00 $1F $08 $10 $08
 .db $10 $00 $08 $00 $00 $10 $08 $10 $20 $10 $00 $10 $00 $50 $70 $B0
@@ -14895,12 +14951,12 @@ _DATA_3AE5E_:
 .ORG $0000
 
 ; Data from 3C000 to 3D901 (6402 bytes)
-_DATA_3C000_:
-.incbin "Lemmings.sms_DATA_3C000_.inc"
+_DATA_3C000_LetsGoSample:
+.incbin "Lemmings.sms_DATA_3C000_LetsGoSample.inc"
 
 ; Data from 3D902 to 3EE23 (5410 bytes)
-_DATA_3D902_:
-.incbin "Lemmings.sms_DATA_3D902_.inc"
+_DATA_3D902_OhNoSample:
+.incbin "Lemmings.sms_DATA_3D902_OhNoSample.inc"
 
 ; 1st entry of Pointer Table from 3F7B8 (indexed by _RAM_DB9D_)
 ; Pointer Table from 3EE24 to 3EE27 (2 entries, indexed by unknown)
