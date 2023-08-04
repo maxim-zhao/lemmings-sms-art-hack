@@ -280,3 +280,17 @@ TitleScreenText:
   PatchW($19BC, TitleScreenText)
   PatchW($1A46, TitleScreenText + 1)
   
+  
+; Samples
+; The original data has a few header bytes at the start:
+; $3c000 00 c6 00 c6 05 05 (6396 bytes of data)
+; $3d902 00 A7 00 A7 05 05 (5400 bytes of data)
+; First two words are length related? c6/a7 = 198/167 = 1.1856. 6396/5400 = 1.1844,
+; 05 05 could be sample rate related?
+; Anyway, let's patch the start addresses and lengths to skip them.
+  PatchW($75f0, $9902 + 6)
+  PatchW($75f3, $1522 - 6)
+  PatchW($75f8, $8000 + 6)
+  PatchW($75fb, $1902 - 6)
+; TODO later? Replace these with pcmenc data, and speed corrected to match the original?
+
