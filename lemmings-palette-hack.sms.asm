@@ -52,6 +52,29 @@ LevelLoaderHack:
     add hl,de
     ; Trigger a load
     call LoadPalette
+    
+    ; Clear tile VRAM to colour 1
+    push bc
+      ld bc,448*8
+      xor a
+      out ($bf),a
+      ld a,$40
+      out ($bf),a
+      di
+-:      ld a,$ff
+        out ($be),a
+        xor a
+        out ($be),a
+        xor a
+        out ($be),a
+        xor a
+        out ($be),a
+        dec bc
+        ld a,b
+        or c
+        jr nz,-
+      ei
+    pop bc
   pop af
   ret
 .ends
