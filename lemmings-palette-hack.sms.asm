@@ -247,6 +247,7 @@ intro_lemmings_lemming:
 .unbackground $645d $713c
 .unbackground $17cb1 $17df0
 .unbackground $1c96 $1cad
+.unbackground $2b9cc $2be4b
   ROMPosition $5b9d
 .section "hud art part 1" force
 .incbin "hud-skills.8x16.bin"
@@ -266,7 +267,10 @@ intro_lemmings_lemming:
 .section "hud art part 4" force
 .incbin "hud-rate-control.tilemap.bin"
 .ends
-
+  ROMPosition $2b9cc
+.section "hud art part 5" force
+.incbin "hud-font.8x16.bin"
+.ends
 
 
 ; Title screen
@@ -294,22 +298,10 @@ TitleScreenText:
 
   PatchW($19BC, TitleScreenText)
   PatchW($1A46, TitleScreenText + 1)
-  
-  
-; Samples
-; The original data has a few header bytes at the start:
-; $3c000 00 c6 00 c6 05 05 (6396 bytes of data)
-; $3d902 00 A7 00 A7 05 05 (5400 bytes of data)
-; First two words are length related? c6/a7 = 198/167 = 1.1856. 6396/5400 = 1.1844,
-; 05 05 could be sample rate related?
-; Anyway, let's patch the start addresses and lengths to skip them.
-  PatchW($75f0, $9902 + 6)
-  PatchW($75f3, $1522 - 6)
-  PatchW($75f8, $8000 + 6)
-  PatchW($75fb, $1902 - 6)
-; TODO later? Replace these with pcmenc data, and speed corrected to match the original?
 
-; pcmenc
+
+
+; pcmenc sample data replacement
 ; CPU clock = 3546893Hz (PAL)
 ; sample data = 7389Hz
 ; So one sample every 480.02 CPU clocks.

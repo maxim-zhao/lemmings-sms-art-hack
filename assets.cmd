@@ -22,6 +22,7 @@ bmp2tile png\hud-numbers.bin.png                            -noremovedupes      
 bmp2tile png\hud-selection.8x16.bin.png                     -noremovedupes -8x16  -savetiles hud-selection.8x16.bin
 bmp2tile png\hud-lemming-states.bin.png                     -noremovedupes        -savetiles hud-lemming-states.bin
 bmp2tile png\hud-rate-control.bin.png                                             -savetiles hud-rate-control.bin                       -tileoffset 246 -savetilemap hud-rate-control.tilemap.bin
+bmp2tile png\hud-font.8x16.bin.png                          -noremovedupes -8x16  -savetiles hud-font.8x16.bin
 bmp2tile png\title-screen-font.1bpp.png                     -noremovedupes        -savetiles title-screen-font.1bpp
 
 pcmenc wav\LETSGO.wav -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10
