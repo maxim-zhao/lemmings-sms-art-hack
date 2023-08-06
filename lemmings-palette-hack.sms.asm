@@ -242,6 +242,8 @@ intro_lemmings_lemming:
 ; The HUD. This is in many parts. We do not change locations.
 .unbackground $5b9d $62dc
 .unbackground $645d $713c
+.unbackground $17cb1 $17df0
+.unbackground $1c96 $1cad
   ROMPosition $5b9d
 .section "hud art part 1" force
 .incbin "hud-skills.8x16.bin"
@@ -251,7 +253,15 @@ intro_lemmings_lemming:
   ROMPosition $645d
 .section "hud art part 2" force
 .incbin "hud-selection.8x16.bin"
-.incbin "hud-lemming-states.bin"
+.incbin "hud-lemming-states.bin" 
+.ends
+  ROMPosition $17cb1
+.section "hud art part 3" force
+.incbin "hud-rate-control.bin" 
+.ends
+  ROMPosition $1c96
+.section "hud art part 4" force
+.incbin "hud-rate-control.tilemap.bin"
 .ends
 
 
@@ -294,3 +304,18 @@ TitleScreenText:
   PatchW($75fb, $1902 - 6)
 ; TODO later? Replace these with pcmenc data, and speed corrected to match the original?
 
+; pcmenc
+; CPU clock = 3579545Hz
+; sample data = 7389Hz
+; So one sample every 484.44 CPU clocks.
+; If we want one nibble per sample then we have ratio = 3 (3 samples per PSG triplet).
+; => emit a nibble every 484 cycles
+; => pcmenc wav\LETSGO.wav -p 4 -dt1 484 -dt2 484 -dt3 484 -rto 3
+; 3175 bytes for "let's go" (~50% as each sample is one nibble)
+; Or 2 samples per triplet:
+; => pcmenc wav\LETSGO.wav -p 4 -dt1 479 -dt2 11 -dt3 479 -rto 2
+; 4760B (~75% as each sample is 1.5 nibbles)
+; Original data is 6396B 
+; Or one sample per triplet:
+; => pcmenc wav\LETSGO.wav -p 4 -dt1 12 -dt2 12 -dt3 460 -rto 1
+; 9518B (~150% as each sample is 3 nibbles)

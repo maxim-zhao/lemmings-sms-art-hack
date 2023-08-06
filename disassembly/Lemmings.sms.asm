@@ -1408,7 +1408,7 @@ _LABEL_7A2_:
 -:
 	ld hl, _DATA_4B7D_
 	ld b, $85
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ret
 
 _LABEL_7AE_:
@@ -1542,7 +1542,7 @@ _LABEL_840_:
 .db $00 $80 $11 $00 $00 $06 $00 $CD $B4 $08 $21 $00 $A0 $11 $00 $20
 .db $06 $80 $CD $B4 $08 $C9
 
-_LABEL_8B4_Load64BytesToVRAM:
+_LABEL_8B4_LoadBTilesToVRAM:
 	di
 	ld c, Port_VDPAddress
 	out (c), e
@@ -1553,7 +1553,7 @@ _LABEL_8B4_Load64BytesToVRAM:
 	nop
 --:
 	push bc
-	ld b, $40 ; 64
+	ld b, $40 ; 64 because outi will decrement b too
 -:
 	outi
 	nop
@@ -2669,7 +2669,7 @@ _LABEL_12F2_:
 	add hl, de
 	ld de, $2AA0
 	ld b, $09
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ret
 
 ; Data from 1346 to 138B (70 bytes)
@@ -3647,70 +3647,82 @@ _LABEL_1ADD_:
 	ret
 
 _LABEL_1AF1_:
-	ld hl, _DATA_62DD_
+	ld hl, _DATA_62DD_CursorTiles
 	ld de, $3E00
 	ld b, $08
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld hl, _DATA_645D_
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld hl, _DATA_645D_SkillSelectionHighlight
 	ld de, $3580
 	ld b, $04
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld a, $05
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld a, :_DATA_17CB1_RateControlTiles ; $05
 	ld (_RAM_FFFF_), a
-	ld hl, _DATA_17CB1_
+	ld hl, _DATA_17CB1_RateControlTiles
 	ld de, $1EC0
 	ld b, $0A
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld hl, _DATA_5F9D_
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld hl, _DATA_5F9D_NukeTiles
 	ld de, $2BC0
 	ld b, $06
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld hl, _DATA_5B9D_
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld hl, _DATA_5B9D_SkillTiles
 	ld de, $2C80
 	ld b, $20
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld hl, _DATA_605D_
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld hl, _DATA_605D_HUDNumbers
 	ld de, $3080
-	ld b, $14
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld a, $0A
+	ld b, 20 ; $14
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld a, :_DATA_2B9CC_HUDTextFont_Letters ; $0A
 	ld (_RAM_FFFF_), a
-	ld hl, _DATA_2B9CC_
+	ld hl, _DATA_2B9CC_HUDTextFont_Letters
 	ld de, $3600
-	ld b, $10
-	call _LABEL_8B4_Load64BytesToVRAM
-	ld hl, _DATA_2BBCC_
+	ld b, $10 ; 16 tiles = TIMENOU% for TIME, IN, OUT, %
+	call _LABEL_8B4_LoadBTilesToVRAM
+  
+	ld hl, _DATA_2BBCC_HUDTextFont_Numbers
 	ld de, $3300
-	ld b, $14
-	call _LABEL_8B4_Load64BytesToVRAM
+	ld b, 20 ; $14 = 10 digits
+	call _LABEL_8B4_LoadBTilesToVRAM
+
 	di
-	ld de, $7D8E
-	ld hl, $0164
-	call _LABEL_1CAE_
-	ld de, $7DCE
+	ld de, $7D8E ; dest = top left of skills in tilemap
+	ld hl, $0164 ; Value to write
+	call _LABEL_1CAE_EmitEveryOtherTileToTilemap_16Times ; 16 tiles for 8 skills
+	ld de, $7DCE ; Bottom row of skills
 	ld hl, $0165
-	call _LABEL_1CAE_
-	ld de, $7D6E
-	ld hl, $015E
-	call _LABEL_1BEC_
-	ld de, $7DAE
-	call _LABEL_1BEC_
+	call _LABEL_1CAE_EmitEveryOtherTileToTilemap_16Times
+  
+	ld de, $7D6E ; Dest = nuke tilemap
+	ld hl, $015E ; Tile to emit, plus the one after it
+	call _LABEL_1BEC_EmitTilePairToTilemap
+	ld de, $7DAE ; And rows below
+	call _LABEL_1BEC_EmitTilePairToTilemap
 	ld de, $7DEE
-	call _LABEL_1BEC_
+	call _LABEL_1BEC_EmitTilePairToTilemap
+  
 	ld hl, $0155
-	ld de, $7D72
-	call _LABEL_1C2B_
+	ld de, $7D72 ; Lemming status area
+	call _LABEL_1C2B_EmitTileTripletToTilemap
 	ld de, $7DB2
-	call _LABEL_1C2B_
+	call _LABEL_1C2B_EmitTileTripletToTilemap
 	ld de, $7DF2
-	call _LABEL_1C2B_
-	ld hl, _DATA_1C96_
-	ld de, $7D46
-	call _LABEL_1C14_
+	call _LABEL_1C2B_EmitTileTripletToTilemap
+  
+	ld hl, _DATA_1C96_RateControlTilemap
+	ld de, $7D46 ; Top left of rate control area
+	call _LABEL_1C14_Emit4TilesToTilemap
 	ld de, $7D86
-	call _LABEL_1C14_
+	call _LABEL_1C14_Emit4TilesToTilemap
 	ld de, $7DC6
-	call _LABEL_1C14_
+	call _LABEL_1C14_Emit4TilesToTilemap
+  
 	ld de, $7CCA
 	ld hl, _DATA_1C62_
 	call +
@@ -3729,7 +3741,7 @@ _LABEL_1AF1_:
 	nop
 	out (c), d
 	dec c
-	ld b, $1A
+	ld b, $1A ; 26 for 13 tiles
 -:
 	ld a, (hl)
 	cp $FF
@@ -3755,7 +3767,7 @@ _LABEL_1AF1_:
 	djnz -
 	ret
 
-_LABEL_1BEC_:
+_LABEL_1BEC_EmitTilePairToTilemap:
 	ld c, Port_VDPAddress
 	out (c), e
 	nop
@@ -3780,7 +3792,7 @@ _LABEL_1BEC_:
 	inc hl
 	ret
 
-_LABEL_1C14_:
+_LABEL_1C14_Emit4TilesToTilemap:
 	ld c, Port_VDPAddress
 	out (c), e
 	nop
@@ -3789,14 +3801,14 @@ _LABEL_1C14_:
 	out (c), d
 	dec c
 	ld ($0007), a
-	ld b, $10
+	ld b, $10 ; 16 counter for 8 loops for 4 tiles
 -:
 	outi
 	nop
 	djnz -
 	ret
 
-_LABEL_1C2B_:
+_LABEL_1C2B_EmitTileTripletToTilemap:
 	ld c, Port_VDPAddress
 	out (c), e
 	nop
@@ -3841,11 +3853,12 @@ _DATA_1C7C_:
 .db $05 $07 $FF $FF $FF $FF $FF $FF $FF $FF
 
 ; Data from 1C96 to 1CAD (24 bytes)
-_DATA_1C96_:
-.db $F6 $00 $F7 $00 $F8 $00 $F9 $00 $FA $00 $00 $00 $00 $00 $FB $00
+_DATA_1C96_RateControlTilemap:
+.db $F6 $00 $F7 $00 $F8 $00 $F9 $00 
+.db $FA $00 $00 $00 $00 $00 $FB $00
 .db $FC $00 $FD $00 $FE $00 $FF $00
 
-_LABEL_1CAE_:
+_LABEL_1CAE_EmitEveryOtherTileToTilemap_16Times:
 	ld c, Port_VDPAddress
 	out (c), e
 	ld ($0007), a
@@ -3853,7 +3866,7 @@ _LABEL_1CAE_:
 	nop
 	out (c), d
 	dec c
-	ld b, $10
+	ld b, $10 ; 32
 -:
 	out (c), l
 	nop
@@ -4545,7 +4558,7 @@ _LABEL_217A_:
 	ld de, $1CC0
 	ld a, $07
 	ld (_RAM_FFFF_), a
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ld a, (_RAM_DB15_)
 	inc a
 	ld (_RAM_DB15_), a
@@ -4980,7 +4993,7 @@ _LABEL_247E_:
 	pop de
 	ld hl, _RAM_DA8B_
 	ld b, $01
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	res 6, d
 	ld hl, $0020
 	add hl, de
@@ -5366,7 +5379,7 @@ _LABEL_290F_:
 	ld b, $00
 	add hl, bc
 	ld b, $01
-	jp _LABEL_8B4_Load64BytesToVRAM
+	jp _LABEL_8B4_LoadBTilesToVRAM
 
 _LABEL_292B_:
 	ld d, $04
@@ -5387,7 +5400,7 @@ _LABEL_292B_:
 	ld h, a
 	ld l, c
 	ld b, $01
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 +:
 	pop bc
 	ld hl, $0020
@@ -5420,7 +5433,7 @@ _LABEL_2955_:
 	ld h, a
 	ld l, c
 	ld b, $01
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 +:
 	pop bc
 	ld hl, $0020
@@ -7106,7 +7119,7 @@ _LABEL_35B0_:
 	add hl, de
 	ld de, $2000
 	ld b, $02
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ld a, (_RAM_DADA_)
 	xor $07
 	ld l, a
@@ -7119,7 +7132,7 @@ _LABEL_35B0_:
 	add hl, de
 	ld de, $2040
 	ld b, $02
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ret
 
 _LABEL_35E9_:
@@ -8108,7 +8121,7 @@ _LABEL_3CE4_:
 	ld h, b
 	ld l, c
 	ld b, $01
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ld hl, $0020
 	pop bc
 	add hl, bc
@@ -9442,7 +9455,7 @@ _LABEL_47C4_:
 	ld a, $0C
 	ld (_RAM_FFFF_), a
 	ld b, $0F
-	jp _LABEL_8B4_Load64BytesToVRAM
+	jp _LABEL_8B4_LoadBTilesToVRAM
 
 ; Pointer Table from 47E8 to 47F7 (8 entries, indexed by _RAM_DAD9_)
 _DATA_47E8_Intro1LemmingFrames:
@@ -9473,7 +9486,7 @@ _LABEL_47FE_:
 	ld b, $0C
 	ld a, $0C
 	ld (_RAM_FFFF_), a
-	jp _LABEL_8B4_Load64BytesToVRAM
+	jp _LABEL_8B4_LoadBTilesToVRAM
 
 _LABEL_4824_:
 	ld a, $CE
@@ -9735,7 +9748,7 @@ _LABEL_4A14_:
 	ld hl, _DATA_49D4_LemmingsTextTM
 	ld de, $2900
 	ld b, $02
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	di
 	ld de, $79B0
 	ld c, Port_VDPAddress
@@ -9762,7 +9775,7 @@ _LABEL_4A14_:
 	ld hl, _DATA_2F6B1_LemmingsScreenDot
 	ld de, $2940
 	ld b, $04
-	call _LABEL_8B4_Load64BytesToVRAM
+	call _LABEL_8B4_LoadBTilesToVRAM
 	ld a, $07
 	ld (_RAM_FFFF_), a
 	ld ix, $29C0
@@ -9986,7 +9999,7 @@ _DATA_5B4A_:
 .dsb 13, $00
 
 ; Data from 5B9D to 5E56 (698 bytes)
-_DATA_5B9D_:
+_DATA_5B9D_SkillTiles:
 .db $F7 $10 $3C $10 $BF $3F $FF $3F $7F $7F $FF $7F $FF $F9 $F9 $F9
 .db $77 $7D $F5 $75 $F3 $7F $F3 $73 $F1 $7F $F1 $71 $F3 $7F $73 $73
 .db $EF $6F $7E $7E $E7 $67 $7C $7C $E7 $67 $7C $7C $E3 $63 $FE $7E
@@ -10057,7 +10070,7 @@ _DATA_5E57_:
 .db $FE $FE $F6 $04 $1F $04
 
 ; Data from 5F9D to 605C (192 bytes)
-_DATA_5F9D_:
+_DATA_5F9D_NukeTiles:
 .db $F7 $10 $3C $10 $BF $3F $FF $3F $7F $7F $FF $7F $FE $FE $FE $FF
 .db $7E $70 $FE $7F $FF $60 $EB $7F $FF $40 $C0 $6F $FF $40 $41 $73
 .db $F7 $04 $1C $04 $FD $FC $FF $FC $FE $FE $FF $FE $0F $0F $3F $FF
@@ -10072,7 +10085,7 @@ _DATA_5F9D_:
 .db $06 $66 $7F $FE $0F $3E $3E $FE $0F $0C $FF $0C $EC $08 $3F $08
 
 ; Data from 605D to 62DC (640 bytes)
-_DATA_605D_:
+_DATA_605D_HUDNumbers:
 .db $7F $71 $F1 $71 $7F $6E $EE $6E $7F $6E $EE $6E $7F $6E $EE $6E
 .db $7F $6E $EE $6E $7F $6E $EE $6E $FF $71 $71 $71 $FF $3F $3F $3F
 .db $7F $7B $FB $7B $7F $73 $F3 $73 $7F $7B $FB $7B $7F $7B $FB $7B
@@ -10115,7 +10128,7 @@ _DATA_605D_:
 .db $FF $FB $FB $FB $FF $BB $BB $BB $FF $C7 $C7 $C7 $FF $FE $FE $FE
 
 ; Data from 62DD to 645C (384 bytes)
-_DATA_62DD_:
+_DATA_62DD_CursorTiles:
 .dsb 10, $00
 .db $10 $00 $10 $00 $10 $00 $10 $00 $10 $00 $10 $00 $10 $00 $10 $00
 .db $10 $00 $FE $00 $EE $00 $10 $00 $10 $00 $10 $00 $10 $00 $10 $00
@@ -10141,7 +10154,7 @@ _DATA_62DD_:
 .db $01 $00 $00 $00 $01 $00 $00 $00 $01 $00 $00 $00 $FF $00 $00
 
 ; Data from 645D to 64DC (128 bytes)
-_DATA_645D_:
+_DATA_645D_SkillSelectionHighlight:
 .db $FF $00 $00 $00 $FF $00 $00 $7F $C0 $00 $00 $40 $C0 $00 $00 $40
 .db $C0 $00 $00 $40 $C0 $00 $00 $40 $C0 $00 $00 $40 $C0 $00 $00 $40
 .db $C0 $00 $00 $40 $C0 $00 $00 $40 $C0 $00 $00 $40 $C0 $00 $00 $40
@@ -13192,7 +13205,7 @@ _DATA_179D0_Intro1_Tilemap:
 .dsb 264, $00
 
 ; Data from 17CB1 to 17FFF (847 bytes)
-_DATA_17CB1_:
+_DATA_17CB1_RateControlTiles:
 .db $F7 $10 $3C $10 $BF $3F $FF $3F $40 $40 $FF $7F $C0 $CF $FF $FF
 .db $40 $5F $FF $7F $C0 $5F $FF $7F $C0 $5F $FF $7F $C0 $5F $7F $7F
 .db $FF $00 $00 $00 $FF $FF $FF $FF $01 $00 $FF $FE $01 $F0 $FE $FE
@@ -13689,7 +13702,7 @@ _DATA_27F2D_:
 .incbin "Lemmings.sms_DATA_28000_.inc"
 
 ; Data from 2B9CC to 2BBCB (512 bytes)
-_DATA_2B9CC_:
+_DATA_2B9CC_HUDTextFont_Letters:
 .db $00 $00 $00 $00 $FE $FE $BA $00 $B6 $CA $48 $00 $EE $FE $D0 $00
 .db $FE $FE $E6 $00 $EE $FE $FE $00 $28 $38 $38 $00 $38 $28 $28 $00
 .db $28 $38 $38 $00 $38 $38 $28 $00 $28 $38 $38 $00 $38 $38 $28 $00
@@ -13724,7 +13737,7 @@ _DATA_2B9CC_:
 .db $AE $EC $E8 $00 $EC $EE $2E $00 $CE $CE $CC $00 $C6 $C6 $C6 $00
 
 ; Data from 2BBCC to 2BFFF (1076 bytes)
-_DATA_2BBCC_:
+_DATA_2BBCC_HUDTextFont_Numbers:
 .db $00 $00 $00 $00 $7C $7C $7C $00 $CA $F6 $B4 $00 $BC $FA $C2 $00
 .db $EC $EA $A2 $00 $C0 $CE $0E $00 $9C $D6 $C2 $00 $C6 $DE $98 $00
 .db $BC $EE $46 $00 $8C $FE $FE $00 $94 $F6 $62 $00 $D6 $B4 $B4 $00
