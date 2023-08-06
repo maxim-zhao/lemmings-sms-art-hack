@@ -20,12 +20,15 @@ banks 14
 
 .background "lemmings.sms"
 
+.sdsctag 0.01, "Lemmings enhancement", "Base for future hacks", "Maxim"
+
 ; Some RAM and ROM locations we want to use
 .define RAM_LevelType $db0b 
 .define LoadPalette   $0a31 
 
-; We seem to have free space at $7ff0-7fef inclusive for code injection.
-.unbackground $7f00 $7fef
+; Unused parts in the low bank
+.unbackground $766d $79ff
+.unbackground $7f00 $7fff
 
 ; Then we hack the level loader just after it's read the level header to RAM
 .orga $2223
@@ -276,9 +279,11 @@ intro_lemmings_lemming:
 ; Title screen scroller text
 .unbackground $0f20 $103a
   ROMPosition $f20
-.section "Title screen scroller text" force
+.section "Title screen scroller text" free
 TitleScreenText:
 .stringmaptable TitleScreen "TitleScreen.tbl"
+.stringmap TitleScreen "  THIS HACK IS BY SMS POWER."
+.stringmap TitleScreen "  FOLLOWING CREDITS RELATE TO THE ORIGINAL GAME, NOT THIS HACK."
 .stringmap TitleScreen "  PUBLISHED UNDER LICENCE FROM PSYGNOSIS LIMITED."
 .stringmap TitleScreen "  © 1991, 1992 PSYGNOSIS LIMITED. ALL RIGHTS RESERVED."
 .stringmap TitleScreen "  REPROGRAMMED GAME ©1992 SEGA."
@@ -305,17 +310,181 @@ TitleScreenText:
 ; TODO later? Replace these with pcmenc data, and speed corrected to match the original?
 
 ; pcmenc
-; CPU clock = 3579545Hz
+; CPU clock = 3546893Hz (PAL)
 ; sample data = 7389Hz
-; So one sample every 484.44 CPU clocks.
+; So one sample every 480.02 CPU clocks.
+; Original data is 6396B 
 ; If we want one nibble per sample then we have ratio = 3 (3 samples per PSG triplet).
-; => emit a nibble every 484 cycles
-; => pcmenc wav\LETSGO.wav -p 4 -dt1 484 -dt2 484 -dt3 484 -rto 3
+; => emit a nibble every 480 cycles
+; => pcmenc wav\LETSGO.wav -p 4 -dt1 480 -dt2 480 -dt3 480 -rto 3 -cpuf 3546893
 ; 3175 bytes for "let's go" (~50% as each sample is one nibble)
 ; Or 2 samples per triplet:
-; => pcmenc wav\LETSGO.wav -p 4 -dt1 479 -dt2 11 -dt3 479 -rto 2
+; => pcmenc wav\LETSGO.wav -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893
 ; 4760B (~75% as each sample is 1.5 nibbles)
-; Original data is 6396B 
 ; Or one sample per triplet:
-; => pcmenc wav\LETSGO.wav -p 4 -dt1 12 -dt2 12 -dt3 460 -rto 1
+; => pcmenc wav\LETSGO.wav -p 4 -dt1 12 -dt2 12 -dt3 456 -rto 1 -cpuf 3546893
 ; 9518B (~150% as each sample is 3 nibbles)
+
+; The sample data
+.unbackground $3c000 $3ee23
+.slot 2
+.section "Let's Go sample" superfree
+LetsGo: .incbin "wav\LETSGO.wav.pcmenc"
+.ends
+.section "Oh No sample" superfree
+OhNo: .incbin "wav\OHNO.wav.pcmenc"
+.ends
+
+; The player code
+.unbackground $75ef $766d
+
+; Insert some new player code based on pcmenc's sample players adapted to the above timings
+.bank 0 slot 0
+.section "New sample player code" free
+; We choose pcmenc ratio 2 for better quality in 75% of the space.
+
+PSGInitData:
+.db $80 $00 $a0 $00 $c0 $00 $9f $bf $df $ff
+
+InitPSG:
+  push hl
+    ld hl,PSGInitData
+    ld bc,$0a7f
+    otir
+  pop hl
+  ret
+
+PlayLetsGo:
+  ld hl,LetsGo
+  ld a,:LetsGo
+  ld ($ffff),a
+  jr PLAY_SAMPLE
+  
+PlayOhNo:
+  ld hl,OhNo
+  ld a,:OhNo
+  ld ($ffff),a
+  ; fall through
+
+; Plays one sample
+; HL - pointes to triplet count followed by data
+PLAY_SAMPLE:
+  ; Code from the original, not sure it matters?
+  ld a,1
+  ld ($c002),a
+  ld a,$ff
+  ld ($c001),a
+  call InitPSG
+  di
+    call +
+  ei
+  call InitPSG ; to mute it, probably unnecessary?
+  xor a
+  ld ($c001),a
+  ret
+  
+  
+
++:ld e, (hl)
+  inc hl
+  ld d, (hl)
+  inc hl
+  ld c, $7f ; for out (c),r
+  
+PsgLoop:
+  ; Get high nibble and play channel 0
+  rld             ; 18 Get high nibble at hl into low nibble of a, will trash RAM data. Faster then getting it and shifting 4 times
+  and $f          ;  7
+  or (0<<5) | $90 ;  7
+  out (c), a      ; 12 <-- 0 (474 cycles)
+  
+  call Delay399   ;399
+  
+  ; Get low nibble, increment and store in b
+  ld a,(hl)       ;  7
+  inc hl          ;  6
+  and $f          ;  7
+  or (1<<5) | $90 ;  7
+  ld b,a          ;  4
+  
+  ; Get high nibble and set for channel 2
+  rld             ; 18
+  and $f          ;  7
+  or (2<<5) | $90 ;  7
+    
+  ; Emit
+  out (c),b       ; 12 <-- 1 (474 cycles)
+  out ($7f),a     ; 11 <-- 2 (11 cycles)
+  
+  ; Check counter
+  ; Decrement length and return if zero
+  dec de          ;  6
+  ld a,d          ;  4
+  or e            ;  4
+  ret z           ;  5
+
+  ; =======================================
+  
+  call Delay416   ;416
+  
+  ; Get low nibble, increment and play channel 0
+  ld a,(hl)       ;  7
+  inc hl          ;  6
+  and $f          ;  7
+  or (0<<5) | $90 ;  7
+  out (c), a      ; 12 <-- 0 (474 cycles)
+
+  call Delay399   ; 82
+  
+  ; Get high nibble and store in b
+  rld             ; 18
+  and $f          ;  7
+  or (1<<5) | $90 ;  7
+  ld b,a          ;  4
+  
+  ; Get low nibble, increment and set for channel 2
+  ld a,(hl)       ;  7
+  inc hl          ;  6
+  and $f          ;  7
+  or (2<<5) | $90 ;  7
+  
+  ; Emit
+  out (c),b       ; 12 <-- 1 (474 cycles)
+  out ($7f),a     ; 11 <-- 2 (11 cycles)
+  
+  call Delay404   ;416
+  
+  ; Check counter
+  ; Decrement length and return if zero
+  dec de          ;  6
+  ld a,d          ;  4
+  or e            ;  4
+  jr nz, PsgLoop  ; 12
+  
+  
+  ; =====================================
+  ret
+
+  ; This is a big ugly...
+Delay416:
+  nop             ; 4
+  nop             ; 4
+  nop             ; 4
+Delay404:
+  ld a,a          ; 5
+Delay399:
+  push bc         ; 11
+    ld b,0        ; 7
+    nop           ; 4  
+    ld b,26       ; 7
+-:  djnz -        ; 13*25 + 8 = 333
+  pop bc          ; 10
+  ret             ; 10
+  ; + 17 for call = 399
+  
+.ends
+
+; Finally we patch the calls to it
+  PatchW($2D95, PlayOhNo)
+  PatchW($3F00, PlayLetsGo)
+  PatchW($474F, PlayLetsGo)

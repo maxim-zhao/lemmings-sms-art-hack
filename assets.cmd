@@ -24,5 +24,5 @@ bmp2tile png\hud-lemming-states.bin.png                     -noremovedupes      
 bmp2tile png\hud-rate-control.bin.png                                             -savetiles hud-rate-control.bin                       -tileoffset 246 -savetilemap hud-rate-control.tilemap.bin
 bmp2tile png\title-screen-font.1bpp.png                     -noremovedupes        -savetiles title-screen-font.1bpp
 
-pcmenc wav\LETSGO.wav -p 4 -dt1 479 -dt2 11 -dt3 479 -rto 2
-pcmenc wav\OHNO.wav   -p 4 -dt1 479 -dt2 11 -dt3 479 -rto 2
+pcmenc wav\LETSGO.wav -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10
+pcmenc wav\OHNO.wav   -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10

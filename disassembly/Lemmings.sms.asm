@@ -20,8 +20,8 @@ BANKS 14
 
 .enum $C000 export
 _RAM_C000_ db
-_RAM_C001_ db
-_RAM_C002_ db
+_RAM_C001_SampleIsPlaying db
+_RAM_C002_SampleNeedsDIEI db
 .ende
 
 .enum $C00F export
@@ -6033,7 +6033,7 @@ _LABEL_2D79_:
 	ret z
 	ld hl, _RAM_D650_
 	ld (_RAM_DB80_), hl
-	call _LABEL_75EF_
+	call _LABEL_75EF_PlayOhNo
 	ret
 
 _LABEL_2D98_:
@@ -8396,7 +8396,7 @@ _LABEL_3E7D_:
 	ld a, (_RAM_DAD4_)
 	cp l
 	jp z, -
-	call _LABEL_75F7_
+	call _LABEL_75F7_PlayLetsGo
 	call _LABEL_18C9_
 	ld a, $01
 	ld (_RAM_DBA4_), a
@@ -9366,7 +9366,7 @@ _LABEL_46E6_Intro1Loop:
 	call +
 	ld b, $50
 	call _LABEL_ADD_
-	call _LABEL_75F7_
+	call _LABEL_75F7_PlayLetsGo
 	call _LABEL_AF5_
 	call _LABEL_4B2_
 	call _LABEL_6F2_
@@ -10336,77 +10336,87 @@ _DATA_755B_:
 .db $FF $00 $00 $FF $00 $00 $FF $00 $00 $FF $00 $00 $FF $00 $00 $FF
 .db $00 $00 $FF $80
 
-_LABEL_75EF_:
+_LABEL_75EF_PlayOhNo:
 	ld hl, _DATA_3D902_OhNoSample
 	ld de, $1522
 	jr +
 
-_LABEL_75F7_:
+_LABEL_75F7_PlayLetsGo:
 	ld hl, _DATA_3C000_LetsGoSample
-	ld de, $1902
+	ld de, $1902 ; Length
 +:
 	ld a, $01
-	ld (_RAM_C002_), a
+	ld (_RAM_C002_SampleNeedsDIEI), a ; Set "DI needed" flag (always set!)
 	ld a, $CF
-	ld (_RAM_FFFF_), a
+	ld (_RAM_FFFF_), a ; Page in data
 	ld a, $FF
-	ld (_RAM_C001_), a
-	ld a, $80
+	ld (_RAM_C001_SampleIsPlaying), a ; Set "sample playing" flag (not used?)
+  ; Set tone channel tones to 0
+	ld a, $80 ; %10000000 %00000000 = ch0 tone to frequency 0
+	out (Port_PSG), a 
+	ld a, $00 ; 
 	out (Port_PSG), a
-	ld a, $00
-	out (Port_PSG), a
-	ld a, $A0
+	ld a, $A0 ; %10100000 %00000000 = ch1 tone to frequency 0
 	out (Port_PSG), a
 	xor a
 	out (Port_PSG), a
-	ld a, $C0
+	ld a, $C0 ; %11000000 %00000000 = ch2 tone to frequency 0
 	out (Port_PSG), a
 	xor a
 	out (Port_PSG), a
-	ld a, $FF
+  ; Set up volumes
+	ld a, $FF ; %11111111 = ch3 attenuation to maximum
 	out (Port_PSG), a
+	ld a, $9F ; %10011111 = ch0 attenuation to maximum
 	out (Port_PSG), a
-	ld a, $9F
+	ld a, $BF ; %10111111 = ch1 attenuation to maximum
 	out (Port_PSG), a
-	ld a, $BF
+	ld a, $DF ; %11011111 = ch2 attenuation to maximum
 	out (Port_PSG), a
-	ld a, $DF
-	out (Port_PSG), a
-	ld a, (_RAM_C002_)
+  ; DI if _RAM_C002_SampleNeedsDIEI != 0
+	ld a, (_RAM_C002_SampleNeedsDIEI)
 	or a
-	jr z, _LABEL_763B_
+	jr z, _LABEL_763B_SampleLoop
 	di
-_LABEL_763B_:
+_LABEL_763B_SampleLoop:
+  ; Read 8-bit signed value
 	ld a, (hl)
 	inc hl
+  ; Make unsigned
 	sub $80
+  ; Shift to 4 bits
 	srl a
 	srl a
 	srl a
 	srl a
+  ; Delay
 	ld b, $19
--:
-	djnz -
-	or $90
+-:djnz -
+  ; Emit to three channels
+	or $90 ; %1001dddd = ch0
 	out (Port_PSG), a
-	or $A0
+	or $A0 ; %1011dddd = ch1 (same as or $b0)
 	out (Port_PSG), a
 	res 5, a
-	or $C0
+	or $C0 ; %1101dddd = ch2 (same as and %0f; or %d0)
 	out (Port_PSG), a
+  ; Check counter
 	dec de
 	ld a, d
 	or e
-	jr nz, _LABEL_763B_
-	ld a, $9F
+	jr nz, _LABEL_763B_SampleLoop
+  ; Mute channel 0 only?!
+	ld a, $9F ; %1001ffff
 	out (Port_PSG), a
 	xor a
-	ld (_RAM_C001_), a
-	ld a, (_RAM_C002_)
+	ld (_RAM_C001_SampleIsPlaying), a
+	ld a, (_RAM_C002_SampleNeedsDIEI)
 	or a
 	ret z
 	ei
 	ret
+  
+; Next is a run of blanks followed by some 256-aligned tables at $7axx onwards
 
 ; Data from 766D to 7680 (20 bytes)
 .dsb 20, $00
@@ -10489,6 +10499,7 @@ _DATA_7681_:
 .ORG $0000
 
 ; Data from 8000 to 81E3 (484 bytes)
+; Lemming sprites
 .db $01 $02 $02 $02 $03 $04 $05 $00 $06 $07 $08 $3A $06 $07 $08 $3A
 .db $09 $0A $0B $3A $0C $0D $00 $00 $0E $0F $00 $00 $0C $10 $0D $00
 .db $0E $11 $0F $00 $0C $10 $0D $00 $0E $11 $0F $00 $0C $12 $0D $00
@@ -12229,7 +12240,7 @@ _LABEL_AE76_:
 	ld a, (_RAM_C0D6_)
 	or a
 	jr nz, _LABEL_AEE2_
-	ld ix, _RAM_C001_
+	ld ix, _RAM_C001_SampleIsPlaying
 	call _LABEL_B3AC_
 	ld a, (ix+1)
 	and c
@@ -12708,7 +12719,7 @@ _LABEL_B222_:
 	add hl, hl
 	ld de, $8000
 	add hl, de
-	ld ix, _RAM_C001_
+	ld ix, _RAM_C001_SampleIsPlaying
 	push hl
 	call _LABEL_B256_
 	pop hl
