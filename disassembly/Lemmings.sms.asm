@@ -891,7 +891,7 @@ _LABEL_4A0_:
 	ld (_RAM_DADB_), hl
 	ret
 
-_LABEL_4B2_:
+_LABEL_4B2_ScreenOff:
 	di
 	ld a, $A2
 	out (Port_VDPAddress), a
@@ -908,7 +908,7 @@ _LABEL_4B2_:
 	ei
 	ret
 
-_LABEL_4C5_:
+_LABEL_4C5_ScreenOn:
 	di
 	ld a, $E2
 	out (Port_VDPAddress), a
@@ -945,9 +945,9 @@ _LABEL_4D8_:
 	ei
 	ret
 
-_LABEL_4F4_:
+_LABEL_4F4_SetVDPRegisters:
 	di
-	ld a, $36
+	ld a, $36 ; %00110110 = no scroll lock, hide left column, line int enable, mode 4, no early sprite clock
 	out (Port_VDPAddress), a
 	nop
 	nop
@@ -1088,7 +1088,7 @@ _LABEL_4F4_:
 	ei
 	call _LABEL_6F2_
 	call _LABEL_4D8_
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	xor a
@@ -1415,8 +1415,8 @@ _LABEL_7AE_:
 	ld de, $2000
 	jp -
 
-_LABEL_7B4_:
-	ld a, $06
+_LABEL_7B4_LoadGreenBackground:
+	ld a, :_DATA_1B986_CompressedTiles_GreenBackground ; $06
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_1B986_CompressedTiles_GreenBackground
 	ld ix, $2000
@@ -1865,7 +1865,7 @@ _LABEL_AB5_:
 .db $DB $DC $CB $67 $CA $C7 $0A $DB $DC $CB $67 $C2 $CE $0A $DB $DC
 .db $CB $67 $CA $D5 $0A $C9
 
-_LABEL_ADD_:
+_LABEL_ADD_Delay:
 	push bc
 	ld bc, $0BB8
 -:
@@ -1874,20 +1874,20 @@ _LABEL_ADD_:
 	or b
 	jp nz, -
 	pop bc
-	djnz _LABEL_ADD_
+	djnz _LABEL_ADD_Delay
 	ret
 
-_LABEL_AEB_:
+_LABEL_AEB_DelayALot:
 	push bc
 	ld b, $32
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	pop bc
-	djnz _LABEL_AEB_
+	djnz _LABEL_AEB_DelayALot
 	ret
 
 _LABEL_AF5_:
 	ld b, $0F
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	call _LABEL_B6A_
 	ld b, $10
 _LABEL_AFF_:
@@ -1910,7 +1910,7 @@ _LABEL_AFF_:
 	call ++
 	ei
 	ld b, $01
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	ld hl, _RAM_D650_
 	ld b, $60
 -:
@@ -8259,7 +8259,7 @@ _LABEL_3D9D_:
 	ld ix, _DATA_103B_PressButtonText
 	call _LABEL_774_PrintString
 	call _LABEL_9ED_
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 _LABEL_3DCB_:
 	xor a
 	ld (_RAM_DAD4_), a
@@ -8326,9 +8326,9 @@ _LABEL_3E42_:
 	ret
 
 _LABEL_3E4C_:
-	call _LABEL_4F4_
+	call _LABEL_4F4_SetVDPRegisters
 	call _LABEL_5BC_
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	xor a
 	ld (_RAM_DB99_), a
 _LABEL_3E59_:
@@ -8353,7 +8353,7 @@ _LABEL_3E7D_:
 	ld (_RAM_DB50_), a
 	call _LABEL_4A0_
 	call _LABEL_1DB3_
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_1E0F_
@@ -8366,7 +8366,7 @@ _LABEL_3E7D_:
 	call _LABEL_94C_
 	xor a
 	ld (_RAM_DBA4_), a
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_2206_
@@ -8394,7 +8394,7 @@ _LABEL_3E7D_:
 +:
 	call _LABEL_1AF1_
 	call _LABEL_9ED_
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld hl, (_RAM_DAD4_)
 -:
 	ld a, (_RAM_DAD4_)
@@ -8511,7 +8511,7 @@ _LABEL_3F17_:
 _LABEL_403A_:
 	call _LABEL_6F2_
 	call _LABEL_7A2_
-	call _LABEL_7B4_
+	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
 	ld (_RAM_FFFF_), a
 	ld bc, $0103
@@ -8602,7 +8602,7 @@ _LABEL_40FC_:
 	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB55_)
 	call _LABEL_1293_
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 -:
@@ -8617,7 +8617,7 @@ _LABEL_40FC_:
 _LABEL_412F_:
 	push de
 	call _LABEL_AF5_
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_
 	pop de
 	ld a, (_RAM_DBA7_)
@@ -8632,7 +8632,7 @@ _LABEL_412F_:
 	ld (_RAM_DB9E_), a
 	cp $04
 	jp nz, +
-	call _LABEL_4824_
+	call _LABEL_4824_EndingSequence
 	xor a
 	ret
 
@@ -8650,10 +8650,10 @@ _LABEL_412F_:
 	ret
 
 _LABEL_4166_:
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_
 	call _LABEL_7A2_
-	call _LABEL_7B4_
+	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
 	ld (_RAM_FFFF_), a
 	ld b, $00
@@ -8715,19 +8715,19 @@ _LABEL_4166_:
 	ld a, (_RAM_DB9D_)
 	inc a
 	call _LABEL_12D2_
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 -:
 	ld b, $02
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	in a, (Port_IOPort1)
 	bit 4, a
 	jp z, -
 -:
 	ld b, $02
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	in a, (Port_IOPort1)
 	bit 5, a
 	jp z, -
@@ -8744,17 +8744,17 @@ _LABEL_4166_:
 	ld a, l
 	ld (_RAM_DBD7_), a
 	call _LABEL_AF5_
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_
 	ret
 
 _LABEL_4255_:
 	call _LABEL_6F2_
 	call _LABEL_7A2_
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld bc, $0002
 	call _LABEL_829_SetTextLocationToBC
 	ld ix, _DATA_D67_LevelSelectText
@@ -8808,11 +8808,11 @@ _LABEL_4255_:
 _LABEL_42D8_:
 	call _LABEL_6F2_
 	call _LABEL_7A2_
-	ld hl, _DATA_1BE5E_
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_7B4_
-	call _LABEL_4C5_
+	call _LABEL_7B4_LoadGreenBackground
+	call _LABEL_4C5_ScreenOn
 	ld a, $40
 	call _LABEL_95F_
 	ld a, $01
@@ -8901,7 +8901,7 @@ _LABEL_4398_:
 	inc a
 	ld (_RAM_DAD9_), a
 	ld b, $05
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	jp _LABEL_4329_
 
 +:
@@ -8954,7 +8954,7 @@ _LABEL_4398_:
 	ld bc, $0008
 	ldir
 	ld b, $02
-	call _LABEL_AEB_
+	call _LABEL_AEB_DelayALot
 	ret
 
 _LABEL_4412_:
@@ -8967,11 +8967,11 @@ _LABEL_4412_:
 	ld bc, $0008
 	ldir
 	ld b, $02
-	call _LABEL_AEB_
+	call _LABEL_AEB_DelayALot
 	jp _LABEL_4432_
 
 _LABEL_4432_:
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	ld a, $CE
 	ld (_RAM_FFFF_), a
 	ld hl, _DATA_1BE6E_
@@ -9010,7 +9010,7 @@ _LABEL_4432_:
 	ld (_RAM_DBC5_), a
 	call _LABEL_455F_
 	call _LABEL_4549_
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld a, $50
 	ld (_RAM_DBC0_), a
 	xor a
@@ -9078,7 +9078,7 @@ _LABEL_4524_:
 	xor a
 	ld (_RAM_DBC5_), a
 	call _LABEL_AF5_
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
 	call _LABEL_4D8_
 	ret
@@ -9087,7 +9087,7 @@ _LABEL_4535_:
 	xor a
 	ld (_RAM_DBC5_), a
 	call _LABEL_AF5_
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
 	call _LABEL_4D8_
 	pop hl
@@ -9304,7 +9304,7 @@ _LABEL_4697_:
 	nop
 	ei
 	call _LABEL_6F2_
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld hl, _DATA_1BE7E_Intro1_Palette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -9369,10 +9369,10 @@ _LABEL_46E6_Intro1Loop:
 	jp nz, _LABEL_46E6_Intro1Loop
 	call +
 	ld b, $50
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	call _LABEL_75F7_PlayLetsGo
 	call _LABEL_AF5_
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_
 	di
 	ld a, $36
@@ -9492,14 +9492,14 @@ _LABEL_47FE_:
 	ld (_RAM_FFFF_), a
 	jp _LABEL_8B4_LoadBTilesToVRAM
 
-_LABEL_4824_:
+_LABEL_4824_EndingSequence:
 	ld a, $CE
 	ld (_RAM_FFFF_), a
 	ld hl, _DATA_1BE8E_EndingPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_5BC_
-	ld de, _DATA_3A2B9_CompressedTiles_Ending1
+	ld de, _DATA_3A2B9_CompressedTiles_EndingCurtains
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_39FB8_EndingTilemap
@@ -9508,14 +9508,14 @@ _LABEL_4824_:
 	call _LABEL_4965_
 	ld a, $0D
 	ld (_RAM_FFFF_), a
-	ld de, _DATA_35EE6_CompressedTiles_Ending2
+	ld de, _DATA_35EE6_CompressedTiles_EndingLemmings
 	ld ix, $0800
 	call _LABEL_3CFD_DecompressTiles
 	ld a, $01
 	call _LABEL_95F_
 	ld a, $01
 	ld (_RAM_DBA4_), a
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld c, $10
 ---:
 	ld ix, _DATA_48EA_
@@ -9531,37 +9531,37 @@ _LABEL_4824_:
 	ld a, (ix+0)
 	call _LABEL_48F7_
 	ld b, $05
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	pop ix
 	pop bc
 	in a, (Port_IOPort1)
 	bit 4, a
-	jp z, _LABEL_48A2_
+	jp z, _LABEL_48A2_Ending_ShowText
 	in a, (Port_IOPort1)
 	bit 5, a
-	jp z, _LABEL_48A2_
+	jp z, _LABEL_48A2_Ending_ShowText
 	inc ix
 	djnz --
 	dec c
 	jp nz, ---
 	jr +
 
-_LABEL_48A2_:
+_LABEL_48A2_Ending_ShowText:
   ; Wait for 1 and 2 buttons to not be pressed
 	in a, (Port_IOPort1)
 	bit 4, a ; Button 1
-	jp z, _LABEL_48A2_
+	jp z, _LABEL_48A2_Ending_ShowText
 	in a, (Port_IOPort1)
 	bit 5, a ; Button 2
-	jp z, _LABEL_48A2_
+	jp z, _LABEL_48A2_Ending_ShowText
 +:
 	call _LABEL_AF5_
-	call _LABEL_4B2_
-	ld hl, _DATA_1BE5E_
+	call _LABEL_4B2_ScreenOff
+	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_7A2_
-	call _LABEL_7B4_
+	call _LABEL_7B4_LoadGreenBackground
 	ld bc, $0506
 	call _LABEL_829_SetTextLocationToBC
 	ld ix, _DATA_E9A_EndingText
@@ -9570,10 +9570,10 @@ _LABEL_48A2_:
 	call _LABEL_768_PrintStringAtBCSpaced
 	call _LABEL_768_PrintStringAtBCSpaced
 	call _LABEL_768_PrintStringAtBCSpaced
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld b, $05
-	call _LABEL_AEB_
-	call _LABEL_4B2_
+	call _LABEL_AEB_DelayALot
+	call _LABEL_4B2_ScreenOff
 	ret
 
 ; Data from 48EA to 48F6 (13 bytes)
@@ -9738,7 +9738,7 @@ _DATA_49D4_LemmingsTextTM:
 .db $50 $50 $FF $FF $10 $10 $FF $FF $00 $00 $FF $FF $00 $00 $FF $FF
 
 _LABEL_4A14_:
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	ld a, $0B
 	ld (_RAM_FFFF_), a
 	ld de, _DATA_2DEFC_LemmingsTextTiles
@@ -9788,7 +9788,7 @@ _LABEL_4A14_:
 	ld hl, _DATA_1BE9E_intro2_palette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_4C5_
+	call _LABEL_4C5_ScreenOn
 	ld a, $4C
 	call _LABEL_95F_
 	ld a, $01
@@ -9804,19 +9804,19 @@ _LABEL_4A14_:
 	call _LABEL_A6D_
 	call +
 	ld b, $01
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	ld a, (_RAM_DBB7_)
 	cp $03
 	jp nz, --
 	ld b, $03
-	call _LABEL_AEB_
+	call _LABEL_AEB_DelayALot
 	ld b, $1E
-	call _LABEL_ADD_
+	call _LABEL_ADD_Delay
 	call _LABEL_94C_
 	call _LABEL_AF5_
 	call _LABEL_8F2_
 	call _LABEL_4D8_
-	call _LABEL_4B2_
+	call _LABEL_4B2_ScreenOff
 	ret
 
 +:
@@ -13334,7 +13334,7 @@ _DATA_1BB5E_GreenBackgroundTilemap:
 .db $08 $05 $08 $07 $08 $05 $03 $04 $12 $23 $1B $02 $0B $12 $23 $23
 
 ; Data from 1BE5E to 1BE6D (16 bytes)
-_DATA_1BE5E_:
+_DATA_1BE5E_MainPalette:
 .db $00 $3F $08 $24 $15 $2A $38 $20 $03 $0B $07 $04 $01 $07 $02 $00
 
 ; Data from 1BE6E to 1BE7D (16 bytes)
@@ -14762,8 +14762,8 @@ _DATA_35E86_:
 .db $00 $FF $FF $FF $00 $55 $FF $FF $00 $00 $FF $FF $AA $AA $FF $FF
 
 ; Data from 35EE6 to 37851 (6508 bytes)
-_DATA_35EE6_CompressedTiles_Ending2:
-.incbin "Lemmings.sms_DATA_35EE6_CompressedTiles_Ending2.inc"
+_DATA_35EE6_CompressedTiles_EndingLemmings:
+.incbin "Lemmings.sms_DATA_35EE6_CompressedTiles_EndingLemmings.inc"
 
 ; Data from 37852 to 37FFF (1966 bytes)
 _DATA_37852_Intro1_Tiles:
@@ -14830,7 +14830,7 @@ _DATA_39FB8_EndingTilemap:
 .dsb 97, $08
 
 ; Data from 3A2B9 to 3A545 (653 bytes)
-_DATA_3A2B9_CompressedTiles_Ending1:
+_DATA_3A2B9_CompressedTiles_EndingCurtains:
 .db $05 $17 $00 $10 $08 $10 $08 $10 $08 $14 $0A $0E $0D $0B $0F $0D
 .db $0E $0B $18 $28 $18 $28 $18 $28 $18 $28 $87 $00 $1F $08 $10 $08
 .db $10 $00 $08 $00 $00 $10 $08 $10 $20 $10 $00 $10 $00 $50 $70 $B0

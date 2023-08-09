@@ -592,3 +592,30 @@ BackgroundTilemap: .incbin "background.lsbtilemap"
   PatchB $7b5 :BackgroundTiles
   PatchW $7BA BackgroundTiles
   PatchW $7C4 BackgroundTilemap
+
+
+
+
+; Ending sequence
+.unbackground $39FB8 $3A545
+.unbackground $35EE6 $37851
+.unbackground $1be8e $1be9d
+.bank 6 slot 2
+.section "Ending palette" free
+EndingPalette: .incbin "ending.palette"
+.ends
+  PatchW($482A, EndingPalette)
+.slot 2
+.section "Ending background" superfree
+EndingBackground: .incbin "ending-background.lemmingscompr"
+EndingBackgroundTilemap: .incbin "ending-background.lsbtilemap"
+.ends
+  PatchB($4825, :EndingBackground)
+  PatchW($4836, EndingBackground)
+  PatchW($4840, EndingBackgroundTilemap)
+.slot 2
+.section "Ending lemmings" superfree
+EndingLemmings: .incbin "ending-lemmings.lemmingscompr"
+.ends
+  PatchB($484C, :EndingLemmings)
+  PatchW($4851, EndingLemmings)
