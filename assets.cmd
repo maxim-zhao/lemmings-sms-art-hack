@@ -23,7 +23,15 @@ bmp2tile png\hud-selection.8x16.bin.png                     -noremovedupes -8x16
 bmp2tile png\hud-lemming-states.bin.png                     -noremovedupes        -savetiles hud-lemming-states.bin
 bmp2tile png\hud-rate-control.bin.png                                             -savetiles hud-rate-control.bin                       -tileoffset 246 -savetilemap hud-rate-control.tilemap.bin
 bmp2tile png\hud-font.8x16.bin.png                          -noremovedupes -8x16  -savetiles hud-font.8x16.bin
+bmp2tile png\title-screen.lemmingscompr.png                                       -savetiles title-screen.lemmingscompr                 -smspalette -fullpalette -savepalette title-screen.palette -savetilemap title-screen.tilemap.bin
+bmp2tile png\title-screen-difficulties.lemmingscompr.png    -noremovedupes        -savetiles title-screen-difficulties.lemmingscompr
+bmp2tile png\title-screen-players.lemmingscompr.png         -noremovedupes        -savetiles title-screen-players.lemmingscompr
 bmp2tile png\title-screen-font.1bpp.png                     -noremovedupes        -savetiles title-screen-font.1bpp
+rem We need to combine these together
+bmp2tile png\title-screen-hand.8x16.bin.png                 -noremovedupes -8x16  -savetiles title-screen-hand.8x16.bin
+bmp2tile png\title-screen-blinking.bin.png                  -noremovedupes        -savetiles title-screen-blinking.bin
+copy /y /b title-screen-hand.8x16.bin+title-screen-blinking.bin title-screen-extras.bin
+bmp2tile title-screen-extras.bin                            -noremovedupes        -savetiles title-screen-extras.lemmingscompr
 bmp2tile png\trap-crusher.bin.png                           -noremovedupes        -savetiles trap-crusher.bin
 bmp2tile png\trap-rope.bin.png                              -noremovedupes        -savetiles trap-rope.bin
 bmp2tile png\trap-beartrap.bin.png                          -noremovedupes        -savetiles trap-beartrap.bin

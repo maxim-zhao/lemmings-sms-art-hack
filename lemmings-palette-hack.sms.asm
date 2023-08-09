@@ -297,6 +297,43 @@ intro_lemmings_lemming:
 
 
 ; Title screen
+
+; Background
+.unbackground $38000 $39FB7
+.slot 2
+.section "Title screen tiles" superfree
+TitleScreenTiles: .incbin "title-screen.lemmingscompr"
+TitleScreenTilemap: .incbin "title-screen.tilemap.bin"
+.ends
+  PatchB($4436, :TitleScreenTiles)
+  PatchW($445E, TitleScreenTiles)
+  PatchW($4468, TitleScreenTilemap)
+
+.unbackground $1BE6E $1BE7d
+.bank 6 slot 2
+.section "Title screen palette" free
+TitleScreenPalette: .incbin "title-screen.palette"
+.ends
+  PatchW($443B, TitleScreenPalette)
+  
+; Options
+.unbackground $3A546 $3BFFF
+.slot 2
+.section "Title screen options art" superfree
+TitleScreenDifficulty: .incbin "title-screen-difficulties.lemmingscompr"
+TitleScreenPlayers: .incbin "title-screen-players.lemmingscompr"
+TitleScreenExtras: .incbin "title-screen-extras.lemmingscompr"
+.ends
+  PatchB($4474, :TitleScreenDifficulty)
+  PatchW($4479, TitleScreenDifficulty)
+  PatchW($4483, TitleScreenPlayers)
+  PatchW($448D, TitleScreenExtras)
+; The winking eyes animations need to be amended for wherever the eyes are now...
+  PatchB($462f, $f4) ; Left eye
+  PatchB($4637, $f5) ; Right eye
+; Screen positions can be changed too if needed
+
+; Scroller
 .unbackground $0bed1 $0bfe8
   ROMPosition $0bed1
 .section "Title screen scroller font" force

@@ -8347,7 +8347,7 @@ _LABEL_3E68_:
 	ld (_RAM_DBA4_), a
 	xor a
 	ld (_RAM_DB9D_), a
-	call _LABEL_4432_
+	call _LABEL_4432_TitleScreen
 _LABEL_3E7D_:
 	xor a
 	ld (_RAM_DB50_), a
@@ -8968,9 +8968,9 @@ _LABEL_4412_:
 	ldir
 	ld b, $02
 	call _LABEL_AEB_DelayALot
-	jp _LABEL_4432_
+	jp _LABEL_4432_TitleScreen
 
-_LABEL_4432_:
+_LABEL_4432_TitleScreen:
 	call _LABEL_4B2_ScreenOff
 	ld a, $CE
 	ld (_RAM_FFFF_), a
@@ -8990,7 +8990,7 @@ _LABEL_4432_:
 	ld de, _DATA_38606_CompressedTiles_TitleScreen
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
-	ld hl, _DATA_38006_
+	ld hl, _DATA_38006_TitleScreenTilemap
 	ld de, $3800
 	ld bc, $0600
 	call _LABEL_49B3_LoadTilemap
@@ -9002,7 +9002,7 @@ _LABEL_4432_:
 	ld de, _DATA_3AA71_CompressedTiles_TitleScreenPlayerCount
 	ld ix, $2F00
 	call _LABEL_3CFD_DecompressTiles
-	ld de, _DATA_3AE5E_TitleScreen_Unknown
+	ld de, _DATA_3AE5E_TitleScreen_LemmingAnimationTiles
 	ld ix, $3300
 	call _LABEL_3CFD_DecompressTiles
 	call _LABEL_19B7_
@@ -9069,7 +9069,7 @@ _LABEL_44B3_:
 
 +:
 	call _LABEL_4255_
-	jp _LABEL_4432_
+	jp _LABEL_4432_TitleScreen
 
 ; Data from 4523 to 4523 (1 bytes)
 .db $C1
@@ -9175,16 +9175,16 @@ _LABEL_45B7_:
 	add a, a
 	ld l, a
 	ld h, $00
-	ld de, _DATA_4621_
+	ld de, _DATA_4621_EyePositions
 	add hl, de
 	ld e, (hl)
 	inc hl
 	ld d, (hl)
-	ld hl, _DATA_4629_
+	ld hl, _DATA_4629_EyeTilemapData1
 	ld a, (_RAM_DBB6_)
 	cp $02
 	jp c, +
-	ld hl, _DATA_4631_
+	ld hl, _DATA_4631_EyeTilemapData2
 +:
 	ld a, (_RAM_DBB7_)
 	add a, a
@@ -9216,15 +9216,15 @@ _LABEL_45B7_:
 	ret
 
 ; Data from 4621 to 4628 (8 bytes)
-_DATA_4621_:
-.db $52 $7B $5E $7B $6C $7B $60 $7B
+_DATA_4621_EyePositions:
+.dw $7B52 $7B5E $7B6C $7B60
 
 ; Data from 4629 to 4630 (8 bytes)
-_DATA_4629_:
+_DATA_4629_EyeTilemapData1:
 .db $A4 $01 $A6 $01 $A4 $01 $F6 $00
 
 ; Data from 4631 to 4638 (8 bytes)
-_DATA_4631_:
+_DATA_4631_EyeTilemapData2:
 .db $A5 $01 $A7 $01 $A5 $01 $F7 $00
 
 _LABEL_4639_:
@@ -14776,8 +14776,8 @@ _DATA_37852_Intro1_Tiles:
 .db $50 $41 $47 $45 $31 $34
 
 ; Data from 38006 to 38605 (1536 bytes)
-_DATA_38006_:
-.incbin "Lemmings.sms_DATA_38006_.inc"
+_DATA_38006_TitleScreenTilemap:
+.incbin "Lemmings.sms_DATA_38006_TitleScreenTilemap.inc"
 
 ; Data from 38606 to 39FB7 (6578 bytes)
 _DATA_38606_CompressedTiles_TitleScreen:
@@ -14944,7 +14944,7 @@ _DATA_3AA71_CompressedTiles_TitleScreenPlayerCount:
 .db $08 $5F $83 $FF $07 $07 $23 $63 $F7 $FF $FE $FC $F8
 
 ; Data from 3AE5E to 3BFFF (4514 bytes)
-_DATA_3AE5E_TitleScreen_Unknown:
+_DATA_3AE5E_TitleScreen_LemmingAnimationTiles:
 .db $03 $81 $00 $0B $03 $04 $0B $0B $09 $08 $05 $06 $05 $04 $03 $01
 .db $83 $00 $0D $80 $60 $F8 $F4 $7A $BE $5D $A9 $51 $AB $02 $8E $FD
 .db $3E $88 $00 $06 $E0 $50 $E8 $78 $B4 $5A $2E $91 $00 $0B $03 $04
