@@ -5353,7 +5353,7 @@ _LABEL_28D3_:
 	call _LABEL_290F_
 	ld a, $0D
 	ld (_RAM_FFFF_), a
-	ld bc, _DATA_357C6_
+	ld bc, _DATA_357C6_Tiles_Trap_Spinner
 	ld hl, _RAM_CD98_
 	call _LABEL_2955_
 	ret
@@ -5415,6 +5415,9 @@ _LABEL_292B_:
 	ret
 
 _LABEL_2955_:
+  ; Only called for spinner trap
+  ; hl = _RAM_CD98_
+  ; bc points to tile data
 	ld d, $06
 -:
 	push de
@@ -5422,13 +5425,14 @@ _LABEL_2955_:
 	push bc
 	ld a, (hl)
 	and a
-	jp z, +
+	jp z, + ; If zero, skip
+  ; Else look up in table
 	ld l, a
 	ld h, $7D
 	ld e, (hl)
 	inc h
 	ld d, (hl)
-	ld a, (_RAM_DAD8_)
+	ld a, (_RAM_DAD8_) ; ??? Adds to high byte of tile data pointer
 	add a, b
 	ld h, a
 	ld l, c
@@ -5436,14 +5440,14 @@ _LABEL_2955_:
 	call _LABEL_8B4_LoadBTilesToVRAM
 +:
 	pop bc
-	ld hl, $0020
+	ld hl, $0020 ; Next tile
 	add hl, bc
 	ld c, l
 	ld b, h
 	pop hl
 	pop de
 	inc hl
-	dec d
+	dec d ; Loop this many times = 6
 	jp nz, -
 	ret
 
@@ -8008,7 +8012,7 @@ _LABEL_3BFC_:
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_3CB4_
+	ld hl, _DATA_3CB4_Tiles_Trap_Crusher_Lookup
 	add hl, de
 	ld c, (hl)
 	inc hl
@@ -8036,7 +8040,7 @@ _LABEL_3C3C_:
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_3CC0_
+	ld hl, _DATA_3CC0_Tiles_Trap_Rope_Lookup
 	add hl, de
 	ld c, (hl)
 	inc hl
@@ -8056,7 +8060,7 @@ _LABEL_3C64_:
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_3CD8_
+	ld hl, _DATA_3CD8_Tiles_Trap_Drip_Lookup
 	add hl, de
 	ld c, (hl)
 	inc hl
@@ -8076,7 +8080,7 @@ _LABEL_3C8C_:
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_3CCA_
+	ld hl, _DATA_3CCA_Tiles_Trap_Beartrap_Lookup
 	add hl, de
 	ld c, (hl)
 	inc hl
@@ -8093,19 +8097,19 @@ _LABEL_3C8C_:
 	jp _LABEL_3CE4_
 
 ; Pointer Table from 3CB4 to 3CBF (6 entries, indexed by _RAM_DB98_)
-_DATA_3CB4_:
-.dw _DATA_343C6_ _DATA_344C6_ _DATA_345C6_ _DATA_346C6_ _DATA_347C6_ _DATA_348C6_
+_DATA_3CB4_Tiles_Trap_Crusher_Lookup:
+.dw _DATA_343C6_Tiles_Trap_Crusher_1 _DATA_344C6_Tiles_Crusher_2 _DATA_345C6_Tiles_Crusher_3 _DATA_346C6_Tiles_Crusher_4 _DATA_347C6_Tiles_Crusher_5 _DATA_348C6_Tiles_Crusher_6
 
 ; Pointer Table from 3CC0 to 3CC9 (5 entries, indexed by _RAM_DB98_)
-_DATA_3CC0_:
+_DATA_3CC0_Tiles_Trap_Rope_Lookup:
 .dw _DATA_349C6_ _DATA_34A46_ _DATA_34AC6_ _DATA_34B46_ _DATA_34BC6_
 
 ; Pointer Table from 3CCA to 3CD7 (7 entries, indexed by _RAM_DB98_)
-_DATA_3CCA_:
+_DATA_3CCA_Tiles_Trap_Beartrap_Lookup:
 .dw _DATA_34C46_ _DATA_34CC6_ _DATA_34D46_ _DATA_34DC6_ _DATA_34E46_ _DATA_34EC6_ _DATA_34F46_
 
 ; Pointer Table from 3CD8 to 3CE3 (6 entries, indexed by _RAM_DB98_)
-_DATA_3CD8_:
+_DATA_3CD8_Tiles_Trap_Drip_Lookup:
 .dw _DATA_34C46_ _DATA_34FC6_ _DATA_35046_ _DATA_350C6_ _DATA_350C6_ _DATA_35146_
 
 _LABEL_3CE4_:
@@ -14285,12 +14289,12 @@ _DATA_34006_:
 
 ; 1st entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 343C6 to 344C5 (256 bytes)
-_DATA_343C6_:
+_DATA_343C6_Tiles_Trap_Crusher_1:
 .dsb 256, $00
 
 ; 2nd entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 344C6 to 345C5 (256 bytes)
-_DATA_344C6_:
+_DATA_344C6_Tiles_Crusher_2:
 .db $01 $06 $00 $06 $07 $08 $00 $0B $0E $11 $00 $17 $1C $23 $00 $2F
 .db $38 $47 $00 $5F $71 $8F $01 $BE $71 $8F $01 $BE $FD $02 $00 $BF
 .db $DE $3F $11 $E0 $3D $FF $2A $C0 $7E $FF $51 $80 $FD $FF $EA $00
@@ -14308,7 +14312,7 @@ _DATA_344C6_:
 
 ; 3rd entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 345C6 to 346C5 (256 bytes)
-_DATA_345C6_:
+_DATA_345C6_Tiles_Crusher_3:
 .dsb 20, $00
 .db $01 $06 $00 $06 $07 $08 $00 $0B $0E $11 $00 $17 $7E $9F $11 $A0
 .db $7D $9F $1A $A0 $7E $9F $11 $A0 $FD $1F $1A $A0 $7E $9F $11 $A0
@@ -14329,7 +14333,7 @@ _DATA_345C6_:
 
 ; 4th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 346C6 to 347C5 (256 bytes)
-_DATA_346C6_:
+_DATA_346C6_Tiles_Crusher_4:
 .dsb 32, $00
 .db $7D $9F $1A $A0 $7E $9F $11 $A0 $FD $1F $1A $A0 $7E $9F $11 $A0
 .db $7D $9F $1A $A0 $7E $9F $11 $A0 $FD $1F $1A $A0 $7E $9F $11 $A0
@@ -14347,7 +14351,7 @@ _DATA_346C6_:
 
 ; 5th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 347C6 to 348C5 (256 bytes)
-_DATA_347C6_:
+_DATA_347C6_Tiles_Crusher_5:
 .dsb 20, $00
 .db $01 $06 $00 $06 $07 $08 $00 $0B $0E $11 $00 $17 $7E $9F $11 $A0
 .db $7D $9F $1A $A0 $7E $9F $11 $A0 $FD $1F $1A $A0 $7E $9F $11 $A0
@@ -14370,7 +14374,7 @@ _DATA_347C6_:
 
 ; 6th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 348C6 to 349C5 (256 bytes)
-_DATA_348C6_:
+_DATA_348C6_Tiles_Crusher_6:
 .db $01 $06 $00 $06 $07 $08 $00 $0B $0E $11 $00 $17 $1C $23 $00 $2F
 .db $38 $47 $00 $5F $71 $8F $01 $BE $71 $8F $01 $BE $FD $02 $00 $BF
 .db $DE $3F $11 $E0 $3D $FF $2A $C0 $7E $FF $51 $80 $FD $FF $EA $00
@@ -14620,7 +14624,7 @@ _DATA_35246_:
 .dsb 172, $00
 
 ; Data from 357C6 to 35B85 (960 bytes)
-_DATA_357C6_:
+_DATA_357C6_Tiles_Trap_Spinner:
 .db $01 $03 $01 $02 $03 $03 $03 $03
 .dsb 23, $00
 .db $01 $FE $FF $F9 $00 $FF $FF $FF $FF $3C $7F $3B $40 $5B $3C $15

@@ -1,4 +1,4 @@
-rem we expect BMP2TIle to be on the path
+rem we expect BMP2Tile and pcmenc to be on the path
 @echo off
 bmp2tile png\font.8x16.bin.png                              -noremovedupes -8x16  -savetiles font.8x16.bin
 bmp2tile png\intro-segalogo.lemmingscompr.png               -noremovedupes        -savetiles intro-segalogo.lemmingscompr               -smspalette -fullpalette -savepalette intro-segalogo.palette
@@ -24,6 +24,16 @@ bmp2tile png\hud-lemming-states.bin.png                     -noremovedupes      
 bmp2tile png\hud-rate-control.bin.png                                             -savetiles hud-rate-control.bin                       -tileoffset 246 -savetilemap hud-rate-control.tilemap.bin
 bmp2tile png\hud-font.8x16.bin.png                          -noremovedupes -8x16  -savetiles hud-font.8x16.bin
 bmp2tile png\title-screen-font.1bpp.png                     -noremovedupes        -savetiles title-screen-font.1bpp
+bmp2tile png\trap-crusher.bin.png                           -noremovedupes        -savetiles trap-crusher.bin
+bmp2tile png\trap-rope.bin.png                              -noremovedupes        -savetiles trap-rope.bin
+bmp2tile png\trap-beartrap.bin.png                          -noremovedupes        -savetiles trap-beartrap.bin
+bmp2tile png\trap-drip.bin.png                              -noremovedupes        -savetiles trap-drip.bin
+bmp2tile png\trap-flame.bin.png                             -noremovedupes        -savetiles trap-flame.bin
+bmp2tile png\trap-spinner.bin.png                           -noremovedupes        -savetiles trap-spinner.bin
+bmp2tile png\animation-exit-flames.bin.png                  -noremovedupes        -savetiles animation-exit-flames.bin
+bmp2tile png\animation-water.8x16.bin.png                   -noremovedupes -8x16  -savetiles animation-water.8x16.bin
+bmp2tile png\animation-green-water.8x16.bin.png             -noremovedupes -8x16  -savetiles animation-green-water.8x16.bin
+bmp2tile png\animation-flame-water.8x16.bin.png             -noremovedupes -8x16  -savetiles animation-flame-water.8x16.bin
 
 pcmenc wav\LETSGO.wav -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10
 pcmenc wav\OHNO.wav   -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10

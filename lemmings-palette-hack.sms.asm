@@ -53,7 +53,7 @@ LevelLoaderHack:
     ; Trigger a load
     call LoadPalette
     
-    ; Clear tile VRAM to colour 1
+    ; Clear tile VRAM to colour 1. This makes it easier to see which tiles are used.
     push bc
       ld bc,448*8
       xor a
@@ -503,3 +503,61 @@ Delay399:
   PatchW($2D95, PlayOhNo)
   PatchW($3F00, PlayLetsGo)
   PatchW($474F, PlayLetsGo)
+
+
+
+; Traps
+.unbackground $343c6 $35b85
+  ROMPosition $343c6
+.section "Crusher trap tiles" force
+.incbin "trap-crusher.bin"
+.ends
+  ROMPosition $349c6
+.section "Rope trap tiles" force
+.incbin "trap-rope.bin"
+.ends
+  ROMPosition $34c46
+.section "Beartrap tiles" force
+.incbin "trap-beartrap.bin"
+.ends
+  ROMPosition $34fc6
+.section "Water drip trap tiles" force
+.incbin "trap-drip.bin"
+.ends
+  ROMPosition $351c6
+.section "Flame trap tiles" force
+.incbin "trap-flame.bin"
+.ends
+  ROMPosition $357c6
+.section "Spinner trap tiles" force
+; These are padded to 8 tiles but only have 6 frames of data
+.incbin "trap-spinner.bin" skip 0*32*6 read 6*32
+.dsb 64,0
+.incbin "trap-spinner.bin" skip 1*32*6 read 6*32
+.dsb 64,0
+.incbin "trap-spinner.bin" skip 2*32*6 read 6*32
+.dsb 64,0
+.incbin "trap-spinner.bin" skip 3*32*6 read 6*32
+.ends
+
+
+
+; Animations
+.unbackground $35b86 $35ee5
+  ROMPosition $35b86
+.section "Level exit flame tiles" force
+.incbin "animation-exit-flames.bin"
+.ends
+  ROMPosition $35c46
+.section "Water tiles" force
+.incbin "animation-water.8x16.bin"
+.ends
+  ROMPosition $35d06
+.section "Green water tiles" force
+.incbin "animation-green-water.8x16.bin"
+.ends
+; One-way arrows animation lives at $35dc6 but seems to be unused
+  ROMPosition $35e26
+.section "Flame water tiles" force
+.incbin "animation-flame-water.8x16.bin"
+.ends
