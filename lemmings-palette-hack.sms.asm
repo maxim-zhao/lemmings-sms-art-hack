@@ -579,3 +579,16 @@ Delay399:
 .section "Trapdoor tiles" force
 .incbin "animation-trapdoor.bin"
 .ends
+
+
+
+; Text screens' green textured background
+.unbackground $1b986 $1be5d
+  ROMPosition $1b986
+.section "Background" superfree
+BackgroundTiles:   .incbin "background.lemmingscompr"
+BackgroundTilemap: .incbin "background.lsbtilemap"
+.ends
+  PatchB $7b5 :BackgroundTiles
+  PatchW $7BA BackgroundTiles
+  PatchW $7C4 BackgroundTilemap

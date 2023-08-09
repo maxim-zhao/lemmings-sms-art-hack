@@ -1418,10 +1418,10 @@ _LABEL_7AE_:
 _LABEL_7B4_:
 	ld a, $06
 	ld (_RAM_FFFF_), a
-	ld de, _DATA_1B986_
+	ld de, _DATA_1B986_CompressedTiles_GreenBackground
 	ld ix, $2000
 	call _LABEL_3CFD_DecompressTiles
-	ld hl, _DATA_1BB5E_
+	ld hl, _DATA_1BB5E_GreenBackgroundTilemap
 	ld de, $3800
 	ld bc, $0300
 	call _LABEL_4989_
@@ -8987,7 +8987,7 @@ _LABEL_4432_:
 	ld (_RAM_DACE_), a
 	ld a, $00
 	call _LABEL_736_
-	ld de, _DATA_38606_
+	ld de, _DATA_38606_CompressedTiles_TitleScreen
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_38006_
@@ -8996,13 +8996,13 @@ _LABEL_4432_:
 	call _LABEL_49B3_LoadTilemap
 	ld a, $0E
 	ld (_RAM_FFFF_), a
-	ld de, _DATA_3A546_
+	ld de, _DATA_3A546_CompressedTiles_TitleScreenDifficulties
 	ld ix, $2700
 	call _LABEL_3CFD_DecompressTiles
-	ld de, _DATA_3AA71_
+	ld de, _DATA_3AA71_CompressedTiles_TitleScreenPlayerCount
 	ld ix, $2F00
 	call _LABEL_3CFD_DecompressTiles
-	ld de, _DATA_3AE5E_
+	ld de, _DATA_3AE5E_TitleScreen_Unknown
 	ld ix, $3300
 	call _LABEL_3CFD_DecompressTiles
 	call _LABEL_19B7_
@@ -9499,7 +9499,7 @@ _LABEL_4824_:
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_5BC_
-	ld de, _DATA_3A2B9_EndingTiles
+	ld de, _DATA_3A2B9_CompressedTiles_Ending1
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_39FB8_EndingTilemap
@@ -9508,7 +9508,7 @@ _LABEL_4824_:
 	call _LABEL_4965_
 	ld a, $0D
 	ld (_RAM_FFFF_), a
-	ld de, _DATA_35EE6_EndingTiles2
+	ld de, _DATA_35EE6_CompressedTiles_Ending2
 	ld ix, $0800
 	call _LABEL_3CFD_DecompressTiles
 	ld a, $01
@@ -13250,7 +13250,7 @@ _DATA_17CB1_RateControlTiles:
 .incbin "Lemmings.sms_DATA_18000_.inc"
 
 ; Data from 1B986 to 1BB5D (472 bytes)
-_DATA_1B986_:
+_DATA_1B986_CompressedTiles_GreenBackground:
 .db $05 $85 $FF $01 $DF $F3 $8F $FF $00 $F7 $86 $FF $01 $EF $FB $89
 .db $FF $02 $FB $FF $7D $82 $FF $00 $EF $CC $FF $3F $EA $DF $AB $76
 .db $FD $1F $82 $C1 $EA $DF $AB $76 $FD $1F $82 $C1 $FF $BA $FD $FF
@@ -13283,7 +13283,7 @@ _DATA_1B986_:
 .db $00 $9D $FF $00 $7F $88 $FF $97
 
 ; Data from 1BB5E to 1BE5D (768 bytes)
-_DATA_1BB5E_:
+_DATA_1BB5E_GreenBackgroundTilemap:
 .db $00 $01 $02 $03 $04 $05 $06 $07 $08 $09 $0A $0B $0C $05 $06 $05
 .db $0D $08 $05 $0E $0D $0F $06 $00 $0F $07 $10 $11 $12 $13 $05 $05
 .db $01 $15 $16 $17 $02 $02 $18 $04 $18 $02 $02 $08 $05 $0E $0D $0F
@@ -14762,8 +14762,8 @@ _DATA_35E86_:
 .db $00 $FF $FF $FF $00 $55 $FF $FF $00 $00 $FF $FF $AA $AA $FF $FF
 
 ; Data from 35EE6 to 37851 (6508 bytes)
-_DATA_35EE6_EndingTiles2:
-.incbin "Lemmings.sms_DATA_35EE6_EndingTiles2.inc"
+_DATA_35EE6_CompressedTiles_Ending2:
+.incbin "Lemmings.sms_DATA_35EE6_CompressedTiles_Ending2.inc"
 
 ; Data from 37852 to 37FFF (1966 bytes)
 _DATA_37852_Intro1_Tiles:
@@ -14780,8 +14780,8 @@ _DATA_38006_:
 .incbin "Lemmings.sms_DATA_38006_.inc"
 
 ; Data from 38606 to 39FB7 (6578 bytes)
-_DATA_38606_:
-.incbin "Lemmings.sms_DATA_38606_.inc"
+_DATA_38606_CompressedTiles_TitleScreen:
+.incbin "Lemmings.sms_DATA_38606_CompressedTiles_TitleScreen.inc"
 
 ; Data from 39FB8 to 3A2B8 (769 bytes)
 _DATA_39FB8_EndingTilemap:
@@ -14830,7 +14830,7 @@ _DATA_39FB8_EndingTilemap:
 .dsb 97, $08
 
 ; Data from 3A2B9 to 3A545 (653 bytes)
-_DATA_3A2B9_EndingTiles:
+_DATA_3A2B9_CompressedTiles_Ending1:
 .db $05 $17 $00 $10 $08 $10 $08 $10 $08 $14 $0A $0E $0D $0B $0F $0D
 .db $0E $0B $18 $28 $18 $28 $18 $28 $18 $28 $87 $00 $1F $08 $10 $08
 .db $10 $00 $08 $00 $00 $10 $08 $10 $20 $10 $00 $10 $00 $50 $70 $B0
@@ -14874,11 +14874,11 @@ _DATA_3A2B9_EndingTiles:
 .db $B8 $FF $07 $BF $7F $17 $BB $4F $AB $51 $55 $B7 $00
 
 ; Data from 3A546 to 3AA70 (1323 bytes)
-_DATA_3A546_:
-.incbin "Lemmings.sms_DATA_3A546_.inc"
+_DATA_3A546_CompressedTiles_TitleScreenDifficulties:
+.incbin "Lemmings.sms_DATA_3A546_CompressedTiles_TitleScreenDifficulties.inc"
 
 ; Data from 3AA71 to 3AE5D (1005 bytes)
-_DATA_3AA71_:
+_DATA_3AA71_CompressedTiles_TitleScreenPlayerCount:
 .db $04 $6F $C4 $AF $5E $BB $36 $7F $7F $6E $57 $EB $F6 $A9 $FE $FF
 .db $EF $B7 $F5 $EB $D7 $EF $1E $F9 $BD $60 $0F $E8 $DC $DC $3E $C2
 .db $FD $1A $57 $7E $6B $56 $6B $5E $3F $77 $BE $BD $B7 $AB $BE $FF
@@ -14944,7 +14944,7 @@ _DATA_3AA71_:
 .db $08 $5F $83 $FF $07 $07 $23 $63 $F7 $FF $FE $FC $F8
 
 ; Data from 3AE5E to 3BFFF (4514 bytes)
-_DATA_3AE5E_:
+_DATA_3AE5E_TitleScreen_Unknown:
 .db $03 $81 $00 $0B $03 $04 $0B $0B $09 $08 $05 $06 $05 $04 $03 $01
 .db $83 $00 $0D $80 $60 $F8 $F4 $7A $BE $5D $A9 $51 $AB $02 $8E $FD
 .db $3E $88 $00 $06 $E0 $50 $E8 $78 $B4 $5A $2E $91 $00 $0B $03 $04

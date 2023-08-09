@@ -36,6 +36,7 @@ bmp2tile png\animation-green-water.8x16.bin.png             -noremovedupes -8x16
 bmp2tile png\animation-flame-water.8x16.bin.png             -noremovedupes -8x16  -savetiles animation-flame-water.8x16.bin
 bmp2tile png\cursors.8x16.bin.png                           -noremovedupes -8x16  -savetiles cursors.8x16.bin
 bmp2tile png\animation-trapdoor.bin.png                     -noremovedupes        -savetiles animation-trapdoor.bin
+bmp2tile png\background.lemmingscompr.png                                         -savetiles background.lemmingscompr                   -savetilemap background.lsbtilemap
 
 pcmenc wav\LETSGO.wav -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10
 pcmenc wav\OHNO.wav   -p 4 -dt1 474 -dt2 11 -dt3 475 -rto 2 -cpuf 3546893 -smooth 10
