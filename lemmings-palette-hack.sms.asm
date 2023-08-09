@@ -561,3 +561,12 @@ Delay399:
 .section "Flame water tiles" force
 .incbin "animation-flame-water.8x16.bin"
 .ends
+
+
+
+; The cursor
+.unbackground $62dd $637d
+  ROMPosition $62dd
+.section "Cursor tiles" force
+.incbin "cursors.8x16.bin"
+.ends
