@@ -570,3 +570,12 @@ Delay399:
 .section "Cursor tiles" force
 .incbin "cursors.8x16.bin"
 .ends
+
+
+
+; Trapdoor animation
+.unbackground $1f137 $1f8b6
+  ROMPosition $1f137
+.section "Trapdoor tiles" force
+.incbin "animation-trapdoor.bin"
+.ends
