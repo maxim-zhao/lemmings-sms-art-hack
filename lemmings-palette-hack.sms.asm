@@ -183,7 +183,7 @@ intro_lemmings_background_palette:
 intro_lemmings_background:
 .incbin "intro-lemmings-background.lemmingscompr"
 intro_lemmings_tilemap:
-.incbin "intro-lemmings-background.lemmingscompr.tilemap.bin"
+.incbin "intro-lemmings-background.tilemap.bin"
 intro_lemmings_dot:
 .incbin "intro-lemmings-dot.8x16.bin"
 .ends
@@ -288,7 +288,15 @@ intro_lemmings_lemming:
 .ends
   ROMPosition $1c96
 .section "hud art part 4" force
-.incbin "hud-rate-control.tilemap.bin"
+; HUD tilemap data starts at 246. We want to add this to the even bytes.
+.macro add246
+.if \2 # 2 == 0
+.redefine _out \1+246
+.else
+.redefine _out \1
+.endif
+.endm
+.incbin "hud-rate-control.tilemap.bin" filter add246
 .ends
   ROMPosition $2b9cc
 .section "hud art part 5" force
@@ -639,7 +647,7 @@ BackgroundTilemap: .incbin "background.lsbtilemap"
 .unbackground $1be8e $1be9d
 .bank 6 slot 2
 .section "Ending palette" free
-EndingPalette: .incbin "ending.palette"
+EndingPalette: .incbin "ending-background.palette"
 .ends
   PatchW($482A, EndingPalette)
 .slot 2

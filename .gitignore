@@ -8,3 +8,5 @@
 *.palette
 *.1bpp
 *.pcmenc
+/auto.makefile
+/linkfile
