@@ -173,7 +173,7 @@ intro_lemming:
 .bank 6 ; Banked palettes must be here
 .section "Lemmings title palette" free
 intro_lemmings_background_palette:
-.incbin "intro-lemmings-background.lemmingscompr.palette"
+.incbin "intro-lemmings-background.palette"
 .ends
   PatchW($4A84, intro_lemmings_background_palette)
 ; 2. Tiles, tilemap, dot all share a bank

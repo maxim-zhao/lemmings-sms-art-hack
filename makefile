@@ -61,6 +61,9 @@ auto.makefile: lemmings-palette-hack.sms.asm
 %.palette: png/%.png
 	$(BMP2TILE) $< -smspalette -fullpalette -savepalette $@
 
+%.palette: png/%.unoptimised.png
+	$(BMP2TILE) $< -smspalette -fullpalette -savepalette $@
+
 # 1bpp art, no tile dedupe
 %.1bpp: png/%.png
 	$(BMP2TILE) $< -noremovedupes -savetiles $@
@@ -84,5 +87,8 @@ clean:
 	del *.lemmingscompr
 	del *.lsbtilemap
 	del *.1bpp
+	del *.palette
+	del *.sym
+	del wav\*.pcmenc
 	del lemmings-palette-hack.sms
 	del lemmings-palette-hack.o
