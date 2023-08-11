@@ -288,15 +288,11 @@ intro_lemmings_lemming:
 .ends
   ROMPosition $1c96
 .section "hud art part 4" force
-; HUD tilemap data starts at 246. We want to add this to the even bytes.
+; HUD tilemap data starts at 246. We want to add this to the data, word-wise
 .macro add246
-.if \2 # 2 == 0
 .redefine _out \1+246
-.else
-.redefine _out \1
-.endif
 .endm
-.incbin "hud-rate-control.tilemap.bin" filter add246
+.incbin "hud-rate-control.tilemap.bin" filter add246 filtersize 2
 .ends
   ROMPosition $2b9cc
 .section "hud art part 5" force
