@@ -584,7 +584,7 @@ _RAM_DB4F_ db
 _RAM_DB50_ db
 _RAM_DB51_ db
 _RAM_DB52_ dw
-_RAM_DB54_ db
+_RAM_DB54_NumberOfLemmings db
 _RAM_DB55_ db
 _RAM_DB56_ db
 _RAM_DB57_ db
@@ -638,8 +638,8 @@ _RAM_DB99_ db
 .enum $DB9B export
 _RAM_DB9B_ db
 _RAM_DB9C_ db
-_RAM_DB9D_ db
-_RAM_DB9E_ db
+_RAM_DB9D_LevelNumber db
+_RAM_DB9E_DifficultyLevel db
 _RAM_DB9F_MapDescriptorAddress dw
 _RAM_DBA1_ dw
 _RAM_DBA3_ db
@@ -1851,7 +1851,7 @@ _LABEL_A6D_:
 	ret
 
 _LABEL_AB5_:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	add a, a
 	add a, a
 	add a, a
@@ -2159,7 +2159,7 @@ _DATA_E9A_EndingText:
 .db $4B $20 $4B $4E $4F $57 $4C $45 $53 $00 $50 $52 $4F $44 $55 $43
 .db $45 $52 $20 $4E $45 $49 $4C $20 $59 $4F $55 $4E $47 $00
 
-; Pointer Table from EF8 to EF9 (1 entries, indexed by _RAM_DB9E_)
+; Pointer Table from EF8 to EF9 (1 entries, indexed by _RAM_DB9E_DifficultyLevel)
 _DATA_EF8_DifficultyLevelsText:
 ; "FUN   ",0,0
 ; "TRICKY",0,0
@@ -3390,7 +3390,7 @@ _DATA_17CB_:
 .db $9D $BF $00 $00
 
 _LABEL_18C9_:
-	ld hl, (_RAM_DB9D_)
+	ld hl, (_RAM_DB9D_LevelNumber)
 	ld h, $00
 	ld de, _DATA_18D6_
 	add hl, de
@@ -4038,7 +4038,7 @@ _LABEL_1E0F_:
 	ld (_RAM_DAE4_), a
 	ld a, $CF
 	ld (_RAM_FFFF_), a
-	ld hl, (_RAM_DB9D_)
+	ld hl, (_RAM_DB9D_LevelNumber)
 	ld h, $00
 	ld d, h
 	ld e, l
@@ -4047,22 +4047,22 @@ _LABEL_1E0F_:
 	add hl, hl
 	add hl, hl
 	add hl, de
-	ld a, (_RAM_DB9E_)
-	ld de, _DATA_3F7A9_
+	ld a, (_RAM_DB9E_DifficultyLevel)
+	ld de, _DATA_3F7A9_LevelDescriptors_Fun
 	and a
 	jp z, +
-	ld de, _DATA_3F9A7_
+	ld de, _DATA_3F9A7_LevelDescriptors_Tricky
 	cp $01
 	jp z, +
-	ld de, _DATA_3FBA5_
+	ld de, _DATA_3FBA5_LevelDescriptors_Taxing
 	cp $02
 	jp z, +
-	ld de, _DATA_3FDA3_
+	ld de, _DATA_3FDA3_LevelDescriptors_Mayhem
 	cp $03
 	jp z, +
 +:
 	add hl, de
-	ld de, _RAM_DB54_
+	ld de, _RAM_DB54_NumberOfLemmings
 	ldi
 	ldi
 	ld a, (hl)
@@ -4107,7 +4107,7 @@ _LABEL_1E0F_:
 	ld a, $14
 +:
 	ld (_RAM_DB9B_), a
-	ld hl, _RAM_DB54_
+	ld hl, _RAM_DB54_NumberOfLemmings
 	ld a, (_RAM_DB9B_)
 	sub (hl)
 	jr nc, +
@@ -4144,7 +4144,7 @@ _LABEL_1F0C_:
 	xor a
 	ld (_RAM_DB98_), a
 	ld (_RAM_DB97_), a
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	and a
 	jp z, +
 	dec a
@@ -4156,7 +4156,7 @@ _LABEL_1F0C_:
 	ret
 
 +:
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $01
 	cp $0E
 	jp z, _LABEL_1F9F_
@@ -4175,14 +4175,14 @@ _LABEL_1F0C_:
 	ret
 
 ++:
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $07
 	cp $18
 	jp z, _LABEL_1F9F_
 	ret
 
 +++:
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $01
 	and a
 	jp z, _LABEL_1F9F_
@@ -4198,7 +4198,7 @@ _LABEL_1F0C_:
 	ret
 
 _LABEL_1F78_:
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $04
 	cp $08
 	jp z, _LABEL_1F9F_
@@ -4603,10 +4603,10 @@ _LABEL_2206_:
 	ld (_RAM_FFFF_), a
 	ld hl, (_RAM_DB0D_MapLayoutAddress)
 	call _LABEL_3536_
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $14
 	jr nz, +
 	ld hl, _RAM_CEF9_
@@ -4615,10 +4615,10 @@ _LABEL_2206_:
 	ld bc, $01C0
 	ldir
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jp nz, _LABEL_22D1_
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $16
 	jr nz, _LABEL_22D1_
 	ld de, _RAM_D05E_
@@ -4661,10 +4661,10 @@ _LABEL_22C7_:
 	ret
 
 _LABEL_22D1_:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1B
 	jr nz, +
 	ld a, $8D
@@ -4683,10 +4683,10 @@ _LABEL_22D1_:
 	ld (_RAM_D1BE_), a
 	ld (_RAM_D2B4_), a
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0C
 	jr nz, +
 	ld a, $02
@@ -4696,10 +4696,10 @@ _LABEL_22D1_:
 	ld (_RAM_D37F_), a
 	ld (_RAM_D37E_), a
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0C
 	jr nz, +
 	ld a, $7B
@@ -4708,20 +4708,20 @@ _LABEL_22D1_:
 	ld (_RAM_D0E3_), a
 	ld (_RAM_D153_), a
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $02
 	jr nz, +
 	xor a
 	ld (_RAM_D142_), a
 	ld (_RAM_D1B2_), a
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $17
 	jr nz, +
 	ld hl, $4749
@@ -4729,10 +4729,10 @@ _LABEL_22D1_:
 	ld hl, $4846
 	ld (_RAM_D064_), hl
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1C
 	jr nz, +
 	ld hl, _RAM_D22E_
@@ -4745,10 +4745,10 @@ _LABEL_22D1_:
 	add hl, de
 	djnz -
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jp nz, ++
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0B
 	jp nz, ++
 	ld de, _RAM_D4BA_
@@ -4770,17 +4770,17 @@ _LABEL_22D1_:
 	ret
 
 ++:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $06
 	jr z, ++
 +:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jp nz, +++
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0A
 	jr nz, +++
 ++:
@@ -4800,10 +4800,10 @@ _LABEL_22D1_:
 	lddr
 	ld (de), a
 +++:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jp nz, ++
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1B
 	jp nz, ++
 	ld de, _RAM_DA8B_
@@ -4831,18 +4831,18 @@ _LABEL_22D1_:
 	ret
 
 ++:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	and a
 	jr z, +
 	cp $01
 	jr nz, _LABEL_247E_
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $19
 	jr nz, _LABEL_247E_
 	jr ++
 
 +:
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $08
 	jr nz, _LABEL_247E_
 ++:
@@ -4867,18 +4867,18 @@ _LABEL_22D1_:
 	jp +++
 
 _LABEL_247E_:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jr z, +
 	cp $02
 	jr nz, +++
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $06
 	jr nz, +++
 	jr ++
 
 +:
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $03
 	jr nz, +++
 ++:
@@ -4922,10 +4922,10 @@ _LABEL_247E_:
 	jp nz, -
 	ld a, c
 	ld (_RAM_DB14_), a
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jp nz, ++
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1B
 	jp nz, ++
 	ld hl, _RAM_D067_
@@ -5454,10 +5454,10 @@ _LABEL_2955_:
 	ret
 
 _LABEL_297F_:
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	ret nz
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1B
 	ret nz
 	ld hl, _RAM_D067_
@@ -5518,11 +5518,11 @@ _LABEL_29B1_:
 	ld d, $00
 	add iy, de
 ++:
-	ld a, (_RAM_DB54_)
+	ld a, (_RAM_DB54_NumberOfLemmings)
 	and a
 	ret z
 	dec a
-	ld (_RAM_DB54_), a
+	ld (_RAM_DB54_NumberOfLemmings), a
 	ld a, (_RAM_DB5B_)
 	inc a
 	ld (_RAM_DB5B_), a
@@ -8339,7 +8339,7 @@ _LABEL_3E59_:
 	call _LABEL_4697_
 	call _LABEL_4A14_
 	xor a
-	ld (_RAM_DB9E_), a
+	ld (_RAM_DB9E_DifficultyLevel), a
 _LABEL_3E68_:
 	xor a
 	ld (_RAM_DB50_), a
@@ -8348,7 +8348,7 @@ _LABEL_3E68_:
 	ld a, $01
 	ld (_RAM_DBA4_), a
 	xor a
-	ld (_RAM_DB9D_), a
+	ld (_RAM_DB9D_LevelNumber), a
 	call _LABEL_4432_TitleScreen
 _LABEL_3E7D_:
 	xor a
@@ -8483,7 +8483,7 @@ _LABEL_3F17_:
 	ld a, (_RAM_DB7F_)
 	cp $03
 	jp z, +
-	ld hl, (_RAM_DB54_)
+	ld hl, (_RAM_DB54_NumberOfLemmings)
 +:
 	ld a, (_RAM_DB5B_)
 	or l
@@ -8548,22 +8548,22 @@ _LABEL_403A_:
 	ld a, (_RAM_DBA7_)
 	cp $4C
 	jr nz, _LABEL_40FC_
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1D
 	jp z, _LABEL_412F_
 +:
 	ld bc, $100C
 	call _LABEL_829_SetTextLocationToBC
-	ld hl, (_RAM_DB9D_)
+	ld hl, (_RAM_DB9D_LevelNumber)
 	ld h, $00
 	add hl, hl
 	add hl, hl
 	add hl, hl
 	ld de, $00F0
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 -:
 	and a
 	jr z, +
@@ -8588,7 +8588,7 @@ _LABEL_403A_:
 	call _LABEL_774_PrintString
 	ld bc, $0D17
 	call _LABEL_829_SetTextLocationToBC
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	add a, $02
 	cp $1F
 	jr c, +
@@ -8625,13 +8625,13 @@ _LABEL_412F_:
 	ld a, (_RAM_DBA7_)
 	cp $4D
 	jp z, +++
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	inc a
 	cp $1E
 	jr nz, ++
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	inc a
-	ld (_RAM_DB9E_), a
+	ld (_RAM_DB9E_DifficultyLevel), a
 	cp $04
 	jp nz, +
 	call _LABEL_4824_EndingSequence
@@ -8641,7 +8641,7 @@ _LABEL_412F_:
 +:
 	xor a
 ++:
-	ld (_RAM_DB9D_), a
+	ld (_RAM_DB9D_LevelNumber), a
 	ld a, $01
 	and a
 	ret
@@ -8674,7 +8674,7 @@ _LABEL_4166_:
 	call _LABEL_768_PrintStringAtBCSpaced
 	ld bc, $0319
 	call _LABEL_829_SetTextLocationToBC
-	ld a, (_RAM_DB54_)
+	ld a, (_RAM_DB54_NumberOfLemmings)
 	call _LABEL_12D2_
 	ld bc, $0609
 	call _LABEL_829_SetTextLocationToBC
@@ -8682,7 +8682,7 @@ _LABEL_4166_:
 	and a
 	jr z, +
 	ld a, (_RAM_DB9B_)
-	ld hl, _RAM_DB54_
+	ld hl, _RAM_DB54_NumberOfLemmings
 	add a, (hl)
 	ld bc, $0715
 	jr ++
@@ -8714,7 +8714,7 @@ _LABEL_4166_:
 	call _LABEL_AB5_
 	ld bc, $1213
 	call _LABEL_829_SetTextLocationToBC
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	inc a
 	call _LABEL_12D2_
 	ld hl, _DATA_1BE5E_MainPalette
@@ -8769,7 +8769,7 @@ _LABEL_4255_:
 	call _LABEL_768_PrintStringAtBCSpaced
 	call _LABEL_768_PrintStringAtBCSpaced
 	xor a
-	ld (_RAM_DB9D_), a
+	ld (_RAM_DB9D_LevelNumber), a
 --:
 	call _LABEL_840_
 	ld bc, $150D
@@ -8777,11 +8777,11 @@ _LABEL_4255_:
 	call _LABEL_AB5_
 	ld bc, $151A
 	call _LABEL_829_SetTextLocationToBC
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	inc a
 	call _LABEL_12D2_
 	ld hl, (_RAM_DBCE_)
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	add a, l
 	cp $FF
 	jr nz, +
@@ -8791,7 +8791,7 @@ _LABEL_4255_:
 	jr nz, +
 	ld a, $1D
 +:
-	ld (_RAM_DB9D_), a
+	ld (_RAM_DB9D_LevelNumber), a
 	xor a
 	ld (_RAM_DAD4_), a
 -:
@@ -8801,9 +8801,9 @@ _LABEL_4255_:
 	ld a, (_RAM_DBD1_)
 	and a
 	jr z, --
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	and $03
-	ld (_RAM_DB9E_), a
+	ld (_RAM_DB9E_DifficultyLevel), a
 	call _LABEL_6F2_
 	ret
 
@@ -8939,12 +8939,12 @@ _LABEL_4398_:
 	dec b
 	add a, $1E
 	ld c, a
-	ld (_RAM_DB9D_), bc
+	ld (_RAM_DB9D_LevelNumber), bc
 	ld ix, _DATA_E7F_PasswordCorrectText
 	ld bc, $090C
 	call _LABEL_829_SetTextLocationToBC
 	call _LABEL_774_PrintString
-	ld a, (_RAM_DB9D_)
+	ld a, (_RAM_DB9D_LevelNumber)
 	inc a
 	call _LABEL_12D2_
 	ld bc, $0C0A
@@ -9043,10 +9043,10 @@ _LABEL_44B3_:
 	jp z, +
 	cp $B0
 	jp nz, _LABEL_44B3_
-	ld a, (_RAM_DB9E_)
+	ld a, (_RAM_DB9E_DifficultyLevel)
 	inc a
 	and $03
-	ld (_RAM_DB9E_), a
+	ld (_RAM_DB9E_DifficultyLevel), a
 	call _LABEL_4549_
 -:
 	in a, (Port_IOPort1)
@@ -9096,7 +9096,7 @@ _LABEL_4535_:
 	jp _LABEL_3E59_
 
 _LABEL_4549_:
-	ld hl, (_RAM_DB9E_)
+	ld hl, (_RAM_DB9E_DifficultyLevel)
 	ld h, $00
 	add hl, hl
 	add hl, hl
@@ -9984,7 +9984,7 @@ _DATA_5453_:
 .db $A0 $DE $DE $00 $FA $DE $DE $00 $D8 $FC $FC $00 $48 $6C $6C $00
 .db $DA $FE $FE $00 $FE
 
-; 1st entry of Pointer Table from EF8 (indexed by _RAM_DB9E_)
+; 1st entry of Pointer Table from EF8 (indexed by _RAM_DB9E_DifficultyLevel)
 ; Data from 5546 to 5549 (4 bytes)
 _DATA_5546_:
 .db $DA $82 $00 $74
@@ -10203,7 +10203,7 @@ _DATA_662F_:
 _DATA_6C25_:
 .incbin "Lemmings.sms_DATA_6C25_.inc"
 
-; 1st entry of Pointer Table from 3F7B6 (indexed by _RAM_DB9D_)
+; 1st entry of Pointer Table from 3F7B6 (indexed by _RAM_DB9D_LevelNumber)
 ; Data from 7174 to 72C2 (335 bytes)
 _DATA_7174_:
 .db $00 $04 $06 $80 $48 $00 $04 $AF $82 $2C $00 $04 $B9 $87 $28 $00
@@ -14988,7 +14988,7 @@ _DATA_3C000_LetsGoSample:
 _DATA_3D902_OhNoSample:
 .incbin "Lemmings.sms_DATA_3D902_OhNoSample.inc"
 
-; 1st entry of Pointer Table from 3F7B8 (indexed by _RAM_DB9D_)
+; 1st entry of Pointer Table from 3F7B8 (indexed by _RAM_DB9D_LevelNumber)
 ; Pointer Table from 3EE24 to 3EE27 (2 entries, indexed by unknown)
 _DATA_3EE24_:
 .dw _DATA_554A_ _DATA_5453_
@@ -14997,13 +14997,13 @@ _DATA_3EE24_:
 .incbin "Lemmings.sms_DATA_3EE28_.inc"
 
 ; Data from 3F7A9 to 3F7B5 (13 bytes)
-_DATA_3F7A9_:
+_DATA_3F7A9_LevelDescriptors_Fun:
 .db $0A $0A $32 $05 $00 $00 $00 $00 $00 $00 $00 $0A $0A
 
-; Pointer Table from 3F7B6 to 3F7B7 (1 entries, indexed by _RAM_DB9D_)
+; Pointer Table from 3F7B6 to 3F7B7 (1 entries, indexed by _RAM_DB9D_LevelNumber)
 .dw _DATA_7174_
 
-; Pointer Table from 3F7B8 to 3F7B9 (1 entries, indexed by _RAM_DB9D_)
+; Pointer Table from 3F7B8 to 3F7B9 (1 entries, indexed by _RAM_DB9D_LevelNumber)
 .dw _DATA_3EE24_
 
 ; Data from 3F7BA to 3F9A6 (493 bytes)
@@ -15041,7 +15041,7 @@ _DATA_3F7A9_:
 .db $14 $14 $14 $14 $05 $F6 $71 $C7 $B0
 
 ; Data from 3F9A7 to 3FBA4 (510 bytes)
-_DATA_3F9A7_:
+_DATA_3F9A7_LevelDescriptors_Tricky:
 .db $14 $32 $32 $04 $0A $0A $0A $0A $0A $0A $0A $0A $05 $83 $71 $DD
 .db $B0 $0A $64 $28 $03 $00 $00 $00 $00 $00 $00 $00 $0A $0A $4C $71
 .db $F6 $B0 $14 $32 $32 $06 $0A $0A $0A $0A $14 $0A $0A $0A $05 $97
@@ -15077,7 +15077,7 @@ _DATA_3F9A7_:
 .db $0A $0A $0A $0A $00 $0A $0A $05 $46 $72 $3F $B3
 
 ; Data from 3FBA5 to 3FDA2 (510 bytes)
-_DATA_3FBA5_:
+_DATA_3FBA5_LevelDescriptors_Taxing:
 .db $14 $5A $28 $05 $02 $02 $02 $02 $08 $02 $02 $02 $05 $4B $72 $4E
 .db $B3 $14 $50 $46 $05 $0A $05 $05 $0A $0A $05 $05 $05 $05 $79 $71
 .db $6D $B3 $14 $64 $01 $02 $14 $14 $14 $00 $14 $14 $14 $14 $05 $51
@@ -15112,7 +15112,7 @@ _DATA_3FBA5_:
 .db $03 $14 $14 $14 $14 $0F $14 $14 $14 $05 $BE $72 $99 $B5
 
 ; Data from 3FDA3 to 3FFFF (605 bytes)
-_DATA_3FDA3_:
+_DATA_3FDA3_LevelDescriptors_Mayhem:
 .db $14 $50 $0F $08 $00 $14 $0A $05 $1E $00 $00 $05 $05 $7E $71 $A3
 .db $B5 $14 $5A $1E $06 $0A $05 $0A $0A $1E $00 $00 $00 $05 $60 $71
 .db $AF $B5 $14 $64 $63
