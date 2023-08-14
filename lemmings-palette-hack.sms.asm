@@ -125,7 +125,7 @@ font:
 .slot 2
 .section "Sega logo tiles" superfree
 intro_segalogo:
-.incbin "intro-segalogo.lemmingscompr"
+.incbin {"intro-segalogo.{COMPRESSION}"}
 .ends
   PatchB($4698, :intro_segalogo)
   PatchW($46BE, intro_segalogo)
@@ -181,7 +181,7 @@ intro_lemmings_background_palette:
 .slot 2
 .section "Lemmings title data" superfree
 intro_lemmings_background:
-.incbin "intro-lemmings-background.lemmingscompr"
+.incbin {"intro-lemmings-background.{COMPRESSION}"}
 intro_lemmings_tilemap:
 .incbin "intro-lemmings-background.tilemap.bin"
 intro_lemmings_dot:
@@ -204,10 +204,7 @@ intro_lemmings_dot:
 .slot 2
 .section "Lemmings title lemming" superfree
 intro_lemmings_lemming:
-; We hack the data here to make it work with the game.
-.db 9 ; First byte is the total tile count divided by 8. The art is 5x8 and 4x8 tiles.
-.incbin "intro-lemmings-lemming1.8x16.lemmingscompr" skip 1
-.incbin "intro-lemmings-lemming2.8x16.lemmingscompr" skip 1
+.incbin {"intro-lemmings-lemming.{COMPRESSION}"}
 .ends
   PatchB($4A75, :intro_lemmings_lemming)
   PatchW($4A7E, intro_lemmings_lemming)
@@ -306,7 +303,7 @@ intro_lemmings_lemming:
 .unbackground $38000 $39FB7
 .slot 2
 .section "Title screen tiles" superfree
-TitleScreenTiles: .incbin "title-screen.lemmingscompr"
+TitleScreenTiles: .incbin {"title-screen.{COMPRESSION}"}
 TitleScreenTilemap: .incbin "title-screen.tilemap.bin"
 .ends
   PatchB($4436, :TitleScreenTiles)
@@ -324,9 +321,9 @@ TitleScreenPalette: .incbin "title-screen.palette"
 .unbackground $3A546 $3BFFF
 .slot 2
 .section "Title screen options art" superfree
-TitleScreenDifficulty: .incbin "title-screen-difficulties.lemmingscompr"
-TitleScreenPlayers: .incbin "title-screen-players.lemmingscompr"
-TitleScreenExtras: .incbin "title-screen-extras.lemmingscompr"
+TitleScreenDifficulty: .incbin {"title-screen-difficulties.{COMPRESSION}"}
+TitleScreenPlayers: .incbin {"title-screen-players.{COMPRESSION}"}
+TitleScreenExtras: .incbin {"title-screen-extras.{COMPRESSION}"}
 .ends
   PatchB($4474, :TitleScreenDifficulty)
   PatchW($4479, TitleScreenDifficulty)
@@ -627,7 +624,7 @@ Delay399:
 .unbackground $1b986 $1be5d
   ROMPosition $1b986
 .section "Background" superfree
-BackgroundTiles:   .incbin "background.lemmingscompr"
+BackgroundTiles:   .incbin {"background.{COMPRESSION}"}
 BackgroundTilemap: .incbin "background.lsbtilemap"
 .ends
   PatchB $7b5 :BackgroundTiles
@@ -648,7 +645,7 @@ EndingPalette: .incbin "ending-background.palette"
   PatchW($482A, EndingPalette)
 .slot 2
 .section "Ending background" superfree
-EndingBackground: .incbin "ending-background.lemmingscompr"
+EndingBackground: .incbin {"ending-background.{COMPRESSION}"}
 EndingBackgroundTilemap: .incbin "ending-background.lsbtilemap"
 .ends
   PatchB($4825, :EndingBackground)
@@ -656,7 +653,7 @@ EndingBackgroundTilemap: .incbin "ending-background.lsbtilemap"
   PatchW($4840, EndingBackgroundTilemap)
 .slot 2
 .section "Ending lemmings" superfree
-EndingLemmings: .incbin "ending-lemmings.lemmingscompr"
+EndingLemmings: .incbin {"ending-lemmings.{COMPRESSION}"}
 .ends
   PatchB($484C, :EndingLemmings)
   PatchW($4851, EndingLemmings)
@@ -704,3 +701,26 @@ TimeSeparatorTiles: .incbin "hud-time-separator.8x16.bin"
   PatchB($1C62 + 20, $f4-$b0)
   PatchB($1C7c + 20, $f5-$b0)
   
+  
+; If we are using alternative compression, we need to replace the decoder...
+.if COMPRESSION != "lemmingscompr"
+.unbackground $3cfd $3d9d
+  ROMPosition $3cfd
+.if COMPRESSION == "psgcompr"
+.section "Compression hook" force
+  ; The original takes ix = VRAM address (not OR $000), de = source
+  ; PSG takes ix = source, hl = dest OR $4000
+  push ix
+  pop hl
+  set 6,h
+  push de
+  pop ix
+  di
+    call PSG_decompress
+  ei
+  ret
+.ends
+.define PSGDecoderBuffer $c500 ; Lemmings uses 512 bytes here
+.include "Phantasy_Star_Gaiden_decompressor.asm"
+.endif
+.endif

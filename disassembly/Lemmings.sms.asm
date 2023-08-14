@@ -3846,7 +3846,7 @@ _LABEL_1C2B_EmitTileTripletToTilemap:
 
 ; Data from 1C62 to 1C7B (26 bytes)
 _DATA_1C62_StatusTextTopRow:
-;   O   U   T                   I   N               %       T   I   M   E
+;   O   U   T       _   _       I   N       _   _   %       T   I   M   E       _       _   _
 .db $0A $0C $00 $FF $FF $FF $FF $02 $08 $FF $FF $FF $0E $FF $00 $02 $04 $06 $FF $FF $FF $FF $FF $FF $FF $FF
 
 ; Data from 1C7C to 1C95 (26 bytes)

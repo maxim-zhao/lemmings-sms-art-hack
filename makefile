@@ -3,6 +3,8 @@ WLALINK = wlalink.exe
 BMP2TILE = bmp2tile.exe
 PCMENC = pcmenc.exe
 
+COMPRESSION = lemmingscompr
+
 # These are targets that aren't files
 .PHONY: all clean default
 
@@ -13,7 +15,7 @@ default: lemmings-palette-hack.sms
 
 # WLA DX will tell us what files we need
 auto.makefile: lemmings-palette-hack.sms.asm
-	$(WLAZ80) -M -t -o lemmings-palette-hack.o lemmings-palette-hack.sms.asm > $@
+	$(WLAZ80) -D COMPRESSION=$(COMPRESSION) -M -t -o lemmings-palette-hack.o lemmings-palette-hack.sms.asm > $@
 
 -include auto.makefile
 
@@ -34,15 +36,15 @@ auto.makefile: lemmings-palette-hack.sms.asm
 	$(BMP2TILE) $< -removedupes -savetiles $@
 
 # Compressed, no tile dedupe, 8x16
-%.8x16.lemmingscompr: png/%.png
+%.8x16.$(COMPRESSION): png/%.png
 	$(BMP2TILE) $< -noremovedupes -8x16 -savetiles $@
 
 # Compressed, no tile dedupe
-%.lemmingscompr: png/%.png
+%.$(COMPRESSION): png/%.png
 	$(BMP2TILE) $< -noremovedupes -savetiles $@
 
 # Compressed with tile dedupe
-%.lemmingscompr: png/%.unoptimised.png
+%.$(COMPRESSION): png/%.unoptimised.png
 	$(BMP2TILE) $< -removedupes -savetiles $@
 
 # Tilemap with tile dedupe
@@ -69,13 +71,18 @@ auto.makefile: lemmings-palette-hack.sms.asm
 	$(BMP2TILE) $< -noremovedupes -savetiles $@
 
 # Special case: title screen extra tiles
-title-screen-extras.lemmingscompr: title-screen-hand.8x16.bin title-screen-blinking.bin
+title-screen-extras.%: title-screen-hand.8x16.bin title-screen-blinking.bin
 	copy /y /b title-screen-hand.8x16.bin+title-screen-blinking.bin title-screen-extras.bin
 	$(BMP2TILE) title-screen-extras.bin -noremovedupes -savetiles $@
+  
+# Special case: intro falling lemming sprite
+intro-lemmings-lemming.%: intro-lemmings-lemming1.8x16.bin intro-lemmings-lemming2.8x16.bin
+	copy /y /b intro-lemmings-lemming1.8x16.bin+intro-lemmings-lemming2.8x16.bin intro-lemmings-lemming.bin
+	$(BMP2TILE) intro-lemmings-lemming.bin -noremovedupes -savetiles $@
 
 # And then we build it
 lemmings-palette-hack.o: 
-	$(WLAZ80) -o $@ lemmings-palette-hack.sms.asm
+	$(WLAZ80) -D COMPRESSION=$(COMPRESSION) -o $@ lemmings-palette-hack.sms.asm
 
 lemmings-palette-hack.sms: lemmings-palette-hack.o
 	echo [objects] > linkfile
@@ -84,7 +91,7 @@ lemmings-palette-hack.sms: lemmings-palette-hack.o
 
 clean:
 	del *.bin
-	del *.lemmingscompr
+	del *.$(COMPRESSION)
 	del *.lsbtilemap
 	del *.1bpp
 	del *.palette
@@ -92,3 +99,4 @@ clean:
 	del wav\*.pcmenc
 	del lemmings-palette-hack.sms
 	del lemmings-palette-hack.o
+	del auto.makefile
