@@ -674,3 +674,33 @@ EndingLemmings: .incbin "ending-lemmings.lemmingscompr"
 .section "Count down tiles" force
 .incbin "countdown.bin" read 5*5*4 ; Data is truncated to 5*5 rows
 .ends
+
+
+
+; Add "-" (or ":") art to timer
+; We make use of some unused tiles next to the cursor in VRAM.
+  ROMPosition $1b50
+.section "Extra status tiles hack hook" overwrite
+  ; Hook to load extra tiles
+  call StatusTilesHack
+.ends
+.section "Extra status tiles hack" free
+StatusTilesHack:
+  call $8b4 ; What we replaced to get here (loading the other status text tiles)
+  ld a,:TimeSeparatorTiles
+  ld ($ffff),a
+  ld hl,TimeSeparatorTiles
+  ld de,$3e80 ; Space in VRAM
+  ld b,2 ; tile count
+  jp $8b4 ; load and return
+.ends
+.slot 2
+.section "Extra status tiles data" superfree
+  ; Tile data
+TimeSeparatorTiles: .incbin "hud-time-separator.8x16.bin"
+.ends
+  ; This is the pseudo-tilemap data used to fill the status text row. We patch over the blank.
+  ; Values are bytes relative to the start of the text tiles at $b0.
+  PatchB($1C62 + 20, $f4-$b0)
+  PatchB($1C7c + 20, $f5-$b0)
+  

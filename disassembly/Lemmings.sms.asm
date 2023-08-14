@@ -3649,7 +3649,7 @@ _LABEL_1ADD_:
 _LABEL_1AF1_:
 	ld hl, _DATA_62DD_CursorTiles
 	ld de, $3E00
-	ld b, $08
+	ld b, $08 ; Only 4 are used
 	call _LABEL_8B4_LoadBTilesToVRAM
   
 	ld hl, _DATA_645D_SkillSelectionHighlight
@@ -3724,16 +3724,17 @@ _LABEL_1AF1_:
 	call _LABEL_1C14_Emit4TilesToTilemap
   
 	ld de, $7CCA
-	ld hl, _DATA_1C62_
+	ld hl, _DATA_1C62_StatusTextTopRow
 	call +
 	ld de, $7D0A
-	ld hl, _DATA_1C7C_
+	ld hl, _DATA_1C7C_StatusTextBottomRow
 	call +
 	call _LABEL_1CCA_
 	ei
 	ret
 
 +:
+  ; Set VRAM address
 	ld c, Port_VDPAddress
 	out (c), e
 	ld ($0007), a
@@ -3743,9 +3744,10 @@ _LABEL_1AF1_:
 	dec c
 	ld b, $1A ; 26 for 13 tiles
 -:
-	ld a, (hl)
-	cp $FF
+	ld a, (hl) ; Read byte
+	cp $FF ; FF = blank
 	jr nz, +
+  ; Blank = tile index 0
 	xor a
 	out (c), a
 	ld ($0007), a
@@ -3755,9 +3757,9 @@ _LABEL_1AF1_:
 	jp ++
 
 +:
-	add a, $B0
+	add a, $B0 ; Offset into tile data
 	out (c), a
-	ld a, $01
+	ld a, $01 ; High byte is 1
 	ld a, $01
 	nop
 	nop
@@ -3843,14 +3845,14 @@ _LABEL_1C2B_EmitTileTripletToTilemap:
 	ret
 
 ; Data from 1C62 to 1C7B (26 bytes)
-_DATA_1C62_:
-.db $0A $0C $00 $FF $FF $FF $FF $02 $08 $FF $FF $FF $0E $FF $00 $02
-.db $04 $06 $FF $FF $FF $FF $FF $FF $FF $FF
+_DATA_1C62_StatusTextTopRow:
+;   O   U   T                   I   N               %       T   I   M   E
+.db $0A $0C $00 $FF $FF $FF $FF $02 $08 $FF $FF $FF $0E $FF $00 $02 $04 $06 $FF $FF $FF $FF $FF $FF $FF $FF
 
 ; Data from 1C7C to 1C95 (26 bytes)
-_DATA_1C7C_:
-.db $0B $0D $01 $FF $FF $FF $FF $03 $09 $FF $FF $FF $0F $FF $01 $03
-.db $05 $07 $FF $FF $FF $FF $FF $FF $FF $FF
+_DATA_1C7C_StatusTextBottomRow:
+;   O   U   T                   I   N               %       T   I   M   E
+.db $0B $0D $01 $FF $FF $FF $FF $03 $09 $FF $FF $FF $0F $FF $01 $03 $05 $07 $FF $FF $FF $FF $FF $FF $FF $FF
 
 ; Data from 1C96 to 1CAD (24 bytes)
 _DATA_1C96_RateControlTilemap:
