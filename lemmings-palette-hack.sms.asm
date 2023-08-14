@@ -660,3 +660,17 @@ EndingLemmings: .incbin "ending-lemmings.lemmingscompr"
 .ends
   PatchB($484C, :EndingLemmings)
   PatchW($4851, EndingLemmings)
+
+
+
+; In-game stuff
+.unbackground $735B $73DC
+  ROMPosition $735B
+.section "Explosion tiles" force
+.incbin "explosion.8x16.bin"
+.ends
+.unbackground $72c3 $733a
+  ROMPosition $72c3
+.section "Count down tiles" force
+.incbin "countdown.bin" read 5*5*4 ; Data is truncated to 5*5 rows
+.ends

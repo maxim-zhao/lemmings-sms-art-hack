@@ -3578,7 +3578,7 @@ _LABEL_1A24_:
 	ld l, a
 	ld h, $00
 	add hl, hl
-	ld de, _DATA_BED1_
+	ld de, _DATA_BED1_Tiles_TitleScreenTextScroller_1bpp
 	add hl, de
 	ld de, _RAM_CEA0_
 	ld bc, $0008
@@ -7532,7 +7532,7 @@ _LABEL_37F3_:
 	dec a
 	ld c, a
 	ld b, $00
-	ld hl, _DATA_72C3_
+	ld hl, _DATA_72C3_Tiles_Countdown
 	add hl, bc
 	ld bc, $2800 | Port_VDPData
 -:
@@ -7560,7 +7560,7 @@ _LABEL_37F3_:
 _LABEL_38CC_:
 	push bc
 	ld bc, $0000 | Port_VDPData
-	ld hl, _DATA_735B_
+	ld hl, _DATA_735B_Tiles_Explosion
 -:
 	outi
 	nop
@@ -10227,7 +10227,7 @@ _DATA_7174_:
 .db $07 $0A $4F $AF $38 $07 $0A $49 $B4 $38 $07 $02 $90 $B8 $38
 
 ; Data from 72C3 to 733A (120 bytes)
-_DATA_72C3_:
+_DATA_72C3_Tiles_Countdown:
 .db $3C $00 $00 $00 $20 $00 $00 $00 $38 $00 $00 $00 $04 $00 $00 $00
 .db $38 $00 $00 $00 $20 $00 $00 $00 $28 $00 $00 $00 $3C $00 $00 $00
 .db $08 $00 $00 $00 $08 $00 $00 $00 $38 $00 $00 $00 $04 $00 $00 $00
@@ -10252,7 +10252,7 @@ _DATA_733B_LevelTilesetData:
 .db $06 $80 $BF $0B ; 191 tiles @ $2c006, Sega
 
 ; Data from 735B to 73DC (130 bytes)
-_DATA_735B_:
+_DATA_735B_Tiles_Explosion:
 .db $00 $00 $00 $00 $00 $00 $00 $20 $00 $00 $00 $10 $00 $00 $00 $10
 .db $00 $00 $00 $1D $08 $00 $00 $0F $07 $00 $00 $1B $07 $00 $00 $1C
 .db $1F $00 $00 $FE $07 $00 $00 $1E $03 $00 $00 $0E $03 $00 $00 $0F
@@ -13116,7 +13116,7 @@ _DATA_B4D4_:
 .incbin "Lemmings.sms_DATA_B4D4_.inc"
 
 ; Data from BED1 to BFFF (303 bytes)
-_DATA_BED1_:
+_DATA_BED1_Tiles_TitleScreenTextScroller_1bpp:
 .db $00 $3C $42 $42 $7E $42 $42 $00 $00 $7C $42 $7C $42 $42 $7C $00
 .db $00 $3E $40 $40 $40 $40 $3E $00 $00 $7C $42 $42 $42 $42 $7C $00
 .db $00 $7E $40 $78 $40 $40 $7E $00 $00 $7E $40 $78 $40 $40 $40 $00
