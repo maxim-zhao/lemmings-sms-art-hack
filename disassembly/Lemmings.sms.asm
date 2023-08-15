@@ -925,7 +925,7 @@ _LABEL_4C5_ScreenOn:
 	ei
 	ret
 
-_LABEL_4D8_:
+_LABEL_4D8_TurnOffSprites:
 	di
 	ld c, Port_VDPAddress
 	ld de, $7F00
@@ -1087,7 +1087,7 @@ _LABEL_4F4_SetVDPRegisters:
 	nop
 	ei
 	call _LABEL_6F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -1097,6 +1097,7 @@ _LABEL_4F4_SetVDPRegisters:
 
 _LABEL_5BC_:
 	di
+  ; Disable sprites
 	xor a
 	ld ($0007), a
 	out (Port_VDPAddress), a
@@ -1108,6 +1109,7 @@ _LABEL_5BC_:
 	ld ($0007), a
 	nop
 	out (Port_VDPData), a
+  ; Clear name table to 0
 	ld ($0007), a
 	ld a, $00
 	nop
@@ -9063,7 +9065,7 @@ _LABEL_44B3_:
 	ld (_RAM_DBC5_), a
 	call _LABEL_AF5_
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	ld a, (_RAM_DBD6_)
 	and a
 	jr nz, +
@@ -9082,7 +9084,7 @@ _LABEL_4524_:
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	ret
 
 _LABEL_4535_:
@@ -9091,7 +9093,7 @@ _LABEL_4535_:
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	pop hl
 	jp _LABEL_3E59_
 
@@ -9761,7 +9763,7 @@ _LABEL_4A14_:
 	out (c), e
 	push ix
 	pop ix
-	out (c), d
+	out (c), d 
 	nop
 	ld ($0007), a
 	dec c
@@ -9817,7 +9819,7 @@ _LABEL_4A14_:
 	call _LABEL_94C_
 	call _LABEL_AF5_
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	call _LABEL_4B2_ScreenOff
 	ret
 
@@ -10267,7 +10269,7 @@ _DATA_735B_Tiles_Explosion:
 
 ; Pointer Table from 73DD to 73E8 (6 entries, indexed by unknown)
 _DATA_73DD_:
-.dw _DATA_7463_ _DATA_7468_ _DATA_746D_ _DATA_7472_ _DATA_7477_ _DATA_7477_
+.dw _DATA_7463_0 _DATA_7468_1 _DATA_746D_2 _DATA_7472_3 _DATA_7477_4 _DATA_7477_4
 
 ; Data from 73E9 to 743A (82 bytes)
 .db $00 $00 $00 $00 $7C $74 $81 $74 $86 $74 $8B $74 $90 $74 $90 $74
@@ -10285,28 +10287,33 @@ _DATA_743B_:
 
 ; 1st entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7463 to 7467 (5 bytes)
-_DATA_7463_:
+; This is 1bpp tile data, 5 bytes for 5 rows, per digit.
+; Each digit is stored 5 times, for 0-4 pixels offset from the left.
+; The first digit is 5:
+_DATA_7463_0:
 .db $F0 $80 $E0 $10 $E0
 
 ; 2nd entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7468 to 746C (5 bytes)
-_DATA_7468_:
+_DATA_7468_1:
 .db $78 $40 $70 $08 $70
 
 ; 3rd entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 746D to 7471 (5 bytes)
-_DATA_746D_:
+_DATA_746D_2:
 .db $3C $20 $38 $04 $38
 
 ; 4th entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7472 to 7476 (5 bytes)
-_DATA_7472_:
+_DATA_7472_3:
 .db $1E $10 $1C $02 $1C
 
 ; 5th entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7477 to 74F8 (130 bytes)
-_DATA_7477_:
-.db $0F $08 $0E $01 $0E $80 $A0 $F0 $20 $20 $40 $50 $78 $10 $10 $20
+_DATA_7477_4:
+.db $0F $08 $0E $01 $0E
+; Then the digits 4-0
+.db $80 $A0 $F0 $20 $20 $40 $50 $78 $10 $10 $20
 .db $28 $3C $08 $08 $10 $14 $1E $04 $04 $08 $0A $0F $02 $02 $E0 $10
 .db $E0 $10 $E0 $70 $08 $70 $08 $70 $38 $04 $38 $04 $38 $1C $02 $1C
 .db $02 $1C $0E $01 $0E $01 $0E $E0 $10 $F0 $80 $F0 $70 $08 $78 $40
