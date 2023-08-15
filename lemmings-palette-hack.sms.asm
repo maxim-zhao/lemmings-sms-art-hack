@@ -129,6 +129,17 @@ intro_segalogo:
 .ends
   PatchB($4698, :intro_segalogo)
   PatchW($46BE, intro_segalogo)
+; and tilemap - which needs some fixing up
+.unbackground $179D0 $17CB0
+.slot 2
+.section "Sega logo tilemap" superfree
+intro_segalogo_tilemap:
+.incbin "intro-segalogo.patched.lsbtilemap"
+.ends
+  PatchB($46C8, :intro_segalogo_tilemap)
+  PatchB($46F3, :intro_segalogo_tilemap)
+  PatchW($46CD, intro_segalogo_tilemap+32) ; Pointer is offset
+
 ; and palette
 .unbackground $1be7e $1be8d
 .bank 6 ; Banked palettes must be here
