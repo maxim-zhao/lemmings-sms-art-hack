@@ -237,12 +237,13 @@ intro_lemmings_lemming:
 
 .macro LevelArt(index, name, count, offset)
   ROMPosition offset
-.section "Level art: {name}" force
+.section "Level art: {name}" superfree
 {name}: .incbin {"{name}.bin"} read count*32
 .ends
-; Using original offsets no need to rewrite pointers
-;  PatchW($733b + 4 * index + 0, {name})
-;  PatchB($733b + 4 * index + 3, :{name})
+; Remap the lookup table
+  PatchW($733b + 4 * index + 0, {name})
+  PatchB($733b + 4 * index + 2, count)
+  PatchB($733b + 4 * index + 3, :{name})
 ; We also inject the palettes, in the palette bank. See above for the hack to load them.
   ROMPosition LevelPalettes + index * 16
 .section "Level palette: {name}" force
