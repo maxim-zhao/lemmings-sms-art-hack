@@ -129,6 +129,17 @@ intro_segalogo:
 .ends
   PatchB($4698, :intro_segalogo)
   PatchW($46BE, intro_segalogo)
+; and tilemap - which needs some fixing up
+.unbackground $179D0 $17CB0
+.slot 2
+.section "Sega logo tilemap" superfree
+intro_segalogo_tilemap:
+.incbin "intro-segalogo.patched.lsbtilemap"
+.ends
+  PatchB($46C8, :intro_segalogo_tilemap)
+  PatchB($46F3, :intro_segalogo_tilemap)
+  PatchW($46CD, intro_segalogo_tilemap+32) ; Pointer is offset
+
 ; and palette
 .unbackground $1be7e $1be8d
 .bank 6 ; Banked palettes must be here
@@ -162,8 +173,9 @@ intro_lemming:
   ; Paging
   PatchB($481b, :intro_wheel)
   PatchB($481d, :intro_wheel)
-; The tilemap refers to both compressed and uncompressed, is it possible to join them up? 
-; Otherwise the art is a bit hard to change.
+  ; Load offsets
+  PatchW($47DC, 240*32) ; matches tile offset for lemming in makefile
+  PatchW($4818, 224*32) ; matches tile offset for wheel in makefile
 
 
 
@@ -670,6 +682,11 @@ EndingLemmings: .incbin {"ending-lemmings.{COMPRESSION}"}
   ROMPosition $72c3
 .section "Count down tiles" force
 .incbin "countdown.bin" read 5*5*4 ; Data is truncated to 5*5 rows
+.ends
+.unbackground $7463 $74f8
+  ROMPosition $7463
+.section "Count down tiles 2" force
+.incbin "countdown2.1bpp" read 5*5*5 ; Data is truncated to 5*5*5 rows
 .ends
 
 

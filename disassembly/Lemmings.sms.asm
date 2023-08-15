@@ -925,7 +925,7 @@ _LABEL_4C5_ScreenOn:
 	ei
 	ret
 
-_LABEL_4D8_:
+_LABEL_4D8_TurnOffSprites:
 	di
 	ld c, Port_VDPAddress
 	ld de, $7F00
@@ -1086,8 +1086,8 @@ _LABEL_4F4_SetVDPRegisters:
 	nop
 	nop
 	ei
-	call _LABEL_6F2_
-	call _LABEL_4D8_
+	call _LABEL_6F2_BlankTilemapAndTile0
+	call _LABEL_4D8_TurnOffSprites
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -1097,6 +1097,7 @@ _LABEL_4F4_SetVDPRegisters:
 
 _LABEL_5BC_:
 	di
+  ; Disable sprites
 	xor a
 	ld ($0007), a
 	out (Port_VDPAddress), a
@@ -1108,6 +1109,7 @@ _LABEL_5BC_:
 	ld ($0007), a
 	nop
 	out (Port_VDPData), a
+  ; Clear name table to 0
 	ld ($0007), a
 	ld a, $00
 	nop
@@ -1291,7 +1293,7 @@ _LABEL_69B_:
 	ei
 	ret
 
-_LABEL_6F2_:
+_LABEL_6F2_BlankTilemapAndTile0:
 	di
 	ld hl, $4000
 	ld c, Port_VDPAddress
@@ -8511,7 +8513,7 @@ _LABEL_3F17_:
 .db $44 $00
 
 _LABEL_403A_:
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
@@ -8620,7 +8622,7 @@ _LABEL_412F_:
 	push de
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	pop de
 	ld a, (_RAM_DBA7_)
 	cp $4D
@@ -8653,7 +8655,7 @@ _LABEL_412F_:
 
 _LABEL_4166_:
 	call _LABEL_4B2_ScreenOff
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
@@ -8747,11 +8749,11 @@ _LABEL_4166_:
 	ld (_RAM_DBD7_), a
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	ret
 
 _LABEL_4255_:
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
@@ -8804,11 +8806,11 @@ _LABEL_4255_:
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	and $03
 	ld (_RAM_DB9E_DifficultyLevel), a
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	ret
 
 _LABEL_42D8_:
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
@@ -9063,7 +9065,7 @@ _LABEL_44B3_:
 	ld (_RAM_DBC5_), a
 	call _LABEL_AF5_
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	ld a, (_RAM_DBD6_)
 	and a
 	jr nz, +
@@ -9082,7 +9084,7 @@ _LABEL_4524_:
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	ret
 
 _LABEL_4535_:
@@ -9091,7 +9093,7 @@ _LABEL_4535_:
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	pop hl
 	jp _LABEL_3E59_
 
@@ -9288,9 +9290,9 @@ _LABEL_467E_:
 	ret
 
 _LABEL_4697_:
-	ld a, $0D
+	ld a, :_DATA_37852_Intro1_Tiles ; $0D ; Location of data
 	ld (_RAM_FFFF_), a
-  ; Set load address
+  ; Set register 0
 	di
 	ld a, $36
 	out (Port_VDPAddress), a
@@ -9305,7 +9307,7 @@ _LABEL_4697_:
 	nop
 	nop
 	ei
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_4C5_ScreenOn
 	ld hl, _DATA_1BE7E_Intro1_Palette
 	ld (_RAM_DBA5_), hl
@@ -9375,7 +9377,7 @@ _LABEL_46E6_Intro1Loop:
 	call _LABEL_75F7_PlayLetsGo
 	call _LABEL_AF5_
 	call _LABEL_4B2_ScreenOff
-	call _LABEL_6F2_
+	call _LABEL_6F2_BlankTilemapAndTile0
 	di
 	ld a, $36
 	out (Port_VDPAddress), a
@@ -9761,7 +9763,7 @@ _LABEL_4A14_:
 	out (c), e
 	push ix
 	pop ix
-	out (c), d
+	out (c), d 
 	nop
 	ld ($0007), a
 	dec c
@@ -9817,7 +9819,7 @@ _LABEL_4A14_:
 	call _LABEL_94C_
 	call _LABEL_AF5_
 	call _LABEL_8F2_
-	call _LABEL_4D8_
+	call _LABEL_4D8_TurnOffSprites
 	call _LABEL_4B2_ScreenOff
 	ret
 
@@ -9967,7 +9969,7 @@ _DATA_4E49_:
 
 ; 2nd entry of Pointer Table from 3EE24 (indexed by unknown)
 ; Data from 5453 to 5545 (243 bytes)
-_DATA_5453_:
+
 .db $98 $00 $FE $FE $C2 $00 $FE $FE $FE $00 $00 $00 $00 $00 $3F $3F
 .db $3F $00 $69 $77 $57 $00 $DC $FF $FB $00 $BF $FE $DC $00 $F7 $B6
 .db $96 $00 $A3 $E2 $C2 $00 $B6 $F7 $D7 $00 $DE $FF $FF $00 $FD $DE
@@ -9990,8 +9992,7 @@ _DATA_5546_:
 .db $DA $82 $00 $74
 
 ; 1st entry of Pointer Table from 3EE24 (indexed by unknown)
-; Data from 554A to 5B49 (1536 bytes)
-_DATA_554A_:
+; Data from 554A to 5B49 (1536 bytes):
 .incbin "Lemmings.sms_DATA_554A_.inc"
 
 ; Data from 5B4A to 5B9C (83 bytes)
@@ -10267,7 +10268,7 @@ _DATA_735B_Tiles_Explosion:
 
 ; Pointer Table from 73DD to 73E8 (6 entries, indexed by unknown)
 _DATA_73DD_:
-.dw _DATA_7463_ _DATA_7468_ _DATA_746D_ _DATA_7472_ _DATA_7477_ _DATA_7477_
+.dw _DATA_7463_0 _DATA_7468_1 _DATA_746D_2 _DATA_7472_3 _DATA_7477_4 _DATA_7477_4
 
 ; Data from 73E9 to 743A (82 bytes)
 .db $00 $00 $00 $00 $7C $74 $81 $74 $86 $74 $8B $74 $90 $74 $90 $74
@@ -10285,28 +10286,33 @@ _DATA_743B_:
 
 ; 1st entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7463 to 7467 (5 bytes)
-_DATA_7463_:
+; This is 1bpp tile data, 5 bytes for 5 rows, per digit.
+; Each digit is stored 5 times, for 0-4 pixels offset from the left.
+; The first digit is 5:
+_DATA_7463_0:
 .db $F0 $80 $E0 $10 $E0
 
 ; 2nd entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7468 to 746C (5 bytes)
-_DATA_7468_:
+_DATA_7468_1:
 .db $78 $40 $70 $08 $70
 
 ; 3rd entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 746D to 7471 (5 bytes)
-_DATA_746D_:
+_DATA_746D_2:
 .db $3C $20 $38 $04 $38
 
 ; 4th entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7472 to 7476 (5 bytes)
-_DATA_7472_:
+_DATA_7472_3:
 .db $1E $10 $1C $02 $1C
 
 ; 5th entry of Pointer Table from 73DD (indexed by unknown)
 ; Data from 7477 to 74F8 (130 bytes)
-_DATA_7477_:
-.db $0F $08 $0E $01 $0E $80 $A0 $F0 $20 $20 $40 $50 $78 $10 $10 $20
+_DATA_7477_4:
+.db $0F $08 $0E $01 $0E
+; Then the digits 4-0
+.db $80 $A0 $F0 $20 $20 $40 $50 $78 $10 $10 $20
 .db $28 $3C $08 $08 $10 $14 $1E $04 $04 $08 $0A $0F $02 $02 $E0 $10
 .db $E0 $10 $E0 $70 $08 $70 $08 $70 $38 $04 $38 $04 $38 $1C $02 $1C
 .db $02 $1C $0E $01 $0E $01 $0E $E0 $10 $F0 $80 $F0 $70 $08 $78 $40
@@ -14987,166 +14993,260 @@ _DATA_3C000_LetsGoSample:
 ; Data from 3D902 to 3EE23 (5410 bytes)
 _DATA_3D902_OhNoSample:
 .incbin "Lemmings.sms_DATA_3D902_OhNoSample.inc"
-
-; 1st entry of Pointer Table from 3F7B8 (indexed by _RAM_DB9D_LevelNumber)
-; Pointer Table from 3EE24 to 3EE27 (2 entries, indexed by unknown)
-_DATA_3EE24_:
-.dw _DATA_554A_ _DATA_5453_
-
-; Data from 3EE28 to 3F7A8 (2433 bytes)
-.incbin "Lemmings.sms_DATA_3EE28_.inc"
+NameFun1:     .db "JUST DIG!",0
+NameFun2:     .db "ONLY FLOATERS CAN SURVIVE THIS",0
+NameFun3:     .db "TAILOR MADE FOR BLOCKERS",0
+NameFun4:     .db "NOW USE MINERS AND CLIMBERS",0
+NameFun5:     .db "YOU NEED BASHERS THIS TIME",0
+NameFun6:     .db "A TASK FOR BLOCKERS AND BOMBERS",0
+NameFun7:     .db "BUILDERS WILL HELP YOU HERE",0
+NameFun8:     .db "NOT AS COMPLICATED AS IT LOOKS",0
+NameFun9:     .db "AS LONG AS YOU TRY YOUR BEST",0
+NameFun10:    .db "SMILE IF YOU LOVE LEMMINGS",0
+NameFun11:    .db "KEEP YOUR HAIR ON MR LEMMING",0
+NameFun12:    .db "PATIENCE",0
+NameFun13:    .db "WE ALL FALL DOWN",0
+NameFun14:    .db "ORIGINS AND LEMMINGS",0
+NameFun15:    .db "DON'T LET YOUR EYES DECEIVE YOU",0
+NameFun16:    .db "DON'T DO ANYTHING TOO HASTY",0
+NameFun17:    .db "EASY WHEN YOU KNOW HOW",0
+NameFun18:    .db "LET'S BLOCK AND BLOW",0
+NameFun19:    .db "TAKE GOOD CARE OF MY LEMMINGS",0
+NameFun20:    .db "SEGA ONE",0
+NameFun21:    .db "YOU LIVE AND LEM",0
+NameFun22:    .db "GO FOR IT",0
+NameFun23:    .db "I'VE LOST THAT LEMMING FEELING",0
+NameFun24:    .db "KONBANWA LEMMING-SAN",0
+NameFun25:    .db "LEMMINGS LEMMINGS EVERYWHERE",0
+NameFun26:    .db "SEGA TWO",0
+NameFun27:    .db "LET'S BE CAREFUL OUT THERE",0
+NameFun28:    .db "IF ONLY THEY COULD FLY",0
+NameFun29:    .db "WORRA LORRA LEMMINGS",0
+NameFun30:    .db "LOCK UP YOUR LEMMINGS",0
+NameTricky1:  .db "THIS SHOULD BE A DODDLE!",0
+NameTricky2:  .db "WE ALL FALL DOWN",0
+NameTricky3:  .db "A LADDER WOULD BE HANDY",0
+NameTricky4:  .db "HERE'S ONE I PREPARED EARLIER",0
+NameTricky5:  .db "CARELESS CLICKING COST LIVES",0
+NameTricky6:  .db "LEMMINGOLOGY",0
+NameTricky7:  .db "BEEN THERE, SEEN IT, DONE IT",0
+NameTricky8:  .db "LEMMING SANCTUARY IN SIGHT",0
+NameTricky9:  .db "THEY JUST KEEP ON COMING",0
+NameTricky10: .db "THERES A LOT OF THEM ABOUT",0
+NameTricky11: .db "LEMMINGS IN THE ATTIC",0
+NameTricky12: .db "BITTER LEMMING",0
+NameTricky13: .db "LEMMING DROPS",0
+NameTricky14: .db "MENACING!",0
+NameTricky15: .db "OZONE FRIENDLY LEMMINGS",0
+NameTricky16: .db "LUVLY JUBLY",0
+NameTricky17: .db "DIET LEMMINGADE",0
+NameTricky18: .db "IT'S LEMMINGENTARY WATSON",0
+NameTricky19: .db "POSTCARD FROM LEMMINGLAND",0
+NameTricky20: .db "ONE WAY DIGGING TO FREEDOM",0
+NameTricky21: .db "SIXES NOT!",0
+NameTricky22: .db "TURN AROUND YOUNG LEMMINGS",0
+NameTricky23: .db "FROM THE BOUNDARY LINE",0
+NameTricky24: .db "TIGHTROPE CITY",0
+NameTricky25: .db "SEGA THREE",0
+NameTricky26: .db "I HAVE A CUNNING PLAN",0
+NameTricky27: .db "THE ISLAND OF THE WICKER PEOPLE",0
+NameTricky28: .db "LOST SOMETHING?",0
+NameTricky29: .db "RAINBOW ISLAND",0
+NameTricky30: .db "THE CRANKSHAFT",0
+NameTaxing1:  .db "IF AT FIRST YOU DON'T SUCEED..",0
+NameTaxing2:  .db "WATCH OUT, THERES TRAPS ABOUT",0
+NameTaxing3:  .db "HEAVEN CAN WAIT WE HOPE",0
+NameTaxing4:  .db "LEND A HELPING HAND",0
+NameTaxing5:  .db "THE PRISON",0
+NameTaxing6:  .db "COMPRESSION METHOD",0
+NameTaxing7:  .db "EVERY LEMMING FOR HIMSELF!!!",0
+NameTaxing8:  .db "THE ART GALLERY",0
+NameTaxing9:  .db "PERSEVERANCE",0
+NameTaxing10: .db "IZZIE WIZZIE LEMMINGS GET BUSY",0
+NameTaxing11: .db "THE ASCENDING PILLAR SCENARIO",0
+NameTaxing12: .db "LIVIN' ON THE EDGE",0
+NameTaxing13: .db "UPSIDE DOWN WORLD",0
+NameTaxing14: .db "HUNT THE NESSY",0
+NameTaxing15: .db "WHAT AN AWESOME LEVEL",0
+NameTaxing16: .db "MARY POPPIN'S LAND",0
+NameTaxing17: .db "X MARKS THE SPOT",0
+NameTaxing18: .db "TRIBUTE TO MC ESCHER",0
+NameTaxing19: .db "BOMBOOZAL",0
+NameTaxing20: .db "WALK THE WEB ROPE",0
+NameTaxing21: .db "SEGA FOUR",0
+NameTaxing22: .db "COME ON OVER TO MY PLACE",0
+NameTaxing23: .db "KING OF THE CASTLE",0
+NameTaxing24: .db "TAKE A RUNNING JUMP",0
+NameTaxing25: .db "FOLLOW THE LEADER",0
+NameTaxing26: .db "TRIPLE TROUBLE",0
+NameTaxing27: .db "CALL IN THE BOMB SQUAD",0
+NameTaxing28: .db "POOR WEE CREATURES",0
+NameTaxing29: .db "HOW DO I DIG UP THE WAY?",0
+NameTaxing30: .db "SEGA FIVE",0
+NameMayhem1:  .db "STEEL WORKS",0
+NameMayhem2:  .db "THE BOILER ROOM",0
+NameMayhem3:  .db "IT'S HERO TIME!",0
+NameMayhem4:  .db "THE CROSSROADS",0
+NameMayhem5:  .db "DOWN,ALONG,UP.IN THAT ORDER",0
+NameMayhem6:  .db "ONE WAY OR ANOTHER",0
+NameMayhem7:  .db "POLES APART",0
+NameMayhem8:  .db "LAST ONE OUT IS A ROTTEN EGG!",0
+NameMayhem9:  .db "SEGA ONE",0
+NameMayhem10: .db "PILLARS OF HERCULES",0
+NameMayhem11: .db "WE ALL FALL DOWN",0
+NameMayhem12: .db "SEGA TWO",0
+NameMayhem13: .db "SEGA THREE",0
+NameMayhem14: .db "PEA SOUP",0
+NameMayhem15: .db "THE FAST FOOD KITCHEN",0
+NameMayhem16: .db "JUST A MINUTE",0
+NameMayhem17: .db "STEPPING STONES",0
+NameMayhem18: .db "SEGA FOUR",0
+NameMayhem19: .db "TIME TO GET UP!",0
+NameMayhem20: .db "NO ADDED COLOURS OR LEMMINGS",0
+NameMayhem21: .db "WITH A TWIST OF LEMMING",0
+NameMayhem22: .db "NEARLY THERE...",0
+NameMayhem23: .db "GOING UP....",0
+NameMayhem24: .db "ALL OR NOTHING",0
+NameMayhem25: .db "HAVE A NICE DAY",0
+NameMayhem26: .db "THE STEEL MINES OF KESSEL",0
+NameMayhem27: .db "JUST A MINUTE PART TWO",0
+NameMayhem28: .db "MIND THE STEP...",0
+NameMayhem29: .db "SEGA FIVE",0
+NameMayhem30: .db "RENDEZVOUS AT THE MOUNTAINS",0
 
 ; Data from 3F7A9 to 3F7B5 (13 bytes)
 _DATA_3F7A9_LevelDescriptors_Fun:
-.db $0A $0A $32 $05 $00 $00 $00 $00 $00 $00 $00 $0A $0A
-
-; Pointer Table from 3F7B6 to 3F7B7 (1 entries, indexed by _RAM_DB9D_LevelNumber)
-.dw _DATA_7174_
-
-; Pointer Table from 3F7B8 to 3F7B9 (1 entries, indexed by _RAM_DB9D_LevelNumber)
-.dw _DATA_3EE24_
-
-; Data from 3F7BA to 3F9A6 (493 bytes)
-.db $0A $0A $32 $05 $00 $0A $00 $00 $00 $00 $00 $00 $0A $47 $71 $2E
-.db $AE $14 $0A $32 $05 $00 $00 $00 $0A $00 $00 $00 $00 $05 $28 $72
-.db $4D $AE $0A $64 $01 $05 $0A $00 $00 $00 $00 $00 $01 $00 $0A $55
-.db $72 $66 $AE $14 $0A $32 $05 $00 $00 $00 $00 $00 $14 $00 $00 $05
-.db $FB $71 $82 $AE $14 $14 $32 $05 $00 $00 $05 $05 $00 $00 $00 $00
-.db $05 $56 $71 $9D $AE $14 $32 $32 $05 $00 $00 $00 $00 $14 $00 $00
-.db $00 $05 $64 $72 $BD $AE $14 $5F $58 $05 $14 $14 $14 $14 $14 $14
-.db $14 $14 $05 $37 $72 $D9 $AE $14 $5A $63 $05 $14 $14 $14 $14 $14
-.db $14 $14 $14 $05 $73 $72 $F8 $AE $14 $32 $32 $05 $14 $14 $14 $14
-.db $14 $14 $14 $14 $05 $3C $72 $15 $AF $14 $55 $32 $05 $0A $0A $0A
-.db $0A $00 $0A $00 $00 $05 $82 $72 $30 $AF $14 $32 $63 $05 $14 $14
-.db $14 $14 $14 $14 $14 $14 $05 $41 $72 $4D $AF $05 $64 $14 $03 $00
-.db $00 $00 $00 $00 $00 $00 $05 $14 $4C $71 $56 $AF $14 $4B $14 $06
-.db $14 $00 $14 $14 $14 $14 $14 $14 $05 $46 $72 $67 $AF $14 $32 $28
-.db $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $4B $72 $7C $AF $14 $3C
-.db $01 $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $51 $71 $9C $AF $14
-.db $28 $63 $05 $14 $00 $14 $14 $14 $14 $14 $14 $05 $91 $72 $B8 $AF
-.db $14 $46 $50 $05 $00 $00 $14 $14 $00 $00 $00 $00 $05 $C9 $71 $CF
-.db $AF $14 $46 $14 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $9B $72
-.db $E4 $AF $14 $3C $0A $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $AA
-.db $72 $02 $B0 $14 $3C $32 $08 $14 $14 $14 $14 $14 $14 $14 $14 $05
-.db $88 $71 $0B $B0 $14 $50 $32 $05 $00 $00 $00 $00 $21 $04 $01 $00
-.db $05 $D8 $71 $1C $B0 $14 $19 $32 $08 $00 $14 $14 $14 $14 $14 $14
-.db $14 $05 $E7 $71 $26 $B0 $14 $41 $63 $05 $14 $14 $14 $14 $14 $14
-.db $14 $14 $05 $A0 $72 $45 $B0 $14 $32 $63 $05 $14 $14 $14 $14 $14
-.db $14 $14 $14 $05 $0F $72 $5A $B0 $02 $64 $1E
-.dsb 9, $05
-.db $32 $AF $72 $77 $B0 $14 $32 $01 $05 $14 $00 $14 $14 $14 $14 $14
-.db $14 $05 $A5 $72 $80 $B0 $14 $3C $50 $05 $14 $14 $14 $14 $14 $14
-.db $14 $14 $05 $F1 $71 $9B $B0 $14 $3C $5A $08 $14 $14 $14 $14 $14
-.db $14 $14 $14 $05 $50 $72 $B2 $B0 $14 $41 $0A $05 $14 $14 $14 $14
-.db $14 $14 $14 $14 $05 $F6 $71 $C7 $B0
-
-; Data from 3F9A7 to 3FBA4 (510 bytes)
+;    ,,- Lemming count
+;    ||  ,,- Target percentage
+;    ||  ||  ,,- Initial release rate
+;    ||  ||  ||  ,,- Time in minutes
+;    ||  ||  ||  ||  ,,--,,--,,--,,--,,--,,--,,--,,- Skill counts
+;    ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ,,- Percent per lemming = 100/count
+;    ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ,,--,,- Level map address
+;    ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ,,--,,- Level name address (above)
+.db $0A $0A $32 $05 $00 $00 $00 $00 $00 $00 $00 $0A $0A $74 $71 NameFun1
+.db $0A $0A $32 $05 $00 $0A $00 $00 $00 $00 $00 $00 $0A $47 $71 NameFun2
+.db $14 $0A $32 $05 $00 $00 $00 $0A $00 $00 $00 $00 $05 $28 $72 NameFun3
+.db $0A $64 $01 $05 $0A $00 $00 $00 $00 $00 $01 $00 $0A $55 $72 NameFun4
+.db $14 $0A $32 $05 $00 $00 $00 $00 $00 $14 $00 $00 $05 $FB $71 NameFun5
+.db $14 $14 $32 $05 $00 $00 $05 $05 $00 $00 $00 $00 $05 $56 $71 NameFun6
+.db $14 $32 $32 $05 $00 $00 $00 $00 $14 $00 $00 $00 $05 $64 $72 NameFun7
+.db $14 $5F $58 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $37 $72 NameFun8
+.db $14 $5A $63 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $73 $72 NameFun9
+.db $14 $32 $32 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $3C $72 NameFun10
+.db $14 $55 $32 $05 $0A $0A $0A $0A $00 $0A $00 $00 $05 $82 $72 NameFun11
+.db $14 $32 $63 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $41 $72 NameFun12
+.db $05 $64 $14 $03 $00 $00 $00 $00 $00 $00 $00 $05 $14 $4C $71 NameFun13
+.db $14 $4B $14 $06 $14 $00 $14 $14 $14 $14 $14 $14 $05 $46 $72 NameFun14
+.db $14 $32 $28 $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $4B $72 NameFun15
+.db $14 $3C $01 $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $51 $71 NameFun16
+.db $14 $28 $63 $05 $14 $00 $14 $14 $14 $14 $14 $14 $05 $91 $72 NameFun17
+.db $14 $46 $50 $05 $00 $00 $14 $14 $00 $00 $00 $00 $05 $C9 $71 NameFun18
+.db $14 $46 $14 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $9B $72 NameFun19
+.db $14 $3C $0A $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $AA $72 NameFun20
+.db $14 $3C $32 $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $88 $71 NameFun21
+.db $14 $50 $32 $05 $00 $00 $00 $00 $21 $04 $01 $00 $05 $D8 $71 NameFun22
+.db $14 $19 $32 $08 $00 $14 $14 $14 $14 $14 $14 $14 $05 $E7 $71 NameFun23
+.db $14 $41 $63 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $A0 $72 NameFun24
+.db $14 $32 $63 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $0F $72 NameFun25
+.db $02 $64 $1E $05 $05 $05 $05 $05 $05 $05 $05 $05 $32 $AF $72 NameFun26
+.db $14 $32 $01 $05 $14 $00 $14 $14 $14 $14 $14 $14 $05 $A5 $72 NameFun27
+.db $14 $3C $50 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $F1 $71 NameFun28
+.db $14 $3C $5A $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $50 $72 NameFun29
+.db $14 $41 $0A $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $F6 $71 NameFun30
 _DATA_3F9A7_LevelDescriptors_Tricky:
-.db $14 $32 $32 $04 $0A $0A $0A $0A $0A $0A $0A $0A $05 $83 $71 $DD
-.db $B0 $0A $64 $28 $03 $00 $00 $00 $00 $00 $00 $00 $0A $0A $4C $71
-.db $F6 $B0 $14 $32 $32 $06 $0A $0A $0A $0A $14 $0A $0A $0A $05 $97
-.db $71 $07 $B1 $14 $32 $37 $08 $05 $00 $02 $02 $0A $03 $00 $00 $05
-.db $8D $71 $1F $B1 $14 $14 $14 $05 $14 $14 $0C $04 $14 $02 $02 $14
-.db $05 $0A $72 $3D $B1 $05 $50 $32 $05
-.dsb 9, $14
-.db $65 $71 $5A $B1 $14 $4B $14 $05 $14 $14 $14 $14 $14 $14 $14 $14
-.db $05 $23 $72 $67 $B1 $14 $3C $28 $08 $00 $00 $00 $14 $14 $00 $00
-.db $00 $05 $B5 $71 $84 $B1 $14 $5A $32 $05 $14 $14 $14 $14 $14 $14
-.db $14 $14 $05 $3D $71 $9F $B1 $14 $5A $3C $08 $14 $14 $14 $14 $14
-.db $14 $14 $14 $05 $C4 $71 $B8 $B1 $14 $50 $14 $08 $14 $14 $14 $14
-.db $14 $14 $14 $14 $05 $6A $71 $D3 $B1 $14 $50 $01 $08 $00 $14 $00
-.db $00 $14 $14 $00 $00 $05 $6E $72 $E9 $B1 $14 $46 $01 $08 $14 $14
-.db $14 $14 $32 $14 $14 $14 $05 $32 $72 $F8 $B1 $14 $4B $32 $06 $0A
-.db $00 $0A $0A $07 $01 $01 $01 $05 $D3 $71 $06 $B2 $0A $28 $32 $05
-.db $00 $00 $06 $00 $00 $00 $00 $00 $0A $74 $71 $10 $B2 $14 $50 $4C
-.db $05 $00 $00 $0A $00 $00 $02 $01 $00 $05 $FB $71 $28 $B2 $14 $5A
-.db $32 $05 $00 $00 $02 $00 $00 $00 $00 $00 $05 $56 $71 $34 $B2 $0A
-.db $5A $32 $05 $00 $01 $01 $00 $02 $00 $00 $01 $0A $47 $71 $44 $B2
-.db $14 $5F $32 $05 $05 $0A $01 $01 $01 $01 $01 $01 $05 $64 $72 $5E
-.db $B2 $14 $55 $3C $04 $03 $03 $06 $02 $02 $04 $02 $02 $05 $E2 $71
-.db $78 $B2 $14 $42 $42 $06 $14 $14 $14 $14 $14 $14 $14 $14 $05 $EC
-.db $71 $93 $B2 $14 $32 $58 $05 $00 $01 $0F $00 $14 $01 $00 $00 $05
-.db $37 $72 $9E $B2 $14 $3C $32 $05 $0A $0A $00 $00 $01 $02 $01 $01
-.db $05 $41 $72 $B9 $B2 $14 $32 $55 $02 $05 $05 $05 $05 $03 $05 $05
-.db $05 $05 $7D $72 $D0 $B2 $14 $32 $32 $08 $14 $14 $14 $14 $0A $14
-.db $14 $14 $05 $B4 $72 $DF $B2 $14 $64 $32 $05 $02 $00 $05 $0A $14
-.db $02 $02 $02 $05 $73 $72 $EA $B2 $14 $5A $3C $05 $05 $00 $05 $05
-.db $05 $05 $05 $05 $05 $A1 $71 $00 $B3 $14 $5A $46 $05 $0A $0A $0A
-.db $0A $0A $0A $0A $0A $05 $A6 $71 $20 $B3 $14 $5F $46 $04 $0A $0A
-.db $0A $0A $0A $0A $0A $0A $05 $8C $72 $30 $B3 $14 $5A $14 $04 $0A
-.db $0A $0A $0A $0A $00 $0A $0A $05 $46 $72 $3F $B3
-
-; Data from 3FBA5 to 3FDA2 (510 bytes)
+.db $14 $32 $32 $04 $0A $0A $0A $0A $0A $0A $0A $0A $05 $83 $71 NameTricky1
+.db $0A $64 $28 $03 $00 $00 $00 $00 $00 $00 $00 $0A $0A $4C $71 NameTricky2
+.db $14 $32 $32 $06 $0A $0A $0A $0A $14 $0A $0A $0A $05 $97 $71 NameTricky3
+.db $14 $32 $37 $08 $05 $00 $02 $02 $0A $03 $00 $00 $05 $8D $71 NameTricky4
+.db $14 $14 $14 $05 $14 $14 $0C $04 $14 $02 $02 $14 $05 $0A $72 NameTricky5
+.db $05 $50 $32 $05 $14 $14 $14 $14 $14 $14 $14 $14 $14 $65 $71 NameTricky6
+.db $14 $4B $14 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $23 $72 NameTricky7
+.db $14 $3C $28 $08 $00 $00 $00 $14 $14 $00 $00 $00 $05 $B5 $71 NameTricky8
+.db $14 $5A $32 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $3D $71 NameTricky9
+.db $14 $5A $3C $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $C4 $71 NameTricky10
+.db $14 $50 $14 $08 $14 $14 $14 $14 $14 $14 $14 $14 $05 $6A $71 NameTricky11
+.db $14 $50 $01 $08 $00 $14 $00 $00 $14 $14 $00 $00 $05 $6E $72 NameTricky12
+.db $14 $46 $01 $08 $14 $14 $14 $14 $32 $14 $14 $14 $05 $32 $72 NameTricky13
+.db $14 $4B $32 $06 $0A $00 $0A $0A $07 $01 $01 $01 $05 $D3 $71 NameTricky14
+.db $0A $28 $32 $05 $00 $00 $06 $00 $00 $00 $00 $00 $0A $74 $71 NameTricky15
+.db $14 $50 $4C $05 $00 $00 $0A $00 $00 $02 $01 $00 $05 $FB $71 NameTricky16
+.db $14 $5A $32 $05 $00 $00 $02 $00 $00 $00 $00 $00 $05 $56 $71 NameTricky17
+.db $0A $5A $32 $05 $00 $01 $01 $00 $02 $00 $00 $01 $0A $47 $71 NameTricky18
+.db $14 $5F $32 $05 $05 $0A $01 $01 $01 $01 $01 $01 $05 $64 $72 NameTricky19
+.db $14 $55 $3C $04 $03 $03 $06 $02 $02 $04 $02 $02 $05 $E2 $71 NameTricky20
+.db $14 $42 $42 $06 $14 $14 $14 $14 $14 $14 $14 $14 $05 $EC $71 NameTricky21
+.db $14 $32 $58 $05 $00 $01 $0F $00 $14 $01 $00 $00 $05 $37 $72 NameTricky22
+.db $14 $3C $32 $05 $0A $0A $00 $00 $01 $02 $01 $01 $05 $41 $72 NameTricky23
+.db $14 $32 $55 $02 $05 $05 $05 $05 $03 $05 $05 $05 $05 $7D $72 NameTricky24
+.db $14 $32 $32 $08 $14 $14 $14 $14 $0A $14 $14 $14 $05 $B4 $72 NameTricky25
+.db $14 $64 $32 $05 $02 $00 $05 $0A $14 $02 $02 $02 $05 $73 $72 NameTricky26
+.db $14 $5A $3C $05 $05 $00 $05 $05 $05 $05 $05 $05 $05 $A1 $71 NameTricky27
+.db $14 $5A $46 $05 $0A $0A $0A $0A $0A $0A $0A $0A $05 $A6 $71 NameTricky28
+.db $14 $5F $46 $04 $0A $0A $0A $0A $0A $0A $0A $0A $05 $8C $72 NameTricky29
+.db $14 $5A $14 $04 $0A $0A $0A $0A $0A $00 $0A $0A $05 $46 $72 NameTricky30
 _DATA_3FBA5_LevelDescriptors_Taxing:
-.db $14 $5A $28 $05 $02 $02 $02 $02 $08 $02 $02 $02 $05 $4B $72 $4E
-.db $B3 $14 $50 $46 $05 $0A $05 $05 $0A $0A $05 $05 $05 $05 $79 $71
-.db $6D $B3 $14 $64 $01 $02 $14 $14 $14 $00 $14 $14 $14 $14 $05 $51
-.db $71 $8B $B3 $14 $50 $32 $07 $00 $00 $05 $04 $14 $02 $02 $02 $05
-.db $1E $72 $A3 $B3 $14 $4B $32 $05 $00 $00 $05 $04 $14 $0A $00 $03
-.db $05 $AB $71 $B7 $B3 $14 $3C $63 $03 $00 $00 $03 $03 $00 $05 $00
-.db $01 $05 $91 $72 $C2 $B3 $14 $5A $37 $03 $01 $00 $05 $01 $06 $01
-.db $00 $00 $05 $8D $71 $D5 $B3 $14 $64 $14 $04 $0A $0A $0A $00 $0A
-.db $0A $00 $00 $05 $0A $72 $F2 $B3 $14 $64 $32 $04 $02 $01 $01 $02
-.db $02 $01 $01 $02 $05 $3C $72 $02 $B4 $05 $64 $32 $05 $00 $00 $05
-.db $05 $0F $05 $05 $05 $14 $65 $71 $0F $B4 $14 $64 $14 $04 $02 $01
-.db $00 $00 $14 $05 $05 $05 $05 $23 $72 $2E $B4 $0A $50 $01 $05 $0A
-.db $0A $0A $02 $0A $0A $0A $0A $0A $5B $71 $4C $B4 $14 $5A $28 $06
-.db $01 $00 $0A $01 $02 $03 $04 $02 $05 $9C $71 $5F $B4 $14 $5A $1E
-.db $08 $00 $00 $0A $0A $1E $02 $01 $01 $05 $42 $71 $71 $B4 $14 $50
-.db $32 $06 $14 $14 $14 $14 $14 $14 $14 $14 $05 $5A $72 $80 $B4 $14
-.db $50 $32 $03 $00 $04 $03 $03 $14 $00 $00 $00 $05 $DD $71 $96 $B4
-.db $14 $32 $32 $05 $05 $00 $05 $00 $14 $05 $06 $00 $05 $E7 $71 $A9
-.db $B4 $14 $46 $32 $05 $00 $01 $0F $00 $0F $01 $00 $00 $05 $82 $72
-.db $BA $B4 $14 $4B $50 $02 $00 $00 $0F $00 $00 $00 $00 $00 $05 $C9
-.db $71 $CF $B4 $14 $55 $32 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05
-.db $00 $72 $D9 $B4 $14 $64 $32 $05 $14 $14 $14 $14 $0A $14 $14 $14
-.db $05 $B9 $72 $EB $B4 $14 $50 $01 $05 $00 $02 $00 $01 $0A $01 $01
-.db $02 $05 $A5 $72 $F5 $B4 $14 $55 $28 $05 $00 $00 $00 $00 $14 $00
-.db $00 $00 $05 $B5 $71 $0E $B5 $14 $5A $32 $03 $00 $00 $00 $00 $14
-.db $01 $00 $02 $05 $BA $71 $21 $B5 $14 $5A $14 $04 $00 $00 $0A $00
-.db $07 $05 $00 $00 $05 $9B $72 $35 $B5 $14 $50 $50 $05 $0A $0A $0A
-.db $0A $0C $0A $0A $0A $05 $CE $71 $47 $B5 $14 $3C $0A $05 $00 $00
-.db $0A $0A $0A $00 $00 $00 $05 $2D $72 $56 $B5 $14 $28 $01 $05 $01
-.db $01 $04 $04 $08 $03 $01 $00 $05 $14 $72 $6D $B5 $14 $5A $50 $04
-.db $0A $0A $0A $0A $05 $0A $0A $0A $05 $97 $71 $80 $B5 $14 $64 $32
-.db $03 $14 $14 $14 $14 $0F $14 $14 $14 $05 $BE $72 $99 $B5
-
-; Data from 3FDA3 to 3FFFF (605 bytes)
+.db $14 $5A $28 $05 $02 $02 $02 $02 $08 $02 $02 $02 $05 $4B $72 NameTaxing1
+.db $14 $50 $46 $05 $0A $05 $05 $0A $0A $05 $05 $05 $05 $79 $71 NameTaxing2
+.db $14 $64 $01 $02 $14 $14 $14 $00 $14 $14 $14 $14 $05 $51 $71 NameTaxing3
+.db $14 $50 $32 $07 $00 $00 $05 $04 $14 $02 $02 $02 $05 $1E $72 NameTaxing4
+.db $14 $4B $32 $05 $00 $00 $05 $04 $14 $0A $00 $03 $05 $AB $71 NameTaxing5
+.db $14 $3C $63 $03 $00 $00 $03 $03 $00 $05 $00 $01 $05 $91 $72 NameTaxing6
+.db $14 $5A $37 $03 $01 $00 $05 $01 $06 $01 $00 $00 $05 $8D $71 NameTaxing7
+.db $14 $64 $14 $04 $0A $0A $0A $00 $0A $0A $00 $00 $05 $0A $72 NameTaxing8
+.db $14 $64 $32 $04 $02 $01 $01 $02 $02 $01 $01 $02 $05 $3C $72 NameTaxing9
+.db $05 $64 $32 $05 $00 $00 $05 $05 $0F $05 $05 $05 $14 $65 $71 NameTaxing10
+.db $14 $64 $14 $04 $02 $01 $00 $00 $14 $05 $05 $05 $05 $23 $72 NameTaxing11
+.db $0A $50 $01 $05 $0A $0A $0A $02 $0A $0A $0A $0A $0A $5B $71 NameTaxing12
+.db $14 $5A $28 $06 $01 $00 $0A $01 $02 $03 $04 $02 $05 $9C $71 NameTaxing13
+.db $14 $5A $1E $08 $00 $00 $0A $0A $1E $02 $01 $01 $05 $42 $71 NameTaxing14
+.db $14 $50 $32 $06 $14 $14 $14 $14 $14 $14 $14 $14 $05 $5A $72 NameTaxing15
+.db $14 $50 $32 $03 $00 $04 $03 $03 $14 $00 $00 $00 $05 $DD $71 NameTaxing16
+.db $14 $32 $32 $05 $05 $00 $05 $00 $14 $05 $06 $00 $05 $E7 $71 NameTaxing17
+.db $14 $46 $32 $05 $00 $01 $0F $00 $0F $01 $00 $00 $05 $82 $72 NameTaxing18
+.db $14 $4B $50 $02 $00 $00 $0F $00 $00 $00 $00 $00 $05 $C9 $71 NameTaxing19
+.db $14 $55 $32 $05 $14 $14 $14 $14 $14 $14 $14 $14 $05 $00 $72 NameTaxing20
+.db $14 $64 $32 $05 $14 $14 $14 $14 $0A $14 $14 $14 $05 $B9 $72 NameTaxing21
+.db $14 $50 $01 $05 $00 $02 $00 $01 $0A $01 $01 $02 $05 $A5 $72 NameTaxing22
+.db $14 $55 $28 $05 $00 $00 $00 $00 $14 $00 $00 $00 $05 $B5 $71 NameTaxing23
+.db $14 $5A $32 $03 $00 $00 $00 $00 $14 $01 $00 $02 $05 $BA $71 NameTaxing24
+.db $14 $5A $14 $04 $00 $00 $0A $00 $07 $05 $00 $00 $05 $9B $72 NameTaxing25
+.db $14 $50 $50 $05 $0A $0A $0A $0A $0C $0A $0A $0A $05 $CE $71 NameTaxing26
+.db $14 $3C $0A $05 $00 $00 $0A $0A $0A $00 $00 $00 $05 $2D $72 NameTaxing27
+.db $14 $28 $01 $05 $01 $01 $04 $04 $08 $03 $01 $00 $05 $14 $72 NameTaxing28
+.db $14 $5A $50 $04 $0A $0A $0A $0A $05 $0A $0A $0A $05 $97 $71 NameTaxing29
+.db $14 $64 $32 $03 $14 $14 $14 $14 $0F $14 $14 $14 $05 $BE $72 NameTaxing30
 _DATA_3FDA3_LevelDescriptors_Mayhem:
-.db $14 $50 $0F $08 $00 $14 $0A $05 $1E $00 $00 $05 $05 $7E $71 $A3
-.db $B5 $14 $5A $1E $06 $0A $05 $0A $0A $1E $00 $00 $00 $05 $60 $71
-.db $AF $B5 $14 $64 $63
-.dsb 9, $01
-.db $05 $A0 $72 $BF $B5 $14 $64 $32 $01 $00 $00 $0A $00 $00 $0A $00
-.db $00 $05 $0F $72 $CF $B5 $14 $41 $50 $05 $02 $02 $0A $0A $0A $01
-.db $00 $05 $05 $F1 $71 $DE $B5 $14 $64 $32 $04 $00 $00 $0A $00 $0F
-.db $00 $05 $05 $05 $3D $71 $FA $B5 $14 $5A $32 $05 $01 $0A $00 $00
-.db $06 $07 $00 $04 $05 $5F $72 $0D $B6 $14 $55 $37 $05 $05 $00 $05
-.db $05 $0A $00 $05 $06 $05 $B0 $71 $19 $B6 $14 $50 $32 $02 $0A $0A
-.db $0A $0A $0A $0A $0A $0A $05 $AA $72 $37 $B6 $14 $42 $01 $05 $02
-.db $03 $04 $02 $14 $04 $00 $02 $05 $69 $72 $40 $B6 $14 $64 $50 $03
-.db $00 $00 $00 $00 $00 $00 $00 $14 $05 $4C $71 $54 $B6 $14 $64 $32
-.db $04
-.dsb 9, $05
-.db $AF $72 $65 $B6 $02 $64 $32 $08 $0A $0A $0A $14 $14 $01 $00 $0A
-.db $32 $B4 $72 $6E $B6 $14 $5A $46 $05 $00 $00 $0A $0A $1E $00 $00
-.db $14 $05 $78 $72 $79 $B6 $14 $4B $3C $02 $0A $0A $0A $0A $0A $0A
-.db $0A $0A $05 $C4 $71 $82 $B6 $14 $64 $0A $02 $00 $01 $05 $00 $00
-.db $05 $00 $05 $05 $87 $72 $98 $B6 $14 $55 $32 $04 $05 $02 $00 $02
-.db $05 $02 $01 $05 $05 $6E $72 $A6 $B6 $14 $5A $32 $04 $14 $00 $00
-.db $03 $05 $03 $02 $04 $05 $B9 $72 $B6 $B6 $14 $32 $14 $05 $02 $00
-.db $0A $02 $14 $00 $00 $00 $05 $6A $71 $C0 $B6 $14 $64 $55 $05 $02
-.db $00 $00 $01 $03 $01 $02 $01 $05 $55 $72 $D0 $B6 $14 $64 $01 $05
-.db $01 $14 $00 $00 $07 $01 $00 $01 $05 $BF $71 $ED $B6 $14 $55 $4B
-.db $05 $13 $01 $02 $12 $09 $0E $01 $00 $05 $05 $72 $05 $B7 $14 $3C
-.db $46 $09 $00 $01 $14 $14 $1E $05 $01 $00 $05 $19 $72 $15 $B7 $14
-.db $64 $63 $01 $00 $00 $00 $00 $00 $03 $00 $00 $05 $F6 $71 $22 $B7
-.db $14 $5A $01 $05 $02 $02 $00 $02 $19 $01 $01 $01 $05 $32 $72 $31
-.db $B7 $14 $28 $32 $08 $00 $00 $14 $14 $14 $00 $00 $00 $05 $88 $71
-.db $41 $B7 $14 $64 $0A $02 $01 $01 $05 $00 $02 $05 $00 $05 $05 $87
-.db $72 $5B $B7 $01 $64 $01 $07 $00 $00 $00 $00 $19 $0A $00 $0F $64
-.db $96 $72 $72 $B7 $14 $50 $32 $05 $0A $0A $0A $0A $0A $0A $0A $0A
-.db $05 $BE $72 $83 $B7 $14 $4B $14 $09 $0A $01 $0A $0A $1E $0A $0A
-.db $04 $05 $92 $71 $8D $B7
+.db $14 $50 $0F $08 $00 $14 $0A $05 $1E $00 $00 $05 $05 $7E $71 NameMayhem1
+.db $14 $5A $1E $06 $0A $05 $0A $0A $1E $00 $00 $00 $05 $60 $71 NameMayhem2
+.db $14 $64 $63 $01 $01 $01 $01 $01 $01 $01 $01 $01 $05 $A0 $72 NameMayhem3
+.db $14 $64 $32 $01 $00 $00 $0A $00 $00 $0A $00 $00 $05 $0F $72 NameMayhem4
+.db $14 $41 $50 $05 $02 $02 $0A $0A $0A $01 $00 $05 $05 $F1 $71 NameMayhem5
+.db $14 $64 $32 $04 $00 $00 $0A $00 $0F $00 $05 $05 $05 $3D $71 NameMayhem6
+.db $14 $5A $32 $05 $01 $0A $00 $00 $06 $07 $00 $04 $05 $5F $72 NameMayhem7
+.db $14 $55 $37 $05 $05 $00 $05 $05 $0A $00 $05 $06 $05 $B0 $71 NameMayhem8
+.db $14 $50 $32 $02 $0A $0A $0A $0A $0A $0A $0A $0A $05 $AA $72 NameMayhem9
+.db $14 $42 $01 $05 $02 $03 $04 $02 $14 $04 $00 $02 $05 $69 $72 NameMayhem10
+.db $14 $64 $50 $03 $00 $00 $00 $00 $00 $00 $00 $14 $05 $4C $71 NameMayhem11
+.db $14 $64 $32 $04 $05 $05 $05 $05 $05 $05 $05 $05 $05 $AF $72 NameMayhem12
+.db $02 $64 $32 $08 $0A $0A $0A $14 $14 $01 $00 $0A $32 $B4 $72 NameMayhem13
+.db $14 $5A $46 $05 $00 $00 $0A $0A $1E $00 $00 $14 $05 $78 $72 NameMayhem14
+.db $14 $4B $3C $02 $0A $0A $0A $0A $0A $0A $0A $0A $05 $C4 $71 NameMayhem15
+.db $14 $64 $0A $02 $00 $01 $05 $00 $00 $05 $00 $05 $05 $87 $72 NameMayhem16
+.db $14 $55 $32 $04 $05 $02 $00 $02 $05 $02 $01 $05 $05 $6E $72 NameMayhem17
+.db $14 $5A $32 $04 $14 $00 $00 $03 $05 $03 $02 $04 $05 $B9 $72 NameMayhem18
+.db $14 $32 $14 $05 $02 $00 $0A $02 $14 $00 $00 $00 $05 $6A $71 NameMayhem19
+.db $14 $64 $55 $05 $02 $00 $00 $01 $03 $01 $02 $01 $05 $55 $72 NameMayhem20
+.db $14 $64 $01 $05 $01 $14 $00 $00 $07 $01 $00 $01 $05 $BF $71 NameMayhem21
+.db $14 $55 $4B $05 $13 $01 $02 $12 $09 $0E $01 $00 $05 $05 $72 NameMayhem22
+.db $14 $3C $46 $09 $00 $01 $14 $14 $1E $05 $01 $00 $05 $19 $72 NameMayhem23
+.db $14 $64 $63 $01 $00 $00 $00 $00 $00 $03 $00 $00 $05 $F6 $71 NameMayhem24
+.db $14 $5A $01 $05 $02 $02 $00 $02 $19 $01 $01 $01 $05 $32 $72 NameMayhem25
+.db $14 $28 $32 $08 $00 $00 $14 $14 $14 $00 $00 $00 $05 $88 $71 NameMayhem26
+.db $14 $64 $0A $02 $01 $01 $05 $00 $02 $05 $00 $05 $05 $87 $72 NameMayhem27
+.db $01 $64 $01 $07 $00 $00 $00 $00 $19 $0A $00 $0F $64 $96 $72 NameMayhem28
+.db $14 $50 $32 $05 $0A $0A $0A $0A $0A $0A $0A $0A $05 $BE $72 NameMayhem29
+.db $14 $4B $14 $09 $0A $01 $0A $0A $1E $0A $0A $04 $05 $92 $71 NameMayhem30
+
 .dsb 95, $00
 
