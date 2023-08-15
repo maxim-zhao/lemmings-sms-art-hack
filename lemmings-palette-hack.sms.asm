@@ -173,8 +173,9 @@ intro_lemming:
   ; Paging
   PatchB($481b, :intro_wheel)
   PatchB($481d, :intro_wheel)
-; The tilemap refers to both compressed and uncompressed, is it possible to join them up? 
-; Otherwise the art is a bit hard to change.
+  ; Load offsets
+  PatchW($47DC, 240*32) ; matches tile offset for lemming in makefile
+  PatchW($4818, 224*32) ; matches tile offset for wheel in makefile
 
 
 

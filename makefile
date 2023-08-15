@@ -81,9 +81,10 @@ intro-lemmings-lemming.%: intro-lemmings-lemming1.8x16.bin intro-lemmings-lemmin
 	$(BMP2TILE) intro-lemmings-lemming.bin -noremovedupes -savetiles $@
 
 # Special case: intro Sega screen tilemap
-intro-segalogo.patched.lsbtilemap: intro-segalogo.lsbtilemap png/intro-lemming.png png/intro-wheel.png
-	$(BMP2TILE) png/intro-lemming.png -noremovedupes -tileoffset 96 -savetilemap intro-lemming.lsbtilemap
-	$(BMP2TILE) png/intro-wheel.png   -noremovedupes -tileoffset 80 -savetilemap intro-wheel.lsbtilemap
+intro-segalogo.$(COMPRESSION) intro-segalogo.patched.lsbtilemap: png/intro-segalogo.unoptimised.png png/intro-lemming.png png/intro-wheel.png
+	$(BMP2TILE) png/intro-segalogo.unoptimised.png -removedupes -nomirroring -savetiles intro-segalogo.$(COMPRESSION) -savetilemap intro-segalogo.lsbtilemap
+	$(BMP2TILE) png/intro-lemming.png -noremovedupes -tileoffset 240 -savetilemap intro-lemming.lsbtilemap
+	$(BMP2TILE) png/intro-wheel.png   -noremovedupes -tileoffset 224 -savetilemap intro-wheel.lsbtilemap
 	py tools.py patch_tilemap intro-segalogo.lsbtilemap         intro-lemming.lsbtilemap 346 3 5 intro-segalogo.patched.lsbtilemap
 	py tools.py patch_tilemap intro-segalogo.patched.lsbtilemap intro-wheel.lsbtilemap   424 4 3 intro-segalogo.patched.lsbtilemap
 	py tools.py patch_tilemap intro-segalogo.patched.lsbtilemap intro-wheel.lsbtilemap   437 4 3 intro-segalogo.patched.lsbtilemap
