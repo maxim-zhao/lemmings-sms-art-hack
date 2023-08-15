@@ -671,6 +671,11 @@ EndingLemmings: .incbin {"ending-lemmings.{COMPRESSION}"}
 .section "Count down tiles" force
 .incbin "countdown.bin" read 5*5*4 ; Data is truncated to 5*5 rows
 .ends
+.unbackground $7463 $74f8
+  ROMPosition $7463
+.section "Count down tiles 2" force
+.incbin "countdown2.1bpp" read 5*5*5 ; Data is truncated to 5*5*5 rows
+.ends
 
 
 
