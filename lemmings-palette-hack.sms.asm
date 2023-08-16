@@ -742,3 +742,95 @@ TimeSeparatorTiles: .incbin "hud-time-separator.8x16.bin"
 .include "Phantasy_Star_Gaiden_decompressor.asm"
 .endif
 .endif
+
+
+
+; Some optimisations
+
+; The HUD small numbers display was slower than necessary.
+; It could be further optimised by only drawing when it changes?
+; Profile via function _LABEL_1CCA_UpdateHUD
+; Before: ~15078 average cycles per invocation
+; After:  ~14742 => save 64 scanlines (!)
+.unbackground $1cf9 $1db2
+  ROMPosition $1cf9
+.section "HUD small numbers update" force
+  out (c),e
+  out (c),d
+  dec c
+  ld hl,$db72 ; skill counters
+.repeat 8
+  call _writeNumber
+.endr
+  ld hl,$db5f ; Release rate
+  ld a,$88
+  out ($bf),a
+  ld a,$7d
+  out ($bf),a
+  call _writeNumber
+  ei
+  ret
+
+_writeNumber:
+  ld a, (hl)
+  ld e, $83 ; Index of left 0 minus 1
+  ; Count 10s - likely 0
+-:inc e
+  sub 10
+  jr nc, -
+  add a, 10
+  ld d, a
+  out (c), e
+  ld a, 1 ; High tile set
+  nop
+  nop
+  out (c), a
+  ld a, d
+  add a, $8E ; Index of right 0
+  nop
+  out (c), a
+  ld a, 1
+  nop
+  nop
+  out (c), a
+  inc hl
+  ret
+.ends
+; The HUD large numbers are no better...
+; Profile via function _LABEL_1CCA_UpdateHUD again
+; Before: ~14742 average cycles per invocation
+; After:  ~14109 => save another ~3 scanlines
+.unbackground $1450 $148a
+  ROMPosition $1450
+.section "HUD large numbers update" force
+  di
+  ; VRAM address to de
+  ld c, $bf
+  out (c),e
+  out (c),d
+  ; Data port is $be
+  dec c
+  ; $98 + 2a = HUD large digit tile index
+  add a, a
+  add a, $98
+  out (c), a
+  ld b, a ; Remember...
+  ld a, 1
+  nop
+  out (c), a
+  ; One row lower down
+  ld hl, 32*2
+  add hl, de
+  inc c ; Back to $bf
+  out (c), l
+  out (c), h
+  dec c ; $be
+  inc b ; Next tile
+  out (c), b
+  ld a, 1
+  nop
+  nop
+  out (c), a
+  ei
+  ret
+.ends

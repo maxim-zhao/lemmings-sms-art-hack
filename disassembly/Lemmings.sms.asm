@@ -593,8 +593,8 @@ _RAM_DB59_ db
 .ende
 
 .enum $DB5B export
-_RAM_DB5B_ db
-_RAM_DB5C_ db
+_RAM_DB5B_LemmingsOut db
+_RAM_DB5C_LemmingsInPercent db
 _RAM_DB5D_ db
 _RAM_DB5E_ db
 _RAM_DB5F_ db
@@ -615,7 +615,7 @@ _RAM_DB6F_ db
 
 .enum $DB71 export
 _RAM_DB71_ db
-_RAM_DB72_ dsb $8
+_RAM_DB72_SkillCounters dsb $8
 .ende
 
 .enum $DB7C export
@@ -2633,8 +2633,8 @@ _LABEL_12D2_:
 
 _LABEL_12F2_:
 	ld a, (_RAM_DB51_)
-	ld de, $7DB8
-	call _LABEL_1450_
+	ld de, $7DB8 ; Lemming under cursor count
+	call _LABEL_1450_EmitHUDDigit
 	ld de, (_RAM_DB52_)
 	ld hl, $0B40
 	ld a, e
@@ -2682,8 +2682,8 @@ _DATA_1346_:
 .db $0C $D6 $0A $30 $FB $C6 $0A $F5 $79 $11 $84 $7D $CD $50 $14 $F1
 .db $11 $86 $7D $C3 $50 $14
 
-_LABEL_138C_:
-	ld a, (_RAM_DB5B_)
+_LABEL_138C_UpdateHUDOut:
+	ld a, (_RAM_DB5B_LemmingsOut)
 	ld c, $FF
 -:
 	inc c
@@ -2692,48 +2692,49 @@ _LABEL_138C_:
 	add a, $0A
 	push af
 	ld a, c
-	ld de, $7CD2
-	call _LABEL_1450_
+	ld de, $7CD2 ; Out count
+	call _LABEL_1450_EmitHUDDigit
 	pop af
 	inc de
 	inc de
-	jp _LABEL_1450_
+	jp _LABEL_1450_EmitHUDDigit
 
-_LABEL_13A6_:
-	ld de, $7CDE
-	ld a, (_RAM_DB5C_)
-	cp $64
+_LABEL_13A6_UpdateHUDIn:
+	ld de, $7CDE ; In percentage
+	ld a, (_RAM_DB5C_LemmingsInPercent)
+	cp 100
 	jr z, +
 	ld c, $FF
 -:
 	inc c
-	sub $0A
+	sub 10
 	jr nc, -
-	add a, $0A
+	add a, 10
 	push af
 	ld a, c
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit ; tens digit
 	pop af
 	inc e
 	inc e
-	jp _LABEL_1450_
+	jp _LABEL_1450_EmitHUDDigit ; Units digit
 
 +:
+  ; If it's 100, write 1, 0, 0
 	dec e
 	dec e
 	ld a, $01
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc e
 	inc e
 	xor a
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc e
 	inc e
 	xor a
-	jp _LABEL_1450_
+	jp _LABEL_1450_EmitHUDDigit
 
-_LABEL_13D7_:
-	ld de, $7CF0
+_LABEL_13D7_UpdateHUDTime:
+	ld de, $7CF0 ; Time
 	ld hl, (_RAM_DAD1_)
 	ld a, l
 	and a
@@ -2757,17 +2758,17 @@ _LABEL_13D7_:
 
 +:
 	ld a, (_RAM_DAD1_)
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc de
 	inc de
 	inc de
 	inc de
 	ld a, (_RAM_DAD2_)
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc de
 	inc de
 	ld a, (_RAM_DAD3_)
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	ret
 
 ++:
@@ -2805,8 +2806,9 @@ _LABEL_13D7_:
 	ei
 	ret
 
-_LABEL_1450_:
+_LABEL_1450_EmitHUDDigit:
 	di
+  ; VRAM address de
 	ld c, Port_VDPAddress
 	out (c), e
 	ld ($0007), a
@@ -2816,6 +2818,7 @@ _LABEL_1450_:
 	nop
 	nop
 	dec c
+  ; $98 + 2a = HUD digits
 	add a, a
 	add a, $98
 	out (c), a
@@ -2823,6 +2826,7 @@ _LABEL_1450_:
 	ld a, $01
 	ld ($0007), a
 	out (c), a
+  ; One row lower down
 	ld hl, $0040
 	add hl, de
 	inc c
@@ -2833,7 +2837,7 @@ _LABEL_1450_:
 	out (c), h
 	ld ($0007), a
 	dec c
-	inc b
+	inc b ; Next tile
 	out (c), b
 	ld a, $01
 	ld ($0007), a
@@ -3731,7 +3735,7 @@ _LABEL_1AF1_:
 	ld de, $7D0A
 	ld hl, _DATA_1C7C_StatusTextBottomRow
 	call +
-	call _LABEL_1CCA_
+	call _LABEL_1CCA_UpdateHUD
 	ei
 	ret
 
@@ -3882,10 +3886,10 @@ _LABEL_1CAE_EmitEveryOtherTileToTilemap_16Times:
 	djnz -
 	ret
 
-_LABEL_1CCA_:
-	call _LABEL_13D7_
-	call _LABEL_138C_
-	call _LABEL_13A6_
+_LABEL_1CCA_UpdateHUD: ; Called every 4 frames?
+	call _LABEL_13D7_UpdateHUDTime
+	call _LABEL_138C_UpdateHUDOut
+	call _LABEL_13A6_UpdateHUDIn
 	call _LABEL_12F2_
 	ld a, (_RAM_DB57_)
 	and a
@@ -3905,7 +3909,7 @@ _LABEL_1CCA_:
 	ld a, $AE
 	call _LABEL_A5E_
 +:
-	ld de, $7D4E
+	ld de, $7D4E ; Skill digits start
 	di
 	ld c, Port_VDPAddress
 	out (c), e
@@ -3914,11 +3918,13 @@ _LABEL_1CCA_:
 	ld ($0007), a
 	out (c), d
 	dec c
-	ld hl, _RAM_DB72_
-	ld b, $08
+	ld hl, _RAM_DB72_SkillCounters
+	ld b, $08 ; Count
 -:
-	call _LABEL_1D60_
+	call _LABEL_1D60_WriteSkillCountToScreen
 	djnz -
+  ; The skill display is different between SMS and GG,
+  ; this jumped-over code is the GG version. It than presumaby skips the SMS version :)
 	jp +
 
 ; Data from 1D10 to 1D46 (55 bytes)
@@ -3929,7 +3935,7 @@ _LABEL_1CCA_:
 
 +:
 	ld hl, _RAM_DB5F_
-	ld de, $7D88
+	ld de, $7D88 ; Release rate
 	ld c, Port_VDPAddress
 	out (c), e
 	nop
@@ -3938,11 +3944,11 @@ _LABEL_1CCA_:
 	out (c), d
 	dec c
 	ld b, $01
-	call _LABEL_1D60_
+	call _LABEL_1D60_WriteSkillCountToScreen
 	ei
 	ret
 
-_LABEL_1D60_:
+_LABEL_1D60_WriteSkillCountToScreen:
 	ld a, (hl)
 	ld e, $83
 -:
@@ -4085,7 +4091,7 @@ _LABEL_1E0F_:
 	ldi
 	ld de, $0000
 	ld (_RAM_DAD2_), de
-	ld de, _RAM_DB72_
+	ld de, _RAM_DB72_SkillCounters
 	ld bc, $0008
 	ldir
 	ld de, _RAM_DB56_
@@ -4097,8 +4103,8 @@ _LABEL_1E0F_:
 	ldi
 	ldi
 	xor a
-	ld (_RAM_DB5B_), a
-	ld (_RAM_DB5C_), a
+	ld (_RAM_DB5B_LemmingsOut), a
+	ld (_RAM_DB5C_LemmingsInPercent), a
 	ld a, (_RAM_DB9C_)
 	and a
 	ret z
@@ -5525,9 +5531,9 @@ _LABEL_29B1_:
 	ret z
 	dec a
 	ld (_RAM_DB54_NumberOfLemmings), a
-	ld a, (_RAM_DB5B_)
+	ld a, (_RAM_DB5B_LemmingsOut)
 	inc a
-	ld (_RAM_DB5B_), a
+	ld (_RAM_DB5B_LemmingsOut), a
 	ld ix, (_RAM_DAF1_)
 	ld (ix+0), $02
 	ld l, (iy+0)
@@ -6963,9 +6969,9 @@ _LABEL_349B_:
 
 _LABEL_34A4_:
 	ld (ix+0), $00
-	ld a, (_RAM_DB5B_)
+	ld a, (_RAM_DB5B_LemmingsOut)
 	dec a
-	ld (_RAM_DB5B_), a
+	ld (_RAM_DB5B_LemmingsOut), a
 	ret
 
 _LABEL_34B0_:
@@ -7376,11 +7382,11 @@ _LABEL_378F_:
 	inc a
 	cp $08
 	jr c, ++
-	ld a, (_RAM_DB5C_)
+	ld a, (_RAM_DB5C_LemmingsInPercent)
 	ld e, a
 	ld a, (_RAM_DB56_)
 	add a, e
-	ld (_RAM_DB5C_), a
+	ld (_RAM_DB5C_LemmingsInPercent), a
 	ld a, (_RAM_DB9C_)
 	and a
 	jr z, +
@@ -8451,7 +8457,7 @@ _LABEL_3F17_:
 	call _LABEL_9AD_
 	call _LABEL_297F_
 ++:
-	call _LABEL_1CCA_
+	call _LABEL_1CCA_UpdateHUD
 -:
 	ld a, (_RAM_DAD4_)
 	cp $03
@@ -8487,7 +8493,7 @@ _LABEL_3F17_:
 	jp z, +
 	ld hl, (_RAM_DB54_NumberOfLemmings)
 +:
-	ld a, (_RAM_DB5B_)
+	ld a, (_RAM_DB5B_LemmingsOut)
 	or l
 	jp nz, _LABEL_3F17_
 	ld a, $01
@@ -8527,7 +8533,7 @@ _LABEL_403A_:
 	ld d, $4C
 	ld ix, _DATA_D37_PasswordScreenText
 	ld hl, (_RAM_DB55_)
-	ld a, (_RAM_DB5C_)
+	ld a, (_RAM_DB5C_LemmingsInPercent)
 	cp l
 	jp nc, +
 	ld d, $4D
@@ -8600,7 +8606,7 @@ _LABEL_403A_:
 _LABEL_40FC_:
 	ld bc, $0415
 	call _LABEL_829_SetTextLocationToBC
-	ld a, (_RAM_DB5C_)
+	ld a, (_RAM_DB5C_LemmingsInPercent)
 	call _LABEL_1293_
 	ld bc, $0715
 	call _LABEL_829_SetTextLocationToBC
