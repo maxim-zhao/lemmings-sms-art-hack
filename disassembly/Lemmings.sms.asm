@@ -1405,10 +1405,10 @@ _LABEL_774_PrintString:
 	ld (_RAM_DAE7_TextLocationYX), a
 	jr _LABEL_774_PrintString
 
-_LABEL_7A2_:
+_LABEL_7A2_LoadFontTiles:
 	ld de, $0000
 -:
-	ld hl, _DATA_4B7D_
+	ld hl, _DATA_4B7D_FontTiles
 	ld b, $85
 	call _LABEL_8B4_LoadBTilesToVRAM
 	ret
@@ -7776,31 +7776,31 @@ _LABEL_3A12_:
 	ld l, (ix+14)
 	ld h, (ix+15)
 	push bc
-	ld b, $0A
--:
-	ld c, (hl)
-	ld a, (de)
-	and c
-	inc hl
-	or (hl)
-	inc hl
-	ld (de), a
-	inc de
-	ld a, (de)
-	and c
-	or (hl)
-	inc hl
-	ld (de), a
-	inc de
-	ld a, (de)
-	and c
-	ld (de), a
-	inc de
-	ld a, (de)
-	and c
-	ld (de), a
-	inc de
-	djnz -
+    ld b, $0A
+  -:
+    ld c, (hl)
+    ld a, (de)
+    and c
+    inc hl
+    or (hl)
+    inc hl
+    ld (de), a
+    inc de
+    ld a, (de)
+    and c
+    or (hl)
+    inc hl
+    ld (de), a
+    inc de
+    ld a, (de)
+    and c
+    ld (de), a
+    inc de
+    ld a, (de)
+    and c
+    ld (de), a
+    inc de
+    djnz -
 	pop bc
 	ld hl, (_RAM_DB6B_)
 	ld h, $7D
@@ -7827,9 +7827,10 @@ _LABEL_3A12_:
 	ld hl, _RAM_DAAB_
 	call ++
 _LABEL_3A7A_:
+  ; ix += 17
 	ld de, $0011
 	add ix, de
-	pop af
+	pop af ; ?!
 	dec a
 	jp nz, _LABEL_38FF_
 	ret
@@ -7837,7 +7838,7 @@ _LABEL_3A7A_:
 ++:
 	di
 	push bc
-	set 6, d
+	set 6, d ; To write address
 	ld c, Port_VDPAddress
 	out (c), e
 	ld ($0007), a
@@ -7846,7 +7847,7 @@ _LABEL_3A7A_:
 	out (c), d
 	dec c
 	ld ($0007), a
-	ld b, $40
+	ld b, $40 ; Emit 32B
 -:
 	outi
 	nop
@@ -8520,7 +8521,7 @@ _LABEL_3F17_:
 
 _LABEL_403A_:
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
 	ld (_RAM_FFFF_), a
@@ -8662,7 +8663,7 @@ _LABEL_412F_:
 _LABEL_4166_:
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
 	ld (_RAM_FFFF_), a
@@ -8760,7 +8761,7 @@ _LABEL_4166_:
 
 _LABEL_4255_:
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -8817,7 +8818,7 @@ _LABEL_4255_:
 
 _LABEL_42D8_:
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -9570,7 +9571,7 @@ _LABEL_48A2_Ending_ShowText:
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld bc, $0506
 	call _LABEL_829_SetTextLocationToBC
@@ -9918,7 +9919,7 @@ _LABEL_4B41_:
 	ret
 
 ; Data from 4B7D to 4D4C (464 bytes)
-_DATA_4B7D_:
+_DATA_4B7D_FontTiles:
 .dsb 36, $00
 .db $38 $38 $38 $00 $64 $7C $5C $00 $D6 $FA $EA $00 $FA $FC $9C $00
 .db $BC $FE $FE $00 $E4 $E6 $A6 $00 $84 $C6 $C6 $00 $A0 $DE $DE $00

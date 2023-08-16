@@ -751,7 +751,8 @@ TimeSeparatorTiles: .incbin "hud-time-separator.8x16.bin"
 ; It could be further optimised by only drawing when it changes?
 ; Profile via function _LABEL_1CCA_UpdateHUD
 ; Before: ~15078 average cycles per invocation
-; After:  ~14742 => save 64 scanlines (!)
+; After:  ~14742 => save ~1.5 scanlines
+; Called every four frames?
 .unbackground $1cf9 $1db2
   ROMPosition $1cf9
 .section "HUD small numbers update" force
@@ -799,38 +800,106 @@ _writeNumber:
 ; The HUD large numbers are no better...
 ; Profile via function _LABEL_1CCA_UpdateHUD again
 ; Before: ~14742 average cycles per invocation
-; After:  ~14109 => save another ~3 scanlines
+; After:  ~13998 => save another 3.3 scanlines
 .unbackground $1450 $148a
   ROMPosition $1450
 .section "HUD large numbers update" force
   di
-  ; VRAM address to de
-  ld c, $bf
+  ; a = digit value
+  ; d = VRAM address to write top half
+  ld c,$bf
   out (c),e
-  out (c),d
+  out (c),d         ; 11
   ; Data port is $be
-  dec c
-  ; $98 + 2a = HUD large digit tile index
-  add a, a
-  add a, $98
-  out (c), a
-  ld b, a ; Remember...
-  ld a, 1
-  nop
-  out (c), a
+  ; $98 + 2*a = HUD large digit tile index
+  add a, a            ; 4
+  add a, $98          ; 7
+  out ($be), a        ; 11 -> 22 cycles since address set
+  ld c, $be           ; 7
+  ld b, 1             ; 7
+  out (c), b          ; 12 -> 26 cycles since last write
   ; One row lower down
   ld hl, 32*2
   add hl, de
-  inc c ; Back to $bf
+  inc c
   out (c), l
-  out (c), h
-  dec c ; $be
-  inc b ; Next tile
-  out (c), b
-  ld a, 1
-  nop
-  nop
-  out (c), a
+  out (c), h          ; 12
+  inc a ; Next tile   ; 4
+  out ($be), a        ; 11 -> 17 cycles since address set
+  ld c, $be           ; 7
+  ld b, 1             ; 7
+  out (c), b          ; 12 -> 26 cycles since last write
+  ei
+  ret
+.ends
+
+; Code to emit a tile from RAM to VRAM
+; Profile start 3a85 end 3aa1
+; Before: 1164 cycles per invocation
+; After:   894 cycles -> save 1.2 scanlines per invocation
+; Called every 1-2 frames on average so not a great win :(
+.unbackground $3a85 $3aa1
+  ROMPosition $3a85
+.section "Tile upload" free
+  ; hl = source memory address
+  ; de = target VRAM address
+EmitTile:
+  di
+  push bc
+    set 6, d ; To write address
+    ld c,$bf
+    out (c),e
+    out (c),d
+    dec c
+    .repeat 31
+    outi              ; 16
+    jp +              ; 10 -> 26 cycles gap
+    +:
+    .endr
+    outi
+  pop bc
+  ei
+  ret
+.ends
+  PatchW($3A61, EmitTile)
+  PatchW($3A78, EmitTile)
+
+
+; More tile loading routines...
+; Profile 8b4 to 8ce
+; Before: about 3870 cycles per invocation
+; After: about 3350 cycles -> save about 2.3 scanlines per invocation
+; Called on average about once per frame
+.unbackground $8b4 $8f1 ; taking some unused code afterwards
+  ROMPosition $8b4
+.section "Tile batch upload" force
+  ; hl = source memory address
+  ; de = target VRAM address
+  ; b = tile count, emit b*32 bytes
+EmitBTiles:
+  di
+  set 6, d ; To write address
+  ld c,$bf
+  out (c),e
+  out (c),d
+  dec c
+
+  ld a,b
+--:
+  ld b,32*2           ; 7
+-:
+  outi                ; 16
+  djnz -              ; 13
+  dec a
+  jp nz,--
+
+/*
+  .repeat 31
+  outi                ; 16
+  jp +                ; 10
+  +:
+  .endr
+*/
   ei
   ret
 .ends
