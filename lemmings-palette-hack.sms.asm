@@ -915,13 +915,13 @@ EmitBTiles:
   PatchW($1B45+1, EmitBTiles) ; Text letters load
 ;  PatchW($1B50+1, EmitBTiles) ; Text numbers update was rewritten above
   PatchW($21E7+1, EmitBTiles) ; Hatch opening animation
-  PatchW($2567+1, EmitBTiles) ; Loading 1 tile from the tileset to VRAM?
-  PatchW($2928+1, EmitBTiles) ; 1: ?
-  PatchW($2943+1, EmitBTiles) ; 1: ?
-  PatchW($296D+1, EmitBTiles) ; 1: ?
+  PatchW($2567+1, EmitTile) ; 1: selective load of tileset on level start
+  PatchW($2928+1, EmitTile) ; 1: exit flames animation
+  PatchW($2943+1, EmitTile) ; 1: ?
+  PatchW($296D+1, EmitTile) ; 1: ?
   PatchW($35CC+1, EmitBTiles) ; 2: Lemming sprite
   PatchW($35E5+1, EmitBTiles) ; 2: Lemming sprite again?
-  PatchW($3CF2+1, EmitBTiles) ; 1: ?
+  PatchW($3CF2+1, EmitTile) ; 1: ?
   PatchW($47E5+1, EmitBTiles) ; 15: walking lemming in intro
   PatchW($4821+1, EmitBTiles) ; 12: wheel in intro
   ;PatchW($4A3A+1, EmitBTiles) ; 2: TM in intro - now removed
