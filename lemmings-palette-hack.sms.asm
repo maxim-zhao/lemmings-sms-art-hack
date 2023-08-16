@@ -706,13 +706,13 @@ EndingLemmings: .incbin {"ending-lemmings.{COMPRESSION}"}
 .ends
 .section "Extra status tiles hack" free
 StatusTilesHack:
-  call $8b4 ; What we replaced to get here (loading the other status text tiles)
+  call EmitBTiles ; What we replaced to get here (loading the other status text tiles)
   ld a,:TimeSeparatorTiles
   ld ($ffff),a
   ld hl,TimeSeparatorTiles
   ld de,$3e80 ; Space in VRAM
   ld b,2 ; tile count
-  jp $8b4 ; load and return
+  jp EmitBTiles ; load and return
 .ends
 .slot 2
 .section "Extra status tiles data" superfree
@@ -873,11 +873,11 @@ EmitTile:
 ; More tile loading routines...
 ; Profile 8b4 to 8ce
 ; Before: about 3870 cycles per invocation
-; After: about 3350 cycles -> save about 2.3 scanlines per invocation
+; After: about 2972 cycles -> save about 3.9 scanlines per invocation
 ; Called on average about once per frame
 .unbackground $8b4 $8f1 ; taking some unused code afterwards
   ROMPosition $8b4
-.section "Tile batch upload" force
+.section "Tile batch upload" free
   ; hl = source memory address
   ; de = target VRAM address
   ; b = tile count, emit b*32 bytes
@@ -888,23 +888,41 @@ EmitBTiles:
   out (c),e
   out (c),d
   dec c
-
   ld a,b
---:
-  ld b,32*2           ; 7
 -:
-  outi                ; 16
-  djnz -              ; 13
-  dec a
-  jp nz,--
-
-/*
   .repeat 31
   outi                ; 16
   jp +                ; 10
   +:
   .endr
-*/
+  outi
+  dec a
+  jp nz,- ; Too far for djnz or jr, plus it's hard to preserve b anyway
   ei
   ret
 .ends
+  ; Call in _LABEL_7A2_LoadFontTiles has been removed
+  PatchW($08a5+1, EmitBTiles) ; In unused code?
+  PatchW($08b0+1, EmitBTiles) ; In unused code?
+  PatchW($1342+1, EmitBTiles) ; 9 tiles for Lemming skill close-up
+  ; Level start:
+  PatchW($1AF9+1, EmitBTiles) ; Cursor load
+  PatchW($1B04+1, EmitBTiles) ; Skill selection load
+  PatchW($1B14+1, EmitBTiles) ; Rate control load
+  PatchW($1B1F+1, EmitBTiles) ; Nuke load
+  PatchW($1B2A+1, EmitBTiles) ; Skills load
+  PatchW($1B35+1, EmitBTiles) ; Numbers load
+  PatchW($1B45+1, EmitBTiles) ; Text letters load
+;  PatchW($1B50+1, EmitBTiles) ; Text numbers update was rewritten above
+  PatchW($21E7+1, EmitBTiles) ; Hatch opening animation
+  PatchW($2567+1, EmitBTiles) ; Loading 1 tile from the tileset to VRAM?
+  PatchW($2928+1, EmitBTiles) ; 1: ?
+  PatchW($2943+1, EmitBTiles) ; 1: ?
+  PatchW($296D+1, EmitBTiles) ; 1: ?
+  PatchW($35CC+1, EmitBTiles) ; 2: Lemming sprite
+  PatchW($35E5+1, EmitBTiles) ; 2: Lemming sprite again?
+  PatchW($3CF2+1, EmitBTiles) ; 1: ?
+  PatchW($47E5+1, EmitBTiles) ; 15: walking lemming in intro
+  PatchW($4821+1, EmitBTiles) ; 12: wheel in intro
+  ;PatchW($4A3A+1, EmitBTiles) ; 2: TM in intro - now removed
+  PatchW($4A71+1, EmitBTiles) ; 12: dot in Lemmings text
