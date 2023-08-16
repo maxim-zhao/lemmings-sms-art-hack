@@ -89,6 +89,12 @@ intro-segalogo.$(COMPRESSION) intro-segalogo.patched.lsbtilemap: png/intro-segal
 	py tools.py patch_tilemap intro-segalogo.patched.lsbtilemap intro-wheel.lsbtilemap   424 4 3 intro-segalogo.patched.lsbtilemap
 	py tools.py patch_tilemap intro-segalogo.patched.lsbtilemap intro-wheel.lsbtilemap   437 4 3 intro-segalogo.patched.lsbtilemap
 
+# Special case: main font needs a leading blank tile added
+font-with-blank.$(COMPRESSION): png/font.png
+	$(BMP2TILE) png/font.png -noremovedupes -8x16 -savetiles font.bin
+	py tools.py insert_bytes font.bin 0 32 0 font-with-blank.bin
+	$(BMP2TILE) font-with-blank.bin -noremovedupes -savetiles $@
+
 # And then we build it
 lemmings-palette-hack.o: 
 	$(WLAZ80) -D COMPRESSION=$(COMPRESSION) -o $@ lemmings-palette-hack.sms.asm
