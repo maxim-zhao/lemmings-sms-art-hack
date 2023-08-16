@@ -109,14 +109,19 @@ LevelLoaderHack:
 
 ; Main font
 ; This has a leading 8x8 blank that is a bit annoying...
-.unbackground $4b7d, $5b9c
+.unbackground $4b7d $5b9c ; Original data
 .bank 0 slot 0
 .section "Font tiles" free
 font:
-.dsb 32 0
-.incbin "font.8x16.bin"
+.incbin "font-with-blank.lemmingscompr"
 .ends
-  PatchW($07a6, font)
+.unbackground $7a2 $7ad
+  ROMPosition $7a2
+.section "Font loader" force
+  ld ix,$0000
+  ld de,font
+  jp $3cfd ; Decompress and return
+.ends
 
 
 
