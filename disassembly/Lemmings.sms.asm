@@ -2851,12 +2851,14 @@ _LABEL_1450_EmitHUDDigit:
 	ret
 
 _LABEL_148B_:
+  ; Iterate over table of 256 here:
 	ld hl, _RAM_C400_
 -:
 	ld a, (hl)
 	and a
 	jp nz, +
 _LABEL_1493_:
+  ; If zero, continue...
 	inc l
 	jp nz, -
 	ret
@@ -2864,117 +2866,132 @@ _LABEL_1493_:
 +:
 	cp $FF
 	jp z, +
+  ; Not $ff
 	push hl
-	ld l, a
-	jp ++
+    ld l, a ; It's the index we're looking up
+    jp ++
 
-+:
++:; $ff
 	push hl
-++:
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	ld c, Port_VDPAddress
-	di
-	out (c), e
-	ld ($0007), a
-	nop
-	nop
-	out (c), d
-	dec c
-	ld hl, _RAM_DA8B_
-	ld b, $40
--:
-	ini
-	nop
-	djnz -
-	pop hl
-	push hl
-	ld a, l
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	set 6, d
-	ld c, Port_VDPAddress
-	out (c), e
-	ld ($0007), a
-	nop
-	nop
-	out (c), d
-	dec c
-	ld l, a
-	ld h, $00
-	add hl, hl
-	add hl, hl
-	add hl, hl
-	push af
-	ld a, $C5
-	add a, h
-	ld h, a
-	push hl
-	ld b, $08
-	xor a
--:
-	or (hl)
-	jp nz, ++
-	inc l
-	djnz -
-	ei
-	pop hl
-	pop af
-	ld h, $C3
-	ld l, a
-	ld (hl), $00
-	ld e, a
-	ld hl, _RAM_CE00_
-	ld bc, $084F
--:
-	ld a, (hl)
-	cp e
-	jp z, +
-	inc hl
-	dec bc
-	ld a, b
-	or c
-	jp nz, -
-+:
-	ld (hl), $00
-	jp +++
+    ; l is already the index we want
 
 ++:
-	pop hl
-	pop af
-	ld de, _RAM_DA8B_
-	ld b, $08
+    ; de = l*32
+    ld h, $7D
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    ; Set VRAM address
+    ld c, Port_VDPAddress
+    di
+    out (c), e
+;    ld ($0007), a
+;    nop
+;    nop
+    out (c), d
+    dec c
+    ld hl, _RAM_DA8B_ ; Buffer
+    ld b, $40 ; double-count for one tile
 -:
-	ld a, (de)
-	and (hl)
-	out (c), a
-	inc e
-	ld a, (de)
-	and (hl)
-	nop
-	out (c), a
-	inc e
-	ld a, (de)
-	and (hl)
-	nop
-	out (c), a
-	inc e
-	ld a, (de)
-	and (hl)
-	nop
-	out (c), a
-	inc e
-	inc hl
-	djnz -
+    ini
+    nop
+    djnz -
+  pop hl
+  ; Get pointer into original table back
+  push hl
+    ; Look up its index *32
+    ld a, l
+    ld h, $7D ; *32 table
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    set 6, d ; Make a write address and set it
+    ld c, Port_VDPAddress
+    out (c), e
+;    ld ($0007), a
+;    nop
+;    nop
+    out (c), d
+    dec c
+    ; Then multiply the index by 8
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    push af
+      ; Add $c500
+      ld a, $C5
+      add a, h
+      ld h, a
+      push hl
+        ; Check if it is 8 bytes of 0
+        ld b, $08
+        xor a
+-:      or (hl)
+        jp nz, ++ ; If we find any bits, skip ahead
+        inc l
+        djnz -
+        ; If so, ei?!?
+        ei
+      pop hl
+    pop af
+    ; Now add to $c300
+    ld h, $C3
+    ld l, a
+    ld (hl), $00
+    ld e, a ; Save index again
+    ld hl, _RAM_CE00_ ; ?
+    ld bc, $084F ; 2127 bytes?!
+-:
+    ld a, (hl)
+    cp e ; Does it match the index we are looking at?
+    jp z, +
+    ; No: keep looking
+    inc hl
+    dec bc
+    ld a, b
+    or c
+    jp nz, -
++:
+    ; We didn't find it, zero the original table entry and move on
+    ld (hl), $00
+    jp +++
+
+++: ; We found the index in the table from $c500
+      pop hl
+    pop af
+    ld de, _RAM_DA8B_
+    ld b, $08 ; Emit 8*4=32 bytes
+-:
+    ld a, (de)
+    and (hl)
+    out (c), a        ; 12
+    inc e             ; 4
+    ld a, (de)        ; 7
+    and (hl)          ; 7
+    ;nop
+    out (c), a        ; 12 -> gap is 30
+    inc e             ; 4
+    ld a, (de)        ; 7
+    and (hl)          ; 7
+    ;nop
+    out (c), a        ; same again
+    inc e
+    ld a, (de)
+    and (hl)
+    ;nop
+    out (c), a        ; same again
+    inc e
+    inc hl
+    djnz -
 +++:
-	pop hl
-	ei
-	ld (hl), $00
-	jp _LABEL_1493_
+  pop hl
+  ei
+  ; Blank entry in table
+  ld (hl), $00
+  ; And continue loop
+  jp _LABEL_1493_
 
 _LABEL_1533_:
 	push bc
@@ -7639,7 +7656,7 @@ _LABEL_38FF_:
 	ld (_RAM_DB6B_), de
 	push hl
 	ld hl, _RAM_DA8B_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	pop hl
 	jp ++
 
@@ -7669,7 +7686,7 @@ _LABEL_38FF_:
 	dec l
 	ld (_RAM_DB6B_), hl
 	ld hl, _RAM_DA8B_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	pop hl
 ++:
 	ld de, $0020
@@ -7681,7 +7698,7 @@ _LABEL_38FF_:
 	ld d, $01
 	ld (_RAM_DB6D_), de
 	ld hl, _RAM_DAAB_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	jp _LABEL_3A12_
 
 +:
@@ -7709,7 +7726,7 @@ _LABEL_38FF_:
 	dec l
 	ld (_RAM_DB6D_), hl
 	ld hl, _RAM_DAAB_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	ld a, (ix+10)
 	and a
 	jp z, _LABEL_3A12_
@@ -7860,19 +7877,23 @@ _LABEL_3A7A_:
 	ei
 	ret
 
-_LABEL_3AA2_:
+_LABEL_3AA2_TileFromVRAMToMemory:
 	push bc
 	push hl
+  ; hl = $7d00 + e (aligned table)
+  ; Then read into de
 	ld a, d
 	ld h, $7D
 	ld l, e
 	ld e, (hl)
 	inc h
 	ld d, (hl)
+  ; If d was non-zero, set the write address
 	and a
 	jp z, +
 	set 5, d
 +:
+  ; Then set VRAM address to de
 	ld c, Port_VDPAddress
 	di
 	out (c), e
@@ -7882,10 +7903,11 @@ _LABEL_3AA2_:
 	out (c), d
 	dec c
 	pop hl
+  ; Restore original hl
 	nop
 	nop
 	nop
-	ld b, $40
+	ld b, $40 ; Read in 32 bytes
 -:
 	ini
 	nop

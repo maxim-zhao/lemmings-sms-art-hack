@@ -931,8 +931,9 @@ EmitBTiles:
 ; Cursor sprite update
 ; Profile 357c to 35af
 ; Before: 229 cycles
-; After: 161 cycles
+; After: 157 cycles
 ; Saving: 0.3 scanlines!
+; Note that it may access the VDP too fast on the first update of a level.
 .unbackground $357c $35af
   ROMPosition $357c
 .section "Set cursor sprite table entries" force
@@ -951,7 +952,6 @@ EmitBTiles:
   ld b, 0               ; 7
   out ($be),a           ; 11 -> 26 since last write
 
-  nop                   ; 4
   xor a                 ; 4
   out ($bf),a           ; 11 -> 19 since last write
   ld a,$7f
@@ -971,13 +971,11 @@ EmitBTiles:
 ; Before: 47477-47519 cycles on Just Dig
 ; After:  45490-45610 -> 8.3 to 8.7 scanlines saved
 ; This executes in VBlank at the start but runs into about half of the screen.
-; We could try copying from HL into the tabel at DE, then fast-copy as much as possible?
 .unbackground $9ed $a30
   ROMPosition $9ed
 .section "Update name table" force
 .define _RAM_DAEC_LevelLayoutTopLeft $daec
 .define _RAM_D800_LevelLayoutAmendments $d800
-_LABEL_9ED_UpdateNameTable:
   di
   ld hl, (_RAM_DAEC_LevelLayoutTopLeft) ; Pointer to level data in RAM, for top left of screen
   ld de, _RAM_D800_LevelLayoutAmendments ; RAM buffer for temporary name table amendments
@@ -1024,4 +1022,184 @@ _secondByte:
   dec b               ; 4 ; extra increment to balance outi above
   ld a, 1             ; 7
   jp _secondByte
+.ends
+
+
+; Reading a tile from VRAM to RAM
+; Not sure why it needs this?
+; Profile 3aa2 to 3acb
+; Before: 1223-1231 cycles
+; After:  954-963 cycles -> saving ~1.2 scanlines
+.unbackground $3AA2 $3b1a ; Taking some extra space here
+.section "Tile VRAM to RAM" free
+TileFromVRAMToMemory:
+  ; de = tile index
+  ; hl = destination
+  push bc
+    push hl
+      ; hl = $7d00 + e (aligned table) to multiply by 32
+      ; Then read into de
+      ld a, d
+      ld h, $7D
+      ld l, e
+      ld e, (hl)
+      inc h ; Then the table at $7e00 for the high bytes of the multiplication
+      ld d, (hl)
+      ; If the incoming d was non-zero, then the tile index was above 256 (i.e. up to 512).
+      ; So set the next bit to account for that (address + $2000).
+      and a
+      jp z, +
+      set 5, d
++:
+      ; Set VRAM address to de
+      ld c, $bf
+      di
+      out (c), e
+      out (c), d
+      dec c
+    pop hl
+    .repeat 31
+    ini                 ; 16
+    jp +                ; 10
++:
+    .endr
+    ini
+  pop bc
+  ei
+  ret
+.ends
+  PatchW($3946+1, TileFromVRAMToMemory)
+  PatchW($397C+1, TileFromVRAMToMemory)
+  PatchW($3993+1, TileFromVRAMToMemory)
+  PatchW($39C7+1, TileFromVRAMToMemory)
+
+
+
+; This one is very big and I'm not sure what it's for :)
+; Profile 148b 1497
+; Before: 8970 if doing nothing, up to 131459 if I dig a lot
+; Afetr:  8970 (no VRAM access on the happy path), but hard to make it go high. Hard to say what the benefit is.
+.unbackground $148b $1532
+  ROMPosition $148b
+.section "Optimised unknown thing" force
+_LABEL_148B_:
+  ; Iterate over table of 256 here:
+  ld hl, $c400 ; _RAM_C400_
+-:ld a, (hl)
+  and a
+  jp nz, +
+_loop_continue:
+  ; If zero, continue...
+  inc l
+  jp nz, -
+  ret
+
++:cp $FF
+  jp z, +
+  ; Not $ff
+  push hl
+    ld l, a ; It's the index we're looking up
+    jp ++
+
++:; $ff
+  push hl
+    ; l is already the index we want
+
+++:
+    ; de = l*32
+    ld h, $7D
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    ; Set VRAM address
+    ld c, $bf
+    di
+    out (c), e
+    out (c), d
+    dec c
+    ld hl, $DA8B ; _RAM_DA8B_ ; Buffer
+    ld b, $40 ; double-count for one tile
+-:  ini               ; 16
+    djnz -            ; 13 -> 29 cycles between reads
+  pop hl
+  ; Get pointer into original table back
+  push hl
+    ; Look up its index *32
+    ld a, l
+    ld h, $7D ; *32 table
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    set 6, d ; Make a write address and set it
+    ld c, $bf
+    out (c), e
+    out (c), d
+    dec c
+    ; Then multiply the index by 8
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    push af
+      ; Add $c500
+      ld a, $C5
+      add a, h
+      ld h, a
+      push hl
+        ; Check if it is 8 bytes of 0
+        ld b, $08
+        xor a
+-:      or (hl)
+        jp nz, ++ ; If we find any bits, skip ahead
+        inc l
+        djnz -
+        ; If so, ei?!?
+        ei
+      pop hl
+    pop af
+    ; Now add to $c300
+    ld h, $C3
+    ld l, a
+    ld (hl), $00
+    ld e, a ; Save index again
+    ld hl, $CE00 ; _RAM_CE00_ ; ?
+    ld bc, $084F ; 2127 bytes?!
+-:
+    ld a, (hl)
+    cp e ; Does it match the index we are looking at?
+    jp z, +
+    ; No: keep looking
+    inc hl
+    dec bc
+    ld a, b
+    or c
+    jp nz, -
++:
+    ; We didn't find it, zero the original table entry and move on
+    ld (hl), $00
+    jp +++
+
+++: ; We found the index in the table from $c500
+      pop hl
+    pop af
+    ld de, $DA8B ; _RAM_DA8B_
+    ld b, $08 ; Emit 8*4=32 bytes
+-:
+    .repeat 4
+    ld a, (de)        ; 7
+    and (hl)          ; 7
+    out (c), a        ; 12 -> gap is 30
+    inc e             ; 4
+    .endr
+
+    inc hl
+    djnz -
++++:
+  pop hl
+  ei
+  ; Blank entry in table
+  ld (hl), 0
+  ; And continue loop
+  jp _loop_continue
 .ends
