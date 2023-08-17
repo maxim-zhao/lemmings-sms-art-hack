@@ -926,3 +926,102 @@ EmitBTiles:
   PatchW($4821+1, EmitBTiles) ; 12: wheel in intro
   ;PatchW($4A3A+1, EmitBTiles) ; 2: TM in intro - now removed
   PatchW($4A71+1, EmitBTiles) ; 12: dot in Lemmings text
+
+
+; Cursor sprite update
+; Profile 357c to 35af
+; Before: 229 cycles
+; After: 161 cycles
+; Saving: 0.3 scanlines!
+.unbackground $357c $35af
+  ROMPosition $357c
+.section "Set cursor sprite table entries" force
+  ; b is the tile index
+  .define _RAM_DB58_CursorX $db58
+  .define _RAM_DB59_CursorY $db59
+  ld a,$80              ; 7
+  out ($bf),a           ; 11
+  ld a,$7f              ; 7
+  out ($bf),a           ; 11 -> 36, faster than using de and c as in the original
+  ld a, (_RAM_DB58_CursorX) ; 13
+  sub 4                 ; 7
+  out ($be),a           ; 11 -> 31 since address set
+  ld a, b               ; 4
+  nop                   ; 4
+  ld b, 0               ; 7
+  out ($be),a           ; 11 -> 26 since last write
+
+  nop                   ; 4
+  xor a                 ; 4
+  out ($bf),a           ; 11 -> 19 since last write
+  ld a,$7f
+  out ($bf),a
+  ld a, (_RAM_DB59_CursorY) ; 13
+  sub 8                 ; 7
+  out ($be),a           ; 11 -> 31 since address set
+  ret
+.ends
+
+
+; Name table update
+; The game emits the full name table every 4 frames.
+; This consists of the permanent data (from ROM, with amendments for diggers etc)
+; plus a temporary overlay for burned-in lemmings.
+; Profile 9ED to a30
+; Before: 47477-47519 cycles on Just Dig
+; After:  45490-45610 -> 8.3 to 8.7 scanlines saved
+; This executes in VBlank at the start but runs into about half of the screen.
+; We could try copying from HL into the tabel at DE, then fast-copy as much as possible?
+.unbackground $9ed $a30
+  ROMPosition $9ed
+.section "Update name table" force
+.define _RAM_DAEC_LevelLayoutTopLeft $daec
+.define _RAM_D800_LevelLayoutAmendments $d800
+_LABEL_9ED_UpdateNameTable:
+  di
+  ld hl, (_RAM_DAEC_LevelLayoutTopLeft) ; Pointer to level data in RAM, for top left of screen
+  ld de, _RAM_D800_LevelLayoutAmendments ; RAM buffer for temporary name table amendments
+  ld a, $00 ; VRAM $3800 = name table
+  out ($bf), a
+  ld a, $78
+  out ($bf), a
+  exx
+    ld b, $13 ; 19 rows
+--:
+  exx
+  ld bc, $40be
+  ;ld b, $40 ; 32 columns, *2 because we use outi and djnz
+  ;ld c, $be
+-:
+  ; Read byte from buffer
+  ld a, (de)
+  and a
+  jr nz, + ; Unlikely
+  ; If zero, emit data from hl with zero high bits
+  outi                ; 16
+  inc de              ; 6
+  xor a               ; 4
+  nop
+_secondByte:
+  out (c), a          ; 12
+  djnz -
+
+  ; The source data is 112 tiles wide.
+  ; We've walked through 32 of those, so we skip +80 for the next row.
+  ld bc, $0050
+  add hl, bc
+  ld c, $be
+  exx
+    djnz --
+  exx
+  ei
+  ret
+
++:; Else emit the RAM data, in the upper tileset => this is the burned-in lemmings
+  out (c), a          ; 12
+  inc de              ; 6
+  inc hl              ; 6
+  dec b               ; 4 ; extra increment to balance outi above
+  ld a, 1             ; 7
+  jp _secondByte
+.ends
