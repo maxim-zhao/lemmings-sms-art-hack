@@ -1413,7 +1413,7 @@ _LABEL_7A2_LoadFontTiles:
 	call _LABEL_8B4_LoadBTilesToVRAM
 	ret
 
-_LABEL_7AE_:
+_LABEL_7AE_LoadFontHigh:
 	ld de, $2000
 	jp -
 
@@ -8280,12 +8280,12 @@ _LABEL_3D6E_:
 	inc de
 	jp --
 
-_LABEL_3D9D_:
+_LABEL_3D9D_StartLevelPreview:
 	ld a, $01
 	ld (_RAM_DB99_), a
 	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld (_RAM_DBD8_), a
-	call _LABEL_7AE_
+	call _LABEL_7AE_LoadFontHigh
 	call _LABEL_1AF1_InitHUD
 	ld l, $13
 	call _LABEL_B90_
@@ -8425,7 +8425,7 @@ _LABEL_3E7D_:
 	ld a, (_RAM_DBD7_)
 	and a
 	jr z, +
-	call _LABEL_3D9D_
+	call _LABEL_3D9D_StartLevelPreview
 	ld hl, $4080
 	ld (_RAM_DB58_CursorX), hl
 +:

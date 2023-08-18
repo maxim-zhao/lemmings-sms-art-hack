@@ -110,17 +110,15 @@ LevelLoaderHack:
 ; Main font
 ; This has a leading 8x8 blank that is a bit annoying...
 .unbackground $4b7d $5b9c ; Original data
-.bank 0 slot 0
-.section "Font tiles" free
+  ROMPosition $4b7d
+.section "Font tiles" force
 font:
-.incbin "font-with-blank.lemmingscompr"
-.ends
-.unbackground $7a2 $7ad
-  ROMPosition $7a2
-.section "Font loader" force
-  ld ix,$0000
-  ld de,font
-  jp $3cfd ; Decompress and return
+.incbin "font-with-blank.bin"
+; It's tempting to try to replace this with compressed tiles. 
+; However, the Lemmings font decompressor uses memory from $c500-c6ff
+; which is also used to store the level solidity data. The font is also
+; loaded in "preview" mode - causing it to break that data.
+; So it has to be uncompressed unless the algorithm also doesn't trample that RAM.
 .ends
 
 
@@ -901,6 +899,7 @@ EmitBTiles:
   ei
   ret
 .ends
+  PatchW($07aa+1, EmitBTiles) ; $85: Font loader
   ; Call in _LABEL_7A2_LoadFontTiles has been removed
   PatchW($08a5+1, EmitBTiles) ; In unused code?
   PatchW($08b0+1, EmitBTiles) ; In unused code?
@@ -1078,7 +1077,7 @@ TileFromVRAMToMemory:
 ; This one is very big and I'm not sure what it's for :)
 ; Profile 148b 1497
 ; Before: 8970 if doing nothing, up to 131459 if I dig a lot
-; Afetr:  8970 (no VRAM access on the happy path), but hard to make it go high. Hard to say what the benefit is.
+; After:  8970 (no VRAM access on the happy path), but hard to make it go high. Hard to say what the benefit is.
 .unbackground $148b $1532
   ROMPosition $148b
 .section "Optimised unknown thing" force
