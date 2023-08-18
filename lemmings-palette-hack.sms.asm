@@ -606,16 +606,16 @@ Delay399:
 .ends
   ROMPosition $35c46
 .section "Water tiles" force
-.incbin "animation-water.8x16.bin"
+.incbin "animation-water.bin"
 .ends
   ROMPosition $35d06
 .section "Green water tiles" force
-.incbin "animation-green-water.8x16.bin"
+.incbin "animation-green-water.bin"
 .ends
 ; One-way arrows animation lives at $35dc6 but seems to be unused
   ROMPosition $35e26
 .section "Flame water tiles" force
-.incbin "animation-flame-water.8x16.bin"
+.incbin "animation-flame-water.bin"
 .ends
 
 
