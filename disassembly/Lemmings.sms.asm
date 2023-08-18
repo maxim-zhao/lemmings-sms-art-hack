@@ -502,7 +502,7 @@ _RAM_D650_ dsb $154
 .ende
 
 .enum $D800 export
-_RAM_D800_ db
+_RAM_D800_LevelLayoutAmendments db
 _RAM_D801_ db
 .ende
 
@@ -547,7 +547,7 @@ _RAM_DAE7_TextLocationYX dw
 
 .enum $DAEB export
 _RAM_DAEB_ db
-_RAM_DAEC_ dw
+_RAM_DAEC_LevelLayoutTopLeft dw
 .ende
 
 .enum $DAF0 export
@@ -580,7 +580,7 @@ _RAM_DB16_ db
 
 .enum $DB4E export
 _RAM_DB4E_ db
-_RAM_DB4F_ db
+_RAM_DB4F_PointedLemmingType db
 _RAM_DB50_ db
 _RAM_DB51_ db
 _RAM_DB52_ dw
@@ -588,13 +588,13 @@ _RAM_DB54_NumberOfLemmings db
 _RAM_DB55_ db
 _RAM_DB56_ db
 _RAM_DB57_ db
-_RAM_DB58_ db
-_RAM_DB59_ db
+_RAM_DB58_CursorX db
+_RAM_DB59_CursorY db
 .ende
 
 .enum $DB5B export
-_RAM_DB5B_ db
-_RAM_DB5C_ db
+_RAM_DB5B_LemmingsOut db
+_RAM_DB5C_LemmingsInPercent db
 _RAM_DB5D_ db
 _RAM_DB5E_ db
 _RAM_DB5F_ db
@@ -615,7 +615,7 @@ _RAM_DB6F_ db
 
 .enum $DB71 export
 _RAM_DB71_ db
-_RAM_DB72_ dsb $8
+_RAM_DB72_SkillCounters dsb $8
 .ende
 
 .enum $DB7C export
@@ -803,7 +803,7 @@ _LABEL_408_:
 	ld (_RAM_DACF_), a
 	jr z, +
 	xor a
-	ld (_RAM_DB4F_), a
+	ld (_RAM_DB4F_PointedLemmingType), a
 +:
 	xor a
 	ld (_RAM_DAD0_), a
@@ -1405,15 +1405,15 @@ _LABEL_774_PrintString:
 	ld (_RAM_DAE7_TextLocationYX), a
 	jr _LABEL_774_PrintString
 
-_LABEL_7A2_:
+_LABEL_7A2_LoadFontTiles:
 	ld de, $0000
 -:
-	ld hl, _DATA_4B7D_
+	ld hl, _DATA_4B7D_FontTiles
 	ld b, $85
 	call _LABEL_8B4_LoadBTilesToVRAM
 	ret
 
-_LABEL_7AE_:
+_LABEL_7AE_LoadFontHigh:
 	ld de, $2000
 	jp -
 
@@ -1728,12 +1728,12 @@ _LABEL_9AD_:
 	ld (_RAM_DBA3_), a
 	ret
 
-_LABEL_9ED_:
+_LABEL_9ED_UpdateNameTable:
 	di
-	ld hl, (_RAM_DAEC_)
-	ld de, _RAM_D800_
+	ld hl, (_RAM_DAEC_LevelLayoutTopLeft) ; Pointer to level data in RAM, for top left of screen
+	ld de, _RAM_D800_LevelLayoutAmendments ; RAM buffer for temporary name table amendments
 	ld c, Port_VDPAddress
-	ld a, $00
+	ld a, $00 ; VRAM $3800 = name table
 	out (c), a
 	ld a, $78
 	ld ($0007), a
@@ -1741,14 +1741,16 @@ _LABEL_9ED_:
 	dec c
 	xor a
 	exx
-	ld b, $13
+	ld b, $13 ; 19 rows
 --:
 	exx
-	ld b, $40
+	ld b, $40 ; 32 columns, *2 because we use outi and djnz
 -:
+  ; Read byte from buffer
 	ld a, (de)
 	and a
 	jr nz, +
+  ; If zero, emit data from hl
 	outi
 	inc de
 	ld a, $00
@@ -1757,15 +1759,17 @@ _LABEL_9ED_:
 	djnz -
 	jp ++
 
-+:
++:; Else emit the RAM data, in the upper tileset => this is the burned-in lemmings
 	out (c), a
 	inc de
 	inc hl
-	dec b
+	dec b ; extra increment to balance outi above
 	ld a, $01
 	out (c), a
 	djnz -
 ++:
+  ; The source data is 112 tiles wide.
+  ; We've walked through 32 of those, so we skip +80 for the next row.
 	ld bc, $0050
 	add hl, bc
 	ld c, Port_VDPData
@@ -2633,8 +2637,8 @@ _LABEL_12D2_:
 
 _LABEL_12F2_:
 	ld a, (_RAM_DB51_)
-	ld de, $7DB8
-	call _LABEL_1450_
+	ld de, $7DB8 ; Lemming under cursor count
+	call _LABEL_1450_EmitHUDDigit
 	ld de, (_RAM_DB52_)
 	ld hl, $0B40
 	ld a, e
@@ -2682,8 +2686,8 @@ _DATA_1346_:
 .db $0C $D6 $0A $30 $FB $C6 $0A $F5 $79 $11 $84 $7D $CD $50 $14 $F1
 .db $11 $86 $7D $C3 $50 $14
 
-_LABEL_138C_:
-	ld a, (_RAM_DB5B_)
+_LABEL_138C_UpdateHUDOut:
+	ld a, (_RAM_DB5B_LemmingsOut)
 	ld c, $FF
 -:
 	inc c
@@ -2692,48 +2696,49 @@ _LABEL_138C_:
 	add a, $0A
 	push af
 	ld a, c
-	ld de, $7CD2
-	call _LABEL_1450_
+	ld de, $7CD2 ; Out count
+	call _LABEL_1450_EmitHUDDigit
 	pop af
 	inc de
 	inc de
-	jp _LABEL_1450_
+	jp _LABEL_1450_EmitHUDDigit
 
-_LABEL_13A6_:
-	ld de, $7CDE
-	ld a, (_RAM_DB5C_)
-	cp $64
+_LABEL_13A6_UpdateHUDIn:
+	ld de, $7CDE ; In percentage
+	ld a, (_RAM_DB5C_LemmingsInPercent)
+	cp 100
 	jr z, +
 	ld c, $FF
 -:
 	inc c
-	sub $0A
+	sub 10
 	jr nc, -
-	add a, $0A
+	add a, 10
 	push af
 	ld a, c
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit ; tens digit
 	pop af
 	inc e
 	inc e
-	jp _LABEL_1450_
+	jp _LABEL_1450_EmitHUDDigit ; Units digit
 
 +:
+  ; If it's 100, write 1, 0, 0
 	dec e
 	dec e
 	ld a, $01
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc e
 	inc e
 	xor a
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc e
 	inc e
 	xor a
-	jp _LABEL_1450_
+	jp _LABEL_1450_EmitHUDDigit
 
-_LABEL_13D7_:
-	ld de, $7CF0
+_LABEL_13D7_UpdateHUDTime:
+	ld de, $7CF0 ; Time
 	ld hl, (_RAM_DAD1_)
 	ld a, l
 	and a
@@ -2757,17 +2762,17 @@ _LABEL_13D7_:
 
 +:
 	ld a, (_RAM_DAD1_)
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc de
 	inc de
 	inc de
 	inc de
 	ld a, (_RAM_DAD2_)
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	inc de
 	inc de
 	ld a, (_RAM_DAD3_)
-	call _LABEL_1450_
+	call _LABEL_1450_EmitHUDDigit
 	ret
 
 ++:
@@ -2805,8 +2810,9 @@ _LABEL_13D7_:
 	ei
 	ret
 
-_LABEL_1450_:
+_LABEL_1450_EmitHUDDigit:
 	di
+  ; VRAM address de
 	ld c, Port_VDPAddress
 	out (c), e
 	ld ($0007), a
@@ -2816,6 +2822,7 @@ _LABEL_1450_:
 	nop
 	nop
 	dec c
+  ; $98 + 2a = HUD digits
 	add a, a
 	add a, $98
 	out (c), a
@@ -2823,6 +2830,7 @@ _LABEL_1450_:
 	ld a, $01
 	ld ($0007), a
 	out (c), a
+  ; One row lower down
 	ld hl, $0040
 	add hl, de
 	inc c
@@ -2833,7 +2841,7 @@ _LABEL_1450_:
 	out (c), h
 	ld ($0007), a
 	dec c
-	inc b
+	inc b ; Next tile
 	out (c), b
 	ld a, $01
 	ld ($0007), a
@@ -2843,12 +2851,14 @@ _LABEL_1450_:
 	ret
 
 _LABEL_148B_:
+  ; Iterate over table of 256 here:
 	ld hl, _RAM_C400_
 -:
 	ld a, (hl)
 	and a
 	jp nz, +
 _LABEL_1493_:
+  ; If zero, continue...
 	inc l
 	jp nz, -
 	ret
@@ -2856,117 +2866,132 @@ _LABEL_1493_:
 +:
 	cp $FF
 	jp z, +
+  ; Not $ff
 	push hl
-	ld l, a
-	jp ++
+    ld l, a ; It's the index we're looking up
+    jp ++
 
-+:
++:; $ff
 	push hl
-++:
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	ld c, Port_VDPAddress
-	di
-	out (c), e
-	ld ($0007), a
-	nop
-	nop
-	out (c), d
-	dec c
-	ld hl, _RAM_DA8B_
-	ld b, $40
--:
-	ini
-	nop
-	djnz -
-	pop hl
-	push hl
-	ld a, l
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	set 6, d
-	ld c, Port_VDPAddress
-	out (c), e
-	ld ($0007), a
-	nop
-	nop
-	out (c), d
-	dec c
-	ld l, a
-	ld h, $00
-	add hl, hl
-	add hl, hl
-	add hl, hl
-	push af
-	ld a, $C5
-	add a, h
-	ld h, a
-	push hl
-	ld b, $08
-	xor a
--:
-	or (hl)
-	jp nz, ++
-	inc l
-	djnz -
-	ei
-	pop hl
-	pop af
-	ld h, $C3
-	ld l, a
-	ld (hl), $00
-	ld e, a
-	ld hl, _RAM_CE00_
-	ld bc, $084F
--:
-	ld a, (hl)
-	cp e
-	jp z, +
-	inc hl
-	dec bc
-	ld a, b
-	or c
-	jp nz, -
-+:
-	ld (hl), $00
-	jp +++
+    ; l is already the index we want
 
 ++:
-	pop hl
-	pop af
-	ld de, _RAM_DA8B_
-	ld b, $08
+    ; de = l*32
+    ld h, $7D
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    ; Set VRAM address
+    ld c, Port_VDPAddress
+    di
+    out (c), e
+;    ld ($0007), a
+;    nop
+;    nop
+    out (c), d
+    dec c
+    ld hl, _RAM_DA8B_ ; Buffer
+    ld b, $40 ; double-count for one tile
 -:
-	ld a, (de)
-	and (hl)
-	out (c), a
-	inc e
-	ld a, (de)
-	and (hl)
-	nop
-	out (c), a
-	inc e
-	ld a, (de)
-	and (hl)
-	nop
-	out (c), a
-	inc e
-	ld a, (de)
-	and (hl)
-	nop
-	out (c), a
-	inc e
-	inc hl
-	djnz -
+    ini
+    nop
+    djnz -
+  pop hl
+  ; Get pointer into original table back
+  push hl
+    ; Look up its index *32
+    ld a, l
+    ld h, $7D ; *32 table
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    set 6, d ; Make a write address and set it
+    ld c, Port_VDPAddress
+    out (c), e
+;    ld ($0007), a
+;    nop
+;    nop
+    out (c), d
+    dec c
+    ; Then multiply the index by 8
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    push af
+      ; Add $c500
+      ld a, $C5
+      add a, h
+      ld h, a
+      push hl
+        ; Check if it is 8 bytes of 0
+        ld b, $08
+        xor a
+-:      or (hl)
+        jp nz, ++ ; If we find any bits, skip ahead
+        inc l
+        djnz -
+        ; If so, ei?!?
+        ei
+      pop hl
+    pop af
+    ; Now add to $c300
+    ld h, $C3
+    ld l, a
+    ld (hl), $00
+    ld e, a ; Save index again
+    ld hl, _RAM_CE00_ ; ?
+    ld bc, $084F ; 2127 bytes?!
+-:
+    ld a, (hl)
+    cp e ; Does it match the index we are looking at?
+    jp z, +
+    ; No: keep looking
+    inc hl
+    dec bc
+    ld a, b
+    or c
+    jp nz, -
++:
+    ; We didn't find it, zero the original table entry and move on
+    ld (hl), $00
+    jp +++
+
+++: ; We found the index in the table from $c500
+      pop hl
+    pop af
+    ld de, _RAM_DA8B_
+    ld b, $08 ; Emit 8*4=32 bytes
+-:
+    ld a, (de)
+    and (hl)
+    out (c), a        ; 12
+    inc e             ; 4
+    ld a, (de)        ; 7
+    and (hl)          ; 7
+    ;nop
+    out (c), a        ; 12 -> gap is 30
+    inc e             ; 4
+    ld a, (de)        ; 7
+    and (hl)          ; 7
+    ;nop
+    out (c), a        ; same again
+    inc e
+    ld a, (de)
+    and (hl)
+    ;nop
+    out (c), a        ; same again
+    inc e
+    inc hl
+    djnz -
 +++:
-	pop hl
-	ei
-	ld (hl), $00
-	jp _LABEL_1493_
+  pop hl
+  ei
+  ; Blank entry in table
+  ld (hl), $00
+  ; And continue loop
+  jp _LABEL_1493_
 
 _LABEL_1533_:
 	push bc
@@ -3213,7 +3238,7 @@ _LABEL_1690_:
 	ldir
 	xor a
 	ld (_RAM_DB7D_), a
-	ld hl, _RAM_D800_
+	ld hl, _RAM_D800_LevelLayoutAmendments
 	ld de, _RAM_D801_
 	ld (hl), $00
 	ld bc, $0260
@@ -3648,7 +3673,7 @@ _LABEL_1ADD_:
 	ld (_RAM_DAF1_), hl
 	ret
 
-_LABEL_1AF1_:
+_LABEL_1AF1_InitHUD:
 	ld hl, _DATA_62DD_CursorTiles
 	ld de, $3E00
 	ld b, $08 ; Only 4 are used
@@ -3731,7 +3756,7 @@ _LABEL_1AF1_:
 	ld de, $7D0A
 	ld hl, _DATA_1C7C_StatusTextBottomRow
 	call +
-	call _LABEL_1CCA_
+	call _LABEL_1CCA_UpdateHUD
 	ei
 	ret
 
@@ -3882,10 +3907,10 @@ _LABEL_1CAE_EmitEveryOtherTileToTilemap_16Times:
 	djnz -
 	ret
 
-_LABEL_1CCA_:
-	call _LABEL_13D7_
-	call _LABEL_138C_
-	call _LABEL_13A6_
+_LABEL_1CCA_UpdateHUD: ; Called every 4 frames?
+	call _LABEL_13D7_UpdateHUDTime
+	call _LABEL_138C_UpdateHUDOut
+	call _LABEL_13A6_UpdateHUDIn
 	call _LABEL_12F2_
 	ld a, (_RAM_DB57_)
 	and a
@@ -3905,7 +3930,7 @@ _LABEL_1CCA_:
 	ld a, $AE
 	call _LABEL_A5E_
 +:
-	ld de, $7D4E
+	ld de, $7D4E ; Skill digits start
 	di
 	ld c, Port_VDPAddress
 	out (c), e
@@ -3914,11 +3939,13 @@ _LABEL_1CCA_:
 	ld ($0007), a
 	out (c), d
 	dec c
-	ld hl, _RAM_DB72_
-	ld b, $08
+	ld hl, _RAM_DB72_SkillCounters
+	ld b, $08 ; Count
 -:
-	call _LABEL_1D60_
+	call _LABEL_1D60_WriteSkillCountToScreen
 	djnz -
+  ; The skill display is different between SMS and GG,
+  ; this jumped-over code is the GG version. It than presumaby skips the SMS version :)
 	jp +
 
 ; Data from 1D10 to 1D46 (55 bytes)
@@ -3929,7 +3956,7 @@ _LABEL_1CCA_:
 
 +:
 	ld hl, _RAM_DB5F_
-	ld de, $7D88
+	ld de, $7D88 ; Release rate
 	ld c, Port_VDPAddress
 	out (c), e
 	nop
@@ -3938,11 +3965,11 @@ _LABEL_1CCA_:
 	out (c), d
 	dec c
 	ld b, $01
-	call _LABEL_1D60_
+	call _LABEL_1D60_WriteSkillCountToScreen
 	ei
 	ret
 
-_LABEL_1D60_:
+_LABEL_1D60_WriteSkillCountToScreen:
 	ld a, (hl)
 	ld e, $83
 -:
@@ -3978,7 +4005,7 @@ _LABEL_1DB3_:
 	ld (hl), $00
 	ld bc, $0139
 	ldir
-	ld hl, _RAM_D800_
+	ld hl, _RAM_D800_LevelLayoutAmendments
 	ld de, _RAM_D801_
 	ld (hl), $00
 	ld bc, $0260
@@ -4035,7 +4062,7 @@ _LABEL_1E0F_:
 	ld a, $04
 	ld (_RAM_DAE3_), a
 	ld hl, $8080
-	ld (_RAM_DB58_), hl
+	ld (_RAM_DB58_CursorX), hl
 	xor a
 	ld (_RAM_DAE4_), a
 	ld a, $CF
@@ -4085,7 +4112,7 @@ _LABEL_1E0F_:
 	ldi
 	ld de, $0000
 	ld (_RAM_DAD2_), de
-	ld de, _RAM_DB72_
+	ld de, _RAM_DB72_SkillCounters
 	ld bc, $0008
 	ldir
 	ld de, _RAM_DB56_
@@ -4097,8 +4124,8 @@ _LABEL_1E0F_:
 	ldi
 	ldi
 	xor a
-	ld (_RAM_DB5B_), a
-	ld (_RAM_DB5C_), a
+	ld (_RAM_DB5B_LemmingsOut), a
+	ld (_RAM_DB5C_LemmingsInPercent), a
 	ld a, (_RAM_DB9C_)
 	and a
 	ret z
@@ -4139,7 +4166,7 @@ _LABEL_1EEA_:
 	ld a, $50
 +:
 	ld l, a
-	ld (_RAM_DAEC_), hl
+	ld (_RAM_DAEC_LevelLayoutTopLeft), hl
 	ret
 
 _LABEL_1F0C_:
@@ -5008,7 +5035,7 @@ _LABEL_247E_:
 	djnz -
 	call _LABEL_2660_
 	ld hl, _RAM_C300_
-	ld de, _RAM_D800_
+	ld de, _RAM_D800_LevelLayoutAmendments
 	ld bc, $0100
 	ldir
 	ld hl, _RAM_C300_
@@ -5035,8 +5062,8 @@ _LABEL_247E_:
 	ld (hl), $00
 	ld bc, $00FF
 	ldir
-	ld hl, _RAM_D800_
-	ld de, _RAM_D800_ + 1
+	ld hl, _RAM_D800_LevelLayoutAmendments
+	ld de, _RAM_D800_LevelLayoutAmendments + 1
 	ld (hl), $00
 	ld bc, $00FF
 	ldir
@@ -5525,9 +5552,9 @@ _LABEL_29B1_:
 	ret z
 	dec a
 	ld (_RAM_DB54_NumberOfLemmings), a
-	ld a, (_RAM_DB5B_)
+	ld a, (_RAM_DB5B_LemmingsOut)
 	inc a
-	ld (_RAM_DB5B_), a
+	ld (_RAM_DB5B_LemmingsOut), a
 	ld ix, (_RAM_DAF1_)
 	ld (ix+0), $02
 	ld l, (iy+0)
@@ -5574,11 +5601,11 @@ _LABEL_2A5F_:
 	and a
 	jp nz, +
 	ld hl, $C804
-	ld (_RAM_DB58_), hl
+	ld (_RAM_DB58_CursorX), hl
 	ret
 
 +:
-	ld a, (_RAM_DAEC_)
+	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld (_RAM_DAF0_), a
 	call _LABEL_840_
 	ld bc, (_RAM_DBCE_)
@@ -5636,7 +5663,7 @@ _LABEL_2A5F_:
 	ld a, $10
 +:
 	ld (_RAM_DAEB_), a
-	ld hl, (_RAM_DB58_)
+	ld hl, (_RAM_DB58_CursorX)
 	ld a, l
 	add a, c
 	cp $10
@@ -5661,7 +5688,7 @@ _LABEL_2A5F_:
 	ld a, $B8
 +:
 	ld h, a
-	ld (_RAM_DB58_), hl
+	ld (_RAM_DB58_CursorX), hl
 	ret
 
 _LABEL_2AF9_:
@@ -5670,7 +5697,7 @@ _LABEL_2AF9_:
 	add a, a
 	inc a
 	ld l, a
-	ld a, (_RAM_DB58_)
+	ld a, (_RAM_DB58_CursorX)
 	cp $10
 	jp z, ++
 	cp $F8
@@ -5678,35 +5705,35 @@ _LABEL_2AF9_:
 	ld a, (_RAM_DBCE_)
 	cp $01
 	ret nz
-	ld a, (_RAM_DAEC_)
+	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
 	add a, l
 	cp $50
 	jp c, +
 	ld a, $50
 +:
-	ld (_RAM_DAEC_), a
+	ld (_RAM_DAEC_LevelLayoutTopLeft), a
 	ret
 
 ++:
 	ld a, (_RAM_DBCE_)
 	cp $FF
 	ret nz
-	ld a, (_RAM_DAEC_)
+	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
 	sub l
 	jp nc, +
 	xor a
 +:
-	ld (_RAM_DAEC_), a
+	ld (_RAM_DAEC_LevelLayoutTopLeft), a
 	ret
 
 _LABEL_2B32_:
 	ld iy, $0000
 	xor a
 	ld (_RAM_DB51_), a
-	ld a, (_RAM_DB59_)
+	ld a, (_RAM_DB59_CursorY)
 	cp $98
 	jp nc, _LABEL_2B96_
-	ld bc, (_RAM_DB58_)
+	ld bc, (_RAM_DB58_CursorX)
 	ld hl, $0606
 	ld de, $0011
 	ld ix, _RAM_D650_
@@ -5937,13 +5964,13 @@ _LABEL_2CCB_:
 	ret
 
 +:
-	ld a, (_RAM_DB59_)
+	ld a, (_RAM_DB59_CursorY)
 	cp $A8
 	jp c, _LABEL_2D98_
 	ld a, (_RAM_DBD1_)
 	and a
 	jp z, _LABEL_2D98_
-	ld a, (_RAM_DB58_)
+	ld a, (_RAM_DB58_CursorX)
 	sub $38
 	jr c, +
 	cp $80
@@ -5974,7 +6001,7 @@ _LABEL_2CCB_:
 +:
 	add a, $20
 	ret nc
-	ld a, (_RAM_DB59_)
+	ld a, (_RAM_DB59_CursorY)
 	cp $A8
 	ret c
 	cp $B0
@@ -6963,9 +6990,9 @@ _LABEL_349B_:
 
 _LABEL_34A4_:
 	ld (ix+0), $00
-	ld a, (_RAM_DB5B_)
+	ld a, (_RAM_DB5B_LemmingsOut)
 	dec a
-	ld (_RAM_DB5B_), a
+	ld (_RAM_DB5B_LemmingsOut), a
 	ret
 
 _LABEL_34B0_:
@@ -7073,18 +7100,18 @@ _LABEL_355E_:
 	ret
 
 _LABEL_356B_:
-	ld a, (_RAM_DB4F_)
+	ld a, (_RAM_DB4F_PointedLemmingType)
 	and a
 	jr z, +
-	ld b, $F2
+	ld b, $F2 ; [] cursor
 	xor a
 	ld (_RAM_DAEB_), a
 	jp ++
 
 +:
-	ld b, $F0
+	ld b, $F0 ; + cursor
 ++:
-	ld de, $7F00
+	ld de, $7F00 ; Sprite table address
 	ld c, Port_VDPAddress
 	out (c), e
 	nop
@@ -7092,7 +7119,7 @@ _LABEL_356B_:
 	ld ($0007), a
 	out (c), d
 	dec c
-	ld a, (_RAM_DB59_)
+	ld a, (_RAM_DB59_CursorY)
 	sub $08
 	out (c), a
 	ld de, $7F80
@@ -7103,7 +7130,7 @@ _LABEL_356B_:
 	ld ($0007), a
 	out (c), d
 	dec c
-	ld a, (_RAM_DB58_)
+	ld a, (_RAM_DB58_CursorX)
 	sub $04
 	out (c), a
 	nop
@@ -7376,11 +7403,11 @@ _LABEL_378F_:
 	inc a
 	cp $08
 	jr c, ++
-	ld a, (_RAM_DB5C_)
+	ld a, (_RAM_DB5C_LemmingsInPercent)
 	ld e, a
 	ld a, (_RAM_DB56_)
 	add a, e
-	ld (_RAM_DB5C_), a
+	ld (_RAM_DB5C_LemmingsInPercent), a
 	ld a, (_RAM_DB9C_)
 	and a
 	jr z, +
@@ -7411,7 +7438,7 @@ _LABEL_37CB_:
 	ld a, $03
 	ld (_RAM_FFFF_), a
 	exx
-	ld hl, (_RAM_DAEC_)
+	ld hl, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld h, $00
 	add hl, hl
 	add hl, hl
@@ -7629,7 +7656,7 @@ _LABEL_38FF_:
 	ld (_RAM_DB6B_), de
 	push hl
 	ld hl, _RAM_DA8B_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	pop hl
 	jp ++
 
@@ -7659,7 +7686,7 @@ _LABEL_38FF_:
 	dec l
 	ld (_RAM_DB6B_), hl
 	ld hl, _RAM_DA8B_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	pop hl
 ++:
 	ld de, $0020
@@ -7671,7 +7698,7 @@ _LABEL_38FF_:
 	ld d, $01
 	ld (_RAM_DB6D_), de
 	ld hl, _RAM_DAAB_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	jp _LABEL_3A12_
 
 +:
@@ -7699,7 +7726,7 @@ _LABEL_38FF_:
 	dec l
 	ld (_RAM_DB6D_), hl
 	ld hl, _RAM_DAAB_
-	call _LABEL_3AA2_
+	call _LABEL_3AA2_TileFromVRAMToMemory
 	ld a, (ix+10)
 	and a
 	jp z, _LABEL_3A12_
@@ -7770,31 +7797,31 @@ _LABEL_3A12_:
 	ld l, (ix+14)
 	ld h, (ix+15)
 	push bc
-	ld b, $0A
--:
-	ld c, (hl)
-	ld a, (de)
-	and c
-	inc hl
-	or (hl)
-	inc hl
-	ld (de), a
-	inc de
-	ld a, (de)
-	and c
-	or (hl)
-	inc hl
-	ld (de), a
-	inc de
-	ld a, (de)
-	and c
-	ld (de), a
-	inc de
-	ld a, (de)
-	and c
-	ld (de), a
-	inc de
-	djnz -
+    ld b, $0A
+  -:
+    ld c, (hl)
+    ld a, (de)
+    and c
+    inc hl
+    or (hl)
+    inc hl
+    ld (de), a
+    inc de
+    ld a, (de)
+    and c
+    or (hl)
+    inc hl
+    ld (de), a
+    inc de
+    ld a, (de)
+    and c
+    ld (de), a
+    inc de
+    ld a, (de)
+    and c
+    ld (de), a
+    inc de
+    djnz -
 	pop bc
 	ld hl, (_RAM_DB6B_)
 	ld h, $7D
@@ -7821,9 +7848,10 @@ _LABEL_3A12_:
 	ld hl, _RAM_DAAB_
 	call ++
 _LABEL_3A7A_:
+  ; ix += 17
 	ld de, $0011
 	add ix, de
-	pop af
+	pop af ; ?!
 	dec a
 	jp nz, _LABEL_38FF_
 	ret
@@ -7831,7 +7859,7 @@ _LABEL_3A7A_:
 ++:
 	di
 	push bc
-	set 6, d
+	set 6, d ; To write address
 	ld c, Port_VDPAddress
 	out (c), e
 	ld ($0007), a
@@ -7840,7 +7868,7 @@ _LABEL_3A7A_:
 	out (c), d
 	dec c
 	ld ($0007), a
-	ld b, $40
+	ld b, $40 ; Emit 32B
 -:
 	outi
 	nop
@@ -7849,19 +7877,23 @@ _LABEL_3A7A_:
 	ei
 	ret
 
-_LABEL_3AA2_:
+_LABEL_3AA2_TileFromVRAMToMemory:
 	push bc
 	push hl
+  ; hl = $7d00 + e (aligned table)
+  ; Then read into de
 	ld a, d
 	ld h, $7D
 	ld l, e
 	ld e, (hl)
 	inc h
 	ld d, (hl)
+  ; If d was non-zero, set the write address
 	and a
 	jp z, +
 	set 5, d
 +:
+  ; Then set VRAM address to de
 	ld c, Port_VDPAddress
 	di
 	out (c), e
@@ -7871,10 +7903,11 @@ _LABEL_3AA2_:
 	out (c), d
 	dec c
 	pop hl
+  ; Restore original hl
 	nop
 	nop
 	nop
-	ld b, $40
+	ld b, $40 ; Read in 32 bytes
 -:
 	ini
 	nop
@@ -8247,13 +8280,13 @@ _LABEL_3D6E_:
 	inc de
 	jp --
 
-_LABEL_3D9D_:
+_LABEL_3D9D_StartLevelPreview:
 	ld a, $01
 	ld (_RAM_DB99_), a
-	ld a, (_RAM_DAEC_)
+	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld (_RAM_DBD8_), a
-	call _LABEL_7AE_
-	call _LABEL_1AF1_
+	call _LABEL_7AE_LoadFontHigh
+	call _LABEL_1AF1_InitHUD
 	ld l, $13
 	call _LABEL_B90_
 	ld l, $14
@@ -8262,7 +8295,7 @@ _LABEL_3D9D_:
 	call _LABEL_829_SetTextLocationToBC
 	ld ix, _DATA_103B_PressButtonText
 	call _LABEL_774_PrintString
-	call _LABEL_9ED_
+	call _LABEL_9ED_UpdateNameTable
 	call _LABEL_4C5_ScreenOn
 _LABEL_3DCB_:
 	xor a
@@ -8270,11 +8303,11 @@ _LABEL_3DCB_:
 	ld a, (_RAM_DBD7_)
 	cp $01
 	jr z, +
-	ld hl, (_RAM_DAEC_)
+	ld hl, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld a, (_RAM_DBD9_)
 	add a, l
 	ld l, a
-	ld (_RAM_DAEC_), hl
+	ld (_RAM_DAEC_LevelLayoutTopLeft), hl
 	ld a, (_RAM_DBD8_)
 	cp l
 	jp z, _LABEL_3E42_
@@ -8297,7 +8330,7 @@ _LABEL_3DCB_:
 	cp l
 	jp c, -
 	call _LABEL_A6D_
-	call _LABEL_9ED_
+	call _LABEL_9ED_UpdateNameTable
 	ld hl, (_RAM_DBD0_)
 	ld a, l
 	or h
@@ -8307,7 +8340,7 @@ _LABEL_3DCB_:
 	jp nz, _LABEL_3DCB_
 	inc a
 	ld (_RAM_DBD7_), a
-	ld hl, (_RAM_DAEC_)
+	ld hl, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld e, $00
 	ld a, (_RAM_DBD8_)
 	cp l
@@ -8388,16 +8421,16 @@ _LABEL_3E7D_:
 	ld a, $01
 	ld (_RAM_DB50_), a
 	ld hl, $4080
-	ld (_RAM_DB58_), hl
+	ld (_RAM_DB58_CursorX), hl
 	ld a, (_RAM_DBD7_)
 	and a
 	jr z, +
-	call _LABEL_3D9D_
+	call _LABEL_3D9D_StartLevelPreview
 	ld hl, $4080
-	ld (_RAM_DB58_), hl
+	ld (_RAM_DB58_CursorX), hl
 +:
-	call _LABEL_1AF1_
-	call _LABEL_9ED_
+	call _LABEL_1AF1_InitHUD
+	call _LABEL_9ED_UpdateNameTable
 	call _LABEL_4C5_ScreenOn
 	ld hl, (_RAM_DAD4_)
 -:
@@ -8451,7 +8484,7 @@ _LABEL_3F17_:
 	call _LABEL_9AD_
 	call _LABEL_297F_
 ++:
-	call _LABEL_1CCA_
+	call _LABEL_1CCA_UpdateHUD
 -:
 	ld a, (_RAM_DAD4_)
 	cp $03
@@ -8472,7 +8505,7 @@ _LABEL_3F17_:
 	cp l
 	jp c, -
 	call _LABEL_A6D_
-	call _LABEL_9ED_
+	call _LABEL_9ED_UpdateNameTable
 	ld a, $02
 	ld (_RAM_FFFF_), a
 	call _LABEL_B0E7_
@@ -8487,7 +8520,7 @@ _LABEL_3F17_:
 	jp z, +
 	ld hl, (_RAM_DB54_NumberOfLemmings)
 +:
-	ld a, (_RAM_DB5B_)
+	ld a, (_RAM_DB5B_LemmingsOut)
 	or l
 	jp nz, _LABEL_3F17_
 	ld a, $01
@@ -8514,7 +8547,7 @@ _LABEL_3F17_:
 
 _LABEL_403A_:
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
 	ld (_RAM_FFFF_), a
@@ -8527,7 +8560,7 @@ _LABEL_403A_:
 	ld d, $4C
 	ld ix, _DATA_D37_PasswordScreenText
 	ld hl, (_RAM_DB55_)
-	ld a, (_RAM_DB5C_)
+	ld a, (_RAM_DB5C_LemmingsInPercent)
 	cp l
 	jp nc, +
 	ld d, $4D
@@ -8600,7 +8633,7 @@ _LABEL_403A_:
 _LABEL_40FC_:
 	ld bc, $0415
 	call _LABEL_829_SetTextLocationToBC
-	ld a, (_RAM_DB5C_)
+	ld a, (_RAM_DB5C_LemmingsInPercent)
 	call _LABEL_1293_
 	ld bc, $0715
 	call _LABEL_829_SetTextLocationToBC
@@ -8656,7 +8689,7 @@ _LABEL_412F_:
 _LABEL_4166_:
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
 	ld (_RAM_FFFF_), a
@@ -8754,7 +8787,7 @@ _LABEL_4166_:
 
 _LABEL_4255_:
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -8811,7 +8844,7 @@ _LABEL_4255_:
 
 _LABEL_42D8_:
 	call _LABEL_6F2_BlankTilemapAndTile0
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -9564,7 +9597,7 @@ _LABEL_48A2_Ending_ShowText:
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_7A2_
+	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld bc, $0506
 	call _LABEL_829_SetTextLocationToBC
@@ -9912,7 +9945,7 @@ _LABEL_4B41_:
 	ret
 
 ; Data from 4B7D to 4D4C (464 bytes)
-_DATA_4B7D_:
+_DATA_4B7D_FontTiles:
 .dsb 36, $00
 .db $38 $38 $38 $00 $64 $7C $5C $00 $D6 $FA $EA $00 $FA $FC $9C $00
 .db $BC $FE $FE $00 $E4 $E6 $A6 $00 $84 $C6 $C6 $00 $A0 $DE $DE $00

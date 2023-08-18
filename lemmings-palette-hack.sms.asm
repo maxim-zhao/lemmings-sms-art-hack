@@ -110,17 +110,15 @@ LevelLoaderHack:
 ; Main font
 ; This has a leading 8x8 blank that is a bit annoying...
 .unbackground $4b7d $5b9c ; Original data
-.bank 0 slot 0
-.section "Font tiles" free
+  ROMPosition $4b7d
+.section "Font tiles" force
 font:
-.incbin "font-with-blank.lemmingscompr"
-.ends
-.unbackground $7a2 $7ad
-  ROMPosition $7a2
-.section "Font loader" force
-  ld ix,$0000
-  ld de,font
-  jp $3cfd ; Decompress and return
+.incbin "font-with-blank.bin"
+; It's tempting to try to replace this with compressed tiles. 
+; However, the Lemmings font decompressor uses memory from $c500-c6ff
+; which is also used to store the level solidity data. The font is also
+; loaded in "preview" mode - causing it to break that data.
+; So it has to be uncompressed unless the algorithm also doesn't trample that RAM.
 .ends
 
 
@@ -706,13 +704,13 @@ EndingLemmings: .incbin {"ending-lemmings.{COMPRESSION}"}
 .ends
 .section "Extra status tiles hack" free
 StatusTilesHack:
-  call $8b4 ; What we replaced to get here (loading the other status text tiles)
+  call EmitBTiles ; What we replaced to get here (loading the other status text tiles)
   ld a,:TimeSeparatorTiles
   ld ($ffff),a
   ld hl,TimeSeparatorTiles
   ld de,$3e80 ; Space in VRAM
   ld b,2 ; tile count
-  jp $8b4 ; load and return
+  jp EmitBTiles ; load and return
 .ends
 .slot 2
 .section "Extra status tiles data" superfree
@@ -747,3 +745,460 @@ TimeSeparatorTiles: .incbin "hud-time-separator.8x16.bin"
 .include "Phantasy_Star_Gaiden_decompressor.asm"
 .endif
 .endif
+
+
+
+; Some optimisations
+
+; The HUD small numbers display was slower than necessary.
+; It could be further optimised by only drawing when it changes?
+; Profile via function _LABEL_1CCA_UpdateHUD
+; Before: ~15078 average cycles per invocation
+; After:  ~14742 => save ~1.5 scanlines
+; Called every four frames?
+.unbackground $1cf9 $1db2
+  ROMPosition $1cf9
+.section "HUD small numbers update" force
+  out (c),e
+  out (c),d
+  dec c
+  ld hl,$db72 ; skill counters
+.repeat 8
+  call _writeNumber
+.endr
+  ld hl,$db5f ; Release rate
+  ld a,$88
+  out ($bf),a
+  ld a,$7d
+  out ($bf),a
+  call _writeNumber
+  ei
+  ret
+
+_writeNumber:
+  ld a, (hl)
+  ld e, $83 ; Index of left 0 minus 1
+  ; Count 10s - likely 0
+-:inc e
+  sub 10
+  jr nc, -
+  add a, 10
+  ld d, a
+  out (c), e
+  ld a, 1 ; High tile set
+  nop
+  nop
+  out (c), a
+  ld a, d
+  add a, $8E ; Index of right 0
+  nop
+  out (c), a
+  ld a, 1
+  nop
+  nop
+  out (c), a
+  inc hl
+  ret
+.ends
+; The HUD large numbers are no better...
+; Profile via function _LABEL_1CCA_UpdateHUD again
+; Before: ~14742 average cycles per invocation
+; After:  ~13998 => save another 3.3 scanlines
+.unbackground $1450 $148a
+  ROMPosition $1450
+.section "HUD large numbers update" force
+  di
+  ; a = digit value
+  ; d = VRAM address to write top half
+  ld c,$bf
+  out (c),e
+  out (c),d         ; 11
+  ; Data port is $be
+  ; $98 + 2*a = HUD large digit tile index
+  add a, a            ; 4
+  add a, $98          ; 7
+  out ($be), a        ; 11 -> 22 cycles since address set
+  ld c, $be           ; 7
+  ld b, 1             ; 7
+  out (c), b          ; 12 -> 26 cycles since last write
+  ; One row lower down
+  ld hl, 32*2
+  add hl, de
+  inc c
+  out (c), l
+  out (c), h          ; 12
+  inc a ; Next tile   ; 4
+  out ($be), a        ; 11 -> 17 cycles since address set
+  ld c, $be           ; 7
+  ld b, 1             ; 7
+  out (c), b          ; 12 -> 26 cycles since last write
+  ei
+  ret
+.ends
+
+; Code to emit a tile from RAM to VRAM
+; Profile start 3a85 end 3aa1
+; Before: 1164 cycles per invocation
+; After:   894 cycles -> save 1.2 scanlines per invocation
+; Called every 1-2 frames on average so not a great win :(
+.unbackground $3a85 $3aa1
+  ROMPosition $3a85
+.section "Tile upload" free
+  ; hl = source memory address
+  ; de = target VRAM address
+EmitTile:
+  di
+  push bc
+    set 6, d ; To write address
+    ld c,$bf
+    out (c),e
+    out (c),d
+    dec c
+    .repeat 31
+    outi              ; 16
+    jp +              ; 10 -> 26 cycles gap
+    +:
+    .endr
+    outi
+  pop bc
+  ei
+  ret
+.ends
+  PatchW($3A61, EmitTile)
+  PatchW($3A78, EmitTile)
+
+
+; More tile loading routines...
+; Profile 8b4 to 8ce
+; Before: about 3870 cycles per invocation
+; After: about 2972 cycles -> save about 3.9 scanlines per invocation
+; Called on average about once per frame
+.unbackground $8b4 $8f1 ; taking some unused code afterwards
+  ROMPosition $8b4
+.section "Tile batch upload" free
+  ; hl = source memory address
+  ; de = target VRAM address
+  ; b = tile count, emit b*32 bytes
+EmitBTiles:
+  di
+  set 6, d ; To write address
+  ld c,$bf
+  out (c),e
+  out (c),d
+  dec c
+  ld a,b
+-:
+  .repeat 31
+  outi                ; 16
+  jp +                ; 10
+  +:
+  .endr
+  outi
+  dec a
+  jp nz,- ; Too far for djnz or jr, plus it's hard to preserve b anyway
+  ei
+  ret
+.ends
+  PatchW($07aa+1, EmitBTiles) ; $85: Font loader
+  ; Call in _LABEL_7A2_LoadFontTiles has been removed
+  PatchW($08a5+1, EmitBTiles) ; In unused code?
+  PatchW($08b0+1, EmitBTiles) ; In unused code?
+  PatchW($1342+1, EmitBTiles) ; 9 tiles for Lemming skill close-up
+  ; Level start:
+  PatchW($1AF9+1, EmitBTiles) ; Cursor load
+  PatchW($1B04+1, EmitBTiles) ; Skill selection load
+  PatchW($1B14+1, EmitBTiles) ; Rate control load
+  PatchW($1B1F+1, EmitBTiles) ; Nuke load
+  PatchW($1B2A+1, EmitBTiles) ; Skills load
+  PatchW($1B35+1, EmitBTiles) ; Numbers load
+  PatchW($1B45+1, EmitBTiles) ; Text letters load
+;  PatchW($1B50+1, EmitBTiles) ; Text numbers update was rewritten above
+  PatchW($21E7+1, EmitBTiles) ; Hatch opening animation
+  PatchW($2567+1, EmitTile) ; 1: selective load of tileset on level start
+  PatchW($2928+1, EmitTile) ; 1: exit flames animation
+  PatchW($2943+1, EmitTile) ; 1: ?
+  PatchW($296D+1, EmitTile) ; 1: ?
+  PatchW($35CC+1, EmitBTiles) ; 2: Lemming sprite
+  PatchW($35E5+1, EmitBTiles) ; 2: Lemming sprite again?
+  PatchW($3CF2+1, EmitTile) ; 1: ?
+  PatchW($47E5+1, EmitBTiles) ; 15: walking lemming in intro
+  PatchW($4821+1, EmitBTiles) ; 12: wheel in intro
+  ;PatchW($4A3A+1, EmitBTiles) ; 2: TM in intro - now removed
+  PatchW($4A71+1, EmitBTiles) ; 12: dot in Lemmings text
+
+
+; Cursor sprite update
+; Profile 357c to 35af
+; Before: 229 cycles
+; After: 157 cycles
+; Saving: 0.3 scanlines!
+; Note that it may access the VDP too fast on the first update of a level.
+.unbackground $357c $35af
+  ROMPosition $357c
+.section "Set cursor sprite table entries" force
+  ; b is the tile index
+  .define _RAM_DB58_CursorX $db58
+  .define _RAM_DB59_CursorY $db59
+  ld a,$80              ; 7
+  out ($bf),a           ; 11
+  ld a,$7f              ; 7
+  out ($bf),a           ; 11 -> 36, faster than using de and c as in the original
+  ld a, (_RAM_DB58_CursorX) ; 13
+  sub 4                 ; 7
+  out ($be),a           ; 11 -> 31 since address set
+  ld a, b               ; 4
+  nop                   ; 4
+  ld b, 0               ; 7
+  out ($be),a           ; 11 -> 26 since last write
+
+  xor a                 ; 4
+  out ($bf),a           ; 11 -> 19 since last write
+  ld a,$7f
+  out ($bf),a
+  ld a, (_RAM_DB59_CursorY) ; 13
+  sub 8                 ; 7
+  out ($be),a           ; 11 -> 31 since address set
+  ret
+.ends
+
+
+; Name table update
+; The game emits the full name table every 4 frames.
+; This consists of the permanent data (from ROM, with amendments for diggers etc)
+; plus a temporary overlay for burned-in lemmings.
+; Profile 9ED to a30
+; Before: 47477-47519 cycles on Just Dig
+; After:  45490-45610 -> 8.3 to 8.7 scanlines saved
+; This executes in VBlank at the start but runs into about half of the screen.
+.unbackground $9ed $a30
+  ROMPosition $9ed
+.section "Update name table" force
+.define _RAM_DAEC_LevelLayoutTopLeft $daec
+.define _RAM_D800_LevelLayoutAmendments $d800
+  di
+  ld hl, (_RAM_DAEC_LevelLayoutTopLeft) ; Pointer to level data in RAM, for top left of screen
+  ld de, _RAM_D800_LevelLayoutAmendments ; RAM buffer for temporary name table amendments
+  ld a, $00 ; VRAM $3800 = name table
+  out ($bf), a
+  ld a, $78
+  out ($bf), a
+  exx
+    ld b, $13 ; 19 rows
+--:
+  exx
+  ld bc, $40be
+  ;ld b, $40 ; 32 columns, *2 because we use outi and djnz
+  ;ld c, $be
+-:
+  ; Read byte from buffer
+  ld a, (de)
+  and a
+  jr nz, + ; Unlikely
+  ; If zero, emit data from hl with zero high bits
+  outi                ; 16
+  inc de              ; 6
+  xor a               ; 4
+  nop
+_secondByte:
+  out (c), a          ; 12
+  djnz -
+
+  ; The source data is 112 tiles wide.
+  ; We've walked through 32 of those, so we skip +80 for the next row.
+  ld bc, $0050
+  add hl, bc
+  ld c, $be
+  exx
+    djnz --
+  exx
+  ei
+  ret
+
++:; Else emit the RAM data, in the upper tileset => this is the burned-in lemmings
+  out (c), a          ; 12
+  inc de              ; 6
+  inc hl              ; 6
+  dec b               ; 4 ; extra increment to balance outi above
+  ld a, 1             ; 7
+  jp _secondByte
+.ends
+
+
+; Reading a tile from VRAM to RAM
+; Not sure why it needs this?
+; Profile 3aa2 to 3acb
+; Before: 1223-1231 cycles
+; After:  954-963 cycles -> saving ~1.2 scanlines
+.unbackground $3AA2 $3b1a ; Taking some extra space here
+.section "Tile VRAM to RAM" free
+TileFromVRAMToMemory:
+  ; de = tile index
+  ; hl = destination
+  push bc
+    push hl
+      ; hl = $7d00 + e (aligned table) to multiply by 32
+      ; Then read into de
+      ld a, d
+      ld h, $7D
+      ld l, e
+      ld e, (hl)
+      inc h ; Then the table at $7e00 for the high bytes of the multiplication
+      ld d, (hl)
+      ; If the incoming d was non-zero, then the tile index was above 256 (i.e. up to 512).
+      ; So set the next bit to account for that (address + $2000).
+      and a
+      jp z, +
+      set 5, d
++:
+      ; Set VRAM address to de
+      ld c, $bf
+      di
+      out (c), e
+      out (c), d
+      dec c
+    pop hl
+    .repeat 31
+    ini                 ; 16
+    jp +                ; 10
++:
+    .endr
+    ini
+  pop bc
+  ei
+  ret
+.ends
+  PatchW($3946+1, TileFromVRAMToMemory)
+  PatchW($397C+1, TileFromVRAMToMemory)
+  PatchW($3993+1, TileFromVRAMToMemory)
+  PatchW($39C7+1, TileFromVRAMToMemory)
+
+
+
+; This one is very big and I'm not sure what it's for :)
+; Profile 148b 1497
+; Before: 8970 if doing nothing, up to 131459 if I dig a lot
+; After:  8970 (no VRAM access on the happy path), but hard to make it go high. Hard to say what the benefit is.
+.unbackground $148b $1532
+  ROMPosition $148b
+.section "Optimised unknown thing" force
+_LABEL_148B_:
+  ; Iterate over table of 256 here:
+  ld hl, $c400 ; _RAM_C400_
+-:ld a, (hl)
+  and a
+  jp nz, +
+_loop_continue:
+  ; If zero, continue...
+  inc l
+  jp nz, -
+  ret
+
++:cp $FF
+  jp z, +
+  ; Not $ff
+  push hl
+    ld l, a ; It's the index we're looking up
+    jp ++
+
++:; $ff
+  push hl
+    ; l is already the index we want
+
+++:
+    ; de = l*32
+    ld h, $7D
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    ; Set VRAM address
+    ld c, $bf
+    di
+    out (c), e
+    out (c), d
+    dec c
+    ld hl, $DA8B ; _RAM_DA8B_ ; Buffer
+    ld b, $40 ; double-count for one tile
+-:  ini               ; 16
+    djnz -            ; 13 -> 29 cycles between reads
+  pop hl
+  ; Get pointer into original table back
+  push hl
+    ; Look up its index *32
+    ld a, l
+    ld h, $7D ; *32 table
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    set 6, d ; Make a write address and set it
+    ld c, $bf
+    out (c), e
+    out (c), d
+    dec c
+    ; Then multiply the index by 8
+    ld l, a
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    push af
+      ; Add $c500
+      ld a, $C5
+      add a, h
+      ld h, a
+      push hl
+        ; Check if it is 8 bytes of 0
+        ld b, $08
+        xor a
+-:      or (hl)
+        jp nz, ++ ; If we find any bits, skip ahead
+        inc l
+        djnz -
+        ; If so, ei?!?
+        ei
+      pop hl
+    pop af
+    ; Now add to $c300
+    ld h, $C3
+    ld l, a
+    ld (hl), $00
+    ld e, a ; Save index again
+    ld hl, $CE00 ; _RAM_CE00_ ; ?
+    ld bc, $084F ; 2127 bytes?!
+-:
+    ld a, (hl)
+    cp e ; Does it match the index we are looking at?
+    jp z, +
+    ; No: keep looking
+    inc hl
+    dec bc
+    ld a, b
+    or c
+    jp nz, -
++:
+    ; We didn't find it, zero the original table entry and move on
+    ld (hl), $00
+    jp +++
+
+++: ; We found the index in the table from $c500
+      pop hl
+    pop af
+    ld de, $DA8B ; _RAM_DA8B_
+    ld b, $08 ; Emit 8*4=32 bytes
+-:
+    .repeat 4
+    ld a, (de)        ; 7
+    and (hl)          ; 7
+    out (c), a        ; 12 -> gap is 30
+    inc e             ; 4
+    .endr
+
+    inc hl
+    djnz -
++++:
+  pop hl
+  ei
+  ; Blank entry in table
+  ld (hl), 0
+  ; And continue loop
+  jp _loop_continue
+.ends
