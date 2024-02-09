@@ -99,9 +99,7 @@ font-with-blank.bin: png/font.png
 lemmings-palette-hack.o: 
 	$(WLAZ80) -D COMPRESSION=$(COMPRESSION) -o $@ lemmings-palette-hack.sms.asm
 
-lemmings-palette-hack.sms: lemmings-palette-hack.o
-	echo [objects] > linkfile
-	echo "$<" >> linkfile
+lemmings-palette-hack.sms: lemmings-palette-hack.o linkfile
 	$(WLALINK) -d -r -v -S linkfile $@
 
 clean:

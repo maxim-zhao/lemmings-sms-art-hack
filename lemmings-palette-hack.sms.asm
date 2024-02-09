@@ -398,10 +398,10 @@ TitleScreenText:
 .unbackground $3c000 $3ee23
 .slot 2
 .section "Let's Go sample" superfree
-LetsGo: .incbin "wav\LETSGO.wav.pcmenc"
+LetsGo: .incbin "wav/LETSGO.wav.pcmenc"
 .ends
 .section "Oh No sample" superfree
-OhNo: .incbin "wav\OHNO.wav.pcmenc"
+OhNo: .incbin "wav/OHNO.wav.pcmenc"
 .ends
 
 ; The player code
@@ -1025,7 +1025,7 @@ _secondByte:
 
 
 ; Reading a tile from VRAM to RAM
-; Not sure why it needs this?
+; Needed when modifying already-modified tiles
 ; Profile 3aa2 to 3acb
 ; Before: 1223-1231 cycles
 ; After:  954-963 cycles -> saving ~1.2 scanlines
@@ -1202,3 +1202,462 @@ _loop_continue:
   ; And continue loop
   jp _loop_continue
 .ends
+
+; Level descriptors
+.unbackground $3ee24 $3ffff ; Level names and
+  ROMPosition $3f7a9
+
+.section "Level descriptors" force
+.macro LevelDescriptor args count, percentage, rate, mins, climbers, floaters, bombers, blockers, builders, bashers, miners, diggers, dataAddress, nameAddress
+.db count, percentage, rate, mins, climbers, floaters, bombers, blockers, builders, bashers, miners, diggers
+.db 100/count
+.dw dataAddress, nameAddress
+.endm
+
+LevelDescriptors_Fun:
+;                  ,,- Lemming count
+;                  ||  ,,- Target percentage
+;                  ||  ||  ,,- Initial release rate
+;                  ||  ||  ||  ,,- Time in minutes
+;                  ||  ||  ||  ||  ,,--,,--,,--,,--,,--,,--,,--,,- Skill counts
+;                  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ,,,,- Level map address
+;                  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||  ||||    ,,,,- Level name address
+  LevelDescriptor  10  10  50   5   0   0   0   0   0   0   0  10 Level11 NameFun1
+  LevelDescriptor  10  10  50   5   0  10   0   0   0   0   0   0 Level02 NameFun2
+  LevelDescriptor  20  10  50   5   0   0   0  10   0   0   0   0 Level47 NameFun3
+  LevelDescriptor  10 100   1   5  10   0   0   0   0   0   1   0 Level56 NameFun4
+  LevelDescriptor  20  10  50   5   0   0   0   0   0  20   0   0 Level38 NameFun5
+  LevelDescriptor  20  20  50   5   0   0   5   5   0   0   0   0 Level05 NameFun6
+  LevelDescriptor  20  50  50   5   0   0   0   0  20   0   0   0 Level59 NameFun7
+  LevelDescriptor  20  96  88   5  20  20  20  20  20  20  20  20 Level50 NameFun8
+  LevelDescriptor  20  90  99   5  20  20  20  20  20  20  20  20 Level62 NameFun9
+  LevelDescriptor  20  50  50   5  20  20  20  20  20  20  20  20 Level51 NameFun10
+  LevelDescriptor  20  85  50   5  10  10  10  10   0  10   0   0 Level65 NameFun11
+  LevelDescriptor  20  50  99   5  20  20  20  20  20  20  20  20 Level52 NameFun12
+  LevelDescriptor   5 100  20   3   0   0   0   0   0   0   0   5 Level03 NameFun13
+  LevelDescriptor  20  75  20   6  20   0  20  20  20  20  20  20 Level53 NameFun14
+  LevelDescriptor  20  50  40   8  20  20  20  20  20  20  20  20 Level54 NameFun15
+  LevelDescriptor  20  60   1   8  20  20  20  20  20  20  20  20 Level04 NameFun16
+  LevelDescriptor  20  40  99   5  20   0  20  20  20  20  20  20 Level68 NameFun17
+  LevelDescriptor  20  70  80   5   0   0  20  20   0   0   0   0 Level28 NameFun18
+  LevelDescriptor  20  70  20   5  20  20  20  20  20  20  20  20 Level70 NameFun19
+  LevelDescriptor  20  60  10   5  20  20  20  20  20  20  20  20 Level73 NameFun20
+  LevelDescriptor  20  60  50   8  20  20  20  20  20  20  20  20 Level15 NameFun21
+  LevelDescriptor  20  80  50   5   0   0   0   0  33   4   1   0 Level31 NameFun22
+  LevelDescriptor  20  25  50   8   0  20  20  20  20  20  20  20 Level34 NameFun23
+  LevelDescriptor  20  65  99   5  20  20  20  20  20  20  20  20 Level71 NameFun24
+  LevelDescriptor  20  50  99   5  20  20  20  20  20  20  20  20 Level42 NameFun25
+  LevelDescriptor   2 100  30   5   5   5   5   5   5   5   5   5 Level74 NameFun26
+  LevelDescriptor  20  50   1   5  20   0  20  20  20  20  20  20 Level72 NameFun27
+  LevelDescriptor  20  60  80   5  20  20  20  20  20  20  20  20 Level36 NameFun28
+  LevelDescriptor  20  60  90   8  20  20  20  20  20  20  20  20 Level55 NameFun29
+  LevelDescriptor  20  65  10   5  20  20  20  20  20  20  20  20 Level37 NameFun30
+LevelDescriptors_Tricky:
+  LevelDescriptor  20  50  50   4  10  10  10  10  10  10  10  10 Level14 NameTricky1
+  LevelDescriptor  10 100  40   3   0   0   0   0   0   0   0  10 Level03 NameTricky2
+  LevelDescriptor  20  50  50   6  10  10  10  10  20  10  10  10 Level18 NameTricky3
+  LevelDescriptor  20  50  55   8   5   0   2   2  10   3   0   0 Level16 NameTricky4
+  LevelDescriptor  20  20  20   5  20  20  12   4  20   2   2  20 Level41 NameTricky5
+  LevelDescriptor   5  80  50   5  20  20  20  20  20  20  20  20 Level08 NameTricky6
+  LevelDescriptor  20  75  20   5  20  20  20  20  20  20  20  20 Level46 NameTricky7
+  LevelDescriptor  20  60  40   8   0   0   0  20  20   0   0   0 Level24 NameTricky8
+  LevelDescriptor  20  90  50   5  20  20  20  20  20  20  20  20 Level00 NameTricky9
+  LevelDescriptor  20  90  60   8  20  20  20  20  20  20  20  20 Level27 NameTricky10
+  LevelDescriptor  20  80  20   8  20  20  20  20  20  20  20  20 Level09 NameTricky11
+  LevelDescriptor  20  80   1   8   0  20   0   0  20  20   0   0 Level61 NameTricky12
+  LevelDescriptor  20  70   1   8  20  20  20  20  50  20  20  20 Level49 NameTricky13
+  LevelDescriptor  20  75  50   6  10   0  10  10   7   1   1   1 Level30 NameTricky14
+  LevelDescriptor  10  40  50   5   0   0   6   0   0   0   0   0 Level11 NameTricky15
+  LevelDescriptor  20  80  76   5   0   0  10   0   0   2   1   0 Level38 NameTricky16
+  LevelDescriptor  20  90  50   5   0   0   2   0   0   0   0   0 Level05 NameTricky17
+  LevelDescriptor  10  90  50   5   0   1   1   0   2   0   0   1 Level02 NameTricky18
+  LevelDescriptor  20  96  50   5   5  10   1   1   1   1   1   1 Level59 NameTricky19
+  LevelDescriptor  20  85  60   4   3   3   6   2   2   4   2   2 Level33 NameTricky20
+  LevelDescriptor  20  66  66   6  20  20  20  20  20  20  20  20 Level35 NameTricky21
+  LevelDescriptor  20  50  88   5   0   1  15   0  20   1   0   0 Level50 NameTricky22
+  LevelDescriptor  20  60  50   5  10  10   0   0   1   2   1   1 Level52 NameTricky23
+  LevelDescriptor  20  50  85   2   5   5   5   5   3   5   5   5 Level64 NameTricky24
+  LevelDescriptor  20  50  50   8  20  20  20  20  10  20  20  20 Level75 NameTricky25
+  LevelDescriptor  20 100  50   5   2   0   5  10  20   2   2   2 Level62 NameTricky26
+  LevelDescriptor  20  90  60   5   5   0   5   5   5   5   5   5 Level20 NameTricky27
+  LevelDescriptor  20  90  70   5  10  10  10  10  10  10  10  10 Level21 NameTricky28
+  LevelDescriptor  20  96  70   4  10  10  10  10  10  10  10  10 Level67 NameTricky29
+  LevelDescriptor  20  90  20   4  10  10  10  10  10   0  10  10 Level53 NameTricky30
+LevelDescriptors_Taxing:
+  LevelDescriptor  20  90  40   5   2   2   2   2   8   2   2   2 Level54 NameTaxing1
+  LevelDescriptor  20  80  70   5  10   5   5  10  10   5   5   5 Level12 NameTaxing2
+  LevelDescriptor  20 100   1   2  20  20  20   0  20  20  20  20 Level04 NameTaxing3
+  LevelDescriptor  20  80  50   7   0   0   5   4  20   2   2   2 Level45 NameTaxing4
+  LevelDescriptor  20  75  50   5   0   0   5   4  20  10   0   3 Level22 NameTaxing5
+  LevelDescriptor  20  60  99   3   0   0   3   3   0   5   0   1 Level68 NameTaxing6
+  LevelDescriptor  20  90  55   3   1   0   5   1   6   1   0   0 Level16 NameTaxing7
+  LevelDescriptor  20 100  20   4  10  10  10   0  10  10   0   0 Level41 NameTaxing8
+  LevelDescriptor  20 100  50   4   2   1   1   2   2   1   1   2 Level51 NameTaxing9
+  LevelDescriptor   5 100  50   5   0   0   5   5  15   5   5   5 Level08 NameTaxing10
+  LevelDescriptor  20 100  20   4   2   1   0   0  20   5   5   5 Level46 NameTaxing11
+  LevelDescriptor  10  80   1   5  10  10  10   2  10  10  10  10 Level06 NameTaxing12
+  LevelDescriptor  20  90  40   6   1   0  10   1   2   3   4   2 Level19 NameTaxing13
+  LevelDescriptor  20  90  30   8   0   0  10  10  30   2   1   1 Level01 NameTaxing14
+  LevelDescriptor  20  80  50   6  20  20  20  20  20  20  20  20 Level57 NameTaxing15
+  LevelDescriptor  20  80  50   3   0   4   3   3  20   0   0   0 Level32 NameTaxing16
+  LevelDescriptor  20  50  50   5   5   0   5   0  20   5   6   0 Level34 NameTaxing17
+  LevelDescriptor  20  70  50   5   0   1  15   0  15   1   0   0 Level65 NameTaxing18
+  LevelDescriptor  20  75  80   2   0   0  15   0   0   0   0   0 Level28 NameTaxing19
+  LevelDescriptor  20  85  50   5  20  20  20  20  20  20  20  20 Level39 NameTaxing20
+  LevelDescriptor  20 100  50   5  20  20  20  20  10  20  20  20 Level76 NameTaxing21
+  LevelDescriptor  20  80   1   5   0   2   0   1  10   1   1   2 Level72 NameTaxing22
+  LevelDescriptor  20  85  40   5   0   0   0   0  20   0   0   0 Level24 NameTaxing23
+  LevelDescriptor  20  90  50   3   0   0   0   0  20   1   0   2 Level25 NameTaxing24
+  LevelDescriptor  20  90  20   4   0   0  10   0   7   5   0   0 Level70 NameTaxing25
+  LevelDescriptor  20  80  80   5  10  10  10  10  12  10  10  10 Level29 NameTaxing26
+  LevelDescriptor  20  60  10   5   0   0  10  10  10   0   0   0 Level48 NameTaxing27
+  LevelDescriptor  20  40   1   5   1   1   4   4   8   3   1   0 Level43 NameTaxing28
+  LevelDescriptor  20  90  80   4  10  10  10  10   5  10  10  10 Level18 NameTaxing29
+  LevelDescriptor  20 100  50   3  20  20  20  20  15  20  20  20 Level77 NameTaxing30
+LevelDescriptors_Mayhem:
+  LevelDescriptor  20  80  15   8   0  20  10   5  30   0   0   5 Level13 NameMayhem1
+  LevelDescriptor  20  90  30   6  10   5  10  10  30   0   0   0 Level07 NameMayhem2
+  LevelDescriptor  20 100  99   1   1   1   1   1   1   1   1   1 Level71 NameMayhem3
+  LevelDescriptor  20 100  50   1   0   0  10   0   0  10   0   0 Level42 NameMayhem4
+  LevelDescriptor  20  65  80   5   2   2  10  10  10   1   0   5 Level36 NameMayhem5
+  LevelDescriptor  20 100  50   4   0   0  10   0  15   0   5   5 Level00 NameMayhem6
+  LevelDescriptor  20  90  50   5   1  10   0   0   6   7   0   4 Level58 NameMayhem7
+  LevelDescriptor  20  85  55   5   5   0   5   5  10   0   5   6 Level23 NameMayhem8
+  LevelDescriptor  20  80  50   2  10  10  10  10  10  10  10  10 Level73 NameMayhem9
+  LevelDescriptor  20  66   1   5   2   3   4   2  20   4   0   2 Level60 NameMayhem10
+  LevelDescriptor  20 100  80   3   0   0   0   0   0   0   0  20 Level03 NameMayhem11
+  LevelDescriptor  20 100  50   4   5   5   5   5   5   5   5   5 Level74 NameMayhem12
+  LevelDescriptor   2 100  50   8  10  10  10  20  20   1   0  10 Level75 NameMayhem13
+  LevelDescriptor  20  90  70   5   0   0  10  10  30   0   0  20 Level63 NameMayhem14
+  LevelDescriptor  20  75  60   2  10  10  10  10  10  10  10  10 Level27 NameMayhem15
+  LevelDescriptor  20 100  10   2   0   1   5   0   0   5   0   5 Level66 NameMayhem16
+  LevelDescriptor  20  85  50   4   5   2   0   2   5   2   1   5 Level61 NameMayhem17
+  LevelDescriptor  20  90  50   4  20   0   0   3   5   3   2   4 Level76 NameMayhem18
+  LevelDescriptor  20  50  20   5   2   0  10   2  20   0   0   0 Level09 NameMayhem19
+  LevelDescriptor  20 100  85   5   2   0   0   1   3   1   2   1 Level56 NameMayhem20
+  LevelDescriptor  20 100   1   5   1  20   0   0   7   1   0   1 Level26 NameMayhem21
+  LevelDescriptor  20  85  75   5  19   1   2  18   9  14   1   0 Level40 NameMayhem22
+  LevelDescriptor  20  60  70   9   0   1  20  20  30   5   1   0 Level44 NameMayhem23
+  LevelDescriptor  20 100  99   1   0   0   0   0   0   3   0   0 Level37 NameMayhem24
+  LevelDescriptor  20  90   1   5   2   2   0   2  25   1   1   1 Level49 NameMayhem25
+  LevelDescriptor  20  40  50   8   0   0  20  20  20   0   0   0 Level15 NameMayhem26
+  LevelDescriptor  20 100  10   2   1   1   5   0   2   5   0   5 Level66 NameMayhem27
+  LevelDescriptor   1 100   1   7   0   0   0   0  25  10   0  15 Level69 NameMayhem28
+  LevelDescriptor  20  80  50   5  10  10  10  10  10  10  10  10 Level77 NameMayhem29
+  LevelDescriptor  20  75  20   9  10   1  10  10  30  10  10   4 Level17 NameMayhem30
+.ends
+.section "Level names" free ; in the same bank as above
+NameFun1:     .db "JUST DIG!",0
+NameFun2:     .db "ONLY FLOATERS CAN SURVIVE THIS",0
+NameFun3:     .db "TAILOR MADE FOR BLOCKERS",0
+NameFun4:     .db "NOW USE MINERS AND CLIMBERS",0
+NameFun5:     .db "YOU NEED BASHERS THIS TIME",0
+NameFun6:     .db "A TASK FOR BLOCKERS AND BOMBERS",0
+NameFun7:     .db "BUILDERS WILL HELP YOU HERE",0
+NameFun8:     .db "NOT AS COMPLICATED AS IT LOOKS",0
+NameFun9:     .db "AS LONG AS YOU TRY YOUR BEST",0
+NameFun10:    .db "SMILE IF YOU LOVE LEMMINGS",0
+NameFun11:    .db "KEEP YOUR HAIR ON MR LEMMING",0
+NameFun12:    .db "PATIENCE",0
+NameFun13:    .db "WE ALL FALL DOWN",0
+NameFun14:    .db "ORIGINS AND LEMMINGS",0
+NameFun15:    .db "DON'T LET YOUR EYES DECEIVE YOU",0
+NameFun16:    .db "DON'T DO ANYTHING TOO HASTY",0
+NameFun17:    .db "EASY WHEN YOU KNOW HOW",0
+NameFun18:    .db "LET'S BLOCK AND BLOW",0
+NameFun19:    .db "TAKE GOOD CARE OF MY LEMMINGS",0
+NameFun20:    .db "SEGA ONE",0
+NameFun21:    .db "YOU LIVE AND LEM",0
+NameFun22:    .db "GO FOR IT",0
+NameFun23:    .db "I'VE LOST THAT LEMMING FEELING",0
+NameFun24:    .db "KONBANWA LEMMING-SAN",0
+NameFun25:    .db "LEMMINGS LEMMINGS EVERYWHERE",0
+NameFun26:    .db "SEGA TWO",0
+NameFun27:    .db "LET'S BE CAREFUL OUT THERE",0
+NameFun28:    .db "IF ONLY THEY COULD FLY",0
+NameFun29:    .db "WORRA LORRA LEMMINGS",0
+NameFun30:    .db "LOCK UP YOUR LEMMINGS",0
+NameTricky1:  .db "THIS SHOULD BE A DODDLE!",0
+NameTricky2:  .db "WE ALL FALL DOWN",0
+NameTricky3:  .db "A LADDER WOULD BE HANDY",0
+NameTricky4:  .db "HERE'S ONE I PREPARED EARLIER",0
+NameTricky5:  .db "CARELESS CLICKING COST LIVES",0
+NameTricky6:  .db "LEMMINGOLOGY",0
+NameTricky7:  .db "BEEN THERE, SEEN IT, DONE IT",0
+NameTricky8:  .db "LEMMING SANCTUARY IN SIGHT",0
+NameTricky9:  .db "THEY JUST KEEP ON COMING",0
+NameTricky10: .db "THERES A LOT OF THEM ABOUT",0
+NameTricky11: .db "LEMMINGS IN THE ATTIC",0
+NameTricky12: .db "BITTER LEMMING",0
+NameTricky13: .db "LEMMING DROPS",0
+NameTricky14: .db "MENACING!",0
+NameTricky15: .db "OZONE FRIENDLY LEMMINGS",0
+NameTricky16: .db "LUVLY JUBLY",0
+NameTricky17: .db "DIET LEMMINGADE",0
+NameTricky18: .db "IT'S LEMMINGENTARY WATSON",0
+NameTricky19: .db "POSTCARD FROM LEMMINGLAND",0
+NameTricky20: .db "ONE WAY DIGGING TO FREEDOM",0
+NameTricky21: .db "SIXES NOT!",0
+NameTricky22: .db "TURN AROUND YOUNG LEMMINGS",0
+NameTricky23: .db "FROM THE BOUNDARY LINE",0
+NameTricky24: .db "TIGHTROPE CITY",0
+NameTricky25: .db "SEGA THREE",0
+NameTricky26: .db "I HAVE A CUNNING PLAN",0
+NameTricky27: .db "THE ISLAND OF THE WICKER PEOPLE",0
+NameTricky28: .db "LOST SOMETHING?",0
+NameTricky29: .db "RAINBOW ISLAND",0
+NameTricky30: .db "THE CRANKSHAFT",0
+NameTaxing1:  .db "IF AT FIRST YOU DON'T SUCEED..",0
+NameTaxing2:  .db "WATCH OUT, THERES TRAPS ABOUT",0
+NameTaxing3:  .db "HEAVEN CAN WAIT WE HOPE",0
+NameTaxing4:  .db "LEND A HELPING HAND",0
+NameTaxing5:  .db "THE PRISON",0
+NameTaxing6:  .db "COMPRESSION METHOD",0
+NameTaxing7:  .db "EVERY LEMMING FOR HIMSELF!!!",0
+NameTaxing8:  .db "THE ART GALLERY",0
+NameTaxing9:  .db "PERSEVERANCE",0
+NameTaxing10: .db "IZZIE WIZZIE LEMMINGS GET BUSY",0
+NameTaxing11: .db "THE ASCENDING PILLAR SCENARIO",0
+NameTaxing12: .db "LIVIN' ON THE EDGE",0
+NameTaxing13: .db "UPSIDE DOWN WORLD",0
+NameTaxing14: .db "HUNT THE NESSY",0
+NameTaxing15: .db "WHAT AN AWESOME LEVEL",0
+NameTaxing16: .db "MARY POPPIN'S LAND",0
+NameTaxing17: .db "X MARKS THE SPOT",0
+NameTaxing18: .db "TRIBUTE TO MC ESCHER",0
+NameTaxing19: .db "BOMBOOZAL",0
+NameTaxing20: .db "WALK THE WEB ROPE",0
+NameTaxing21: .db "SEGA FOUR",0
+NameTaxing22: .db "COME ON OVER TO MY PLACE",0
+NameTaxing23: .db "KING OF THE CASTLE",0
+NameTaxing24: .db "TAKE A RUNNING JUMP",0
+NameTaxing25: .db "FOLLOW THE LEADER",0
+NameTaxing26: .db "TRIPLE TROUBLE",0
+NameTaxing27: .db "CALL IN THE BOMB SQUAD",0
+NameTaxing28: .db "POOR WEE CREATURES",0
+NameTaxing29: .db "HOW DO I DIG UP THE WAY?",0
+NameTaxing30: .db "SEGA FIVE",0
+NameMayhem1:  .db "STEEL WORKS",0
+NameMayhem2:  .db "THE BOILER ROOM",0
+NameMayhem3:  .db "IT'S HERO TIME!",0
+NameMayhem4:  .db "THE CROSSROADS",0
+NameMayhem5:  .db "DOWN,ALONG,UP.IN THAT ORDER",0
+NameMayhem6:  .db "ONE WAY OR ANOTHER",0
+NameMayhem7:  .db "POLES APART",0
+NameMayhem8:  .db "LAST ONE OUT IS A ROTTEN EGG!",0
+NameMayhem9:  .db "SEGA ONE",0
+NameMayhem10: .db "PILLARS OF HERCULES",0
+NameMayhem11: .db "WE ALL FALL DOWN",0
+NameMayhem12: .db "SEGA TWO",0
+NameMayhem13: .db "SEGA THREE",0
+NameMayhem14: .db "PEA SOUP",0
+NameMayhem15: .db "THE FAST FOOD KITCHEN",0
+NameMayhem16: .db "JUST A MINUTE",0
+NameMayhem17: .db "STEPPING STONES",0
+NameMayhem18: .db "SEGA FOUR",0
+NameMayhem19: .db "TIME TO GET UP!",0
+NameMayhem20: .db "NO ADDED COLOURS OR LEMMINGS",0
+NameMayhem21: .db "WITH A TWIST OF LEMMING",0
+NameMayhem22: .db "NEARLY THERE...",0
+NameMayhem23: .db "GOING UP....",0
+NameMayhem24: .db "ALL OR NOTHING",0
+NameMayhem25: .db "HAVE A NICE DAY",0
+NameMayhem26: .db "THE STEEL MINES OF KESSEL",0
+NameMayhem27: .db "JUST A MINUTE PART TWO",0
+NameMayhem28: .db "MIND THE STEP...",0
+NameMayhem29: .db "SEGA FIVE",0
+NameMayhem30: .db "RENDEZVOUS AT THE MOUNTAINS",0
+.ends
+
+; Level descriptors
+.unbackground $0713d $072c2
+  ROMPosition $0713d
+.section "ROM descriptors" free
+.macro MapDescriptor args type, label, maxFallDistance
+.db type, :label
+.dw label
+.db maxFallDistance
+.endm
+
+Level00:  MapDescriptor 0, Level30006, 48
+Level01:  MapDescriptor 0, Level30490, 56
+Level02:  MapDescriptor 1, Level3078C, 32 
+Level03:  MapDescriptor 2, Level309EC, 44 
+Level04:  MapDescriptor 2, Level30E9B, 56 
+Level05:  MapDescriptor 2, Level31113, 56 
+Level06:  MapDescriptor 2, Level3140F, 56 
+Level07:  MapDescriptor 2, Level31991, 56 
+Level08:  MapDescriptor 2, Level31CBE, 56 
+Level09:  MapDescriptor 4, Level32009, 56 
+; Unused! Level10:  MapDescriptor 0, 0, 56
+Level11:  MapDescriptor 0, Level10006, 72 
+Level12:  MapDescriptor 0, Level102AF, 44 
+Level13:  MapDescriptor 0, Level107B9, 40 
+Level14:  MapDescriptor 0, Level10BD3, 56 
+Level15:  MapDescriptor 0, Level10F95, 56 
+Level16:  MapDescriptor 0, Level114B7, 56 
+Level17:  MapDescriptor 0, Level11904, 56 
+Level18:  MapDescriptor 0, Level11D87, 56 
+Level19:  MapDescriptor 0, Level120CB, 56 
+Level20:  MapDescriptor 0, Level12414, 56 
+Level21:  MapDescriptor 0, Level127B3, 56 
+Level22:  MapDescriptor 2, Level14006, 56 
+Level23:  MapDescriptor 2, Level14298, 56 
+Level24:  MapDescriptor 2, Level1452B, 56 
+Level25:  MapDescriptor 2, Level1467C, 56 
+Level26:  MapDescriptor 2, Level14BD4, 56 
+Level27:  MapDescriptor 2, Level14DD1, 56 
+Level28:  MapDescriptor 2, Level150FB, 56 
+Level29:  MapDescriptor 2, Level15285, 56 
+Level30:  MapDescriptor 2, Level15491, 56 
+Level31:  MapDescriptor 2, Level15989, 56 
+Level32:  MapDescriptor 2, Level15D7D, 56 
+Level33:  MapDescriptor 2, Level15F67, 56 
+Level34:  MapDescriptor 2, Level16380, 56 
+Level35:  MapDescriptor 2, Level16B21, 56 
+Level36:  MapDescriptor 2, Level16E6C, 56 
+Level37:  MapDescriptor 2, Level172C9, 56 
+Level38:  MapDescriptor 3, Level1C006, 56 
+Level39:  MapDescriptor 3, Level1C3D9, 56 
+Level40:  MapDescriptor 3, Level1C760, 56 
+Level41:  MapDescriptor 3, Level1CC75, 56 
+Level42:  MapDescriptor 3, Level1D1FE, 56 
+Level43:  MapDescriptor 3, Level1D5F5, 56 
+Level44:  MapDescriptor 3, Level1DAE5, 56 
+Level45:  MapDescriptor 1, Level12B99, 56 
+Level46:  MapDescriptor 1, Level13056, 56 
+Level47:  MapDescriptor 1, Level134D0, 56 
+Level48:  MapDescriptor 1, Level13695, 56 
+Level49:  MapDescriptor 1, Level1DE56, 56 
+Level50:  MapDescriptor 1, Level1E450, 56 
+Level51:  MapDescriptor 6, Level1EA1C, 56 
+Level52:  MapDescriptor 6, Level1EF84, 56 
+Level53:  MapDescriptor 6, Level2D7E6, 40 
+Level54:  MapDescriptor 6, Level175CE, 56 
+Level55:  MapDescriptor 6, Level2DB8F, 56 
+Level56:  MapDescriptor 4, Level13BB8, 56 
+Level57:  MapDescriptor 4, Level0B564, 56 
+Level58:  MapDescriptor 4, Level278E6, 56 
+Level59:  MapDescriptor 4, Level28006, 56 
+Level60:  MapDescriptor 4, Level2839D, 48 
+Level61:  MapDescriptor 4, Level286AE, 48 
+Level62:  MapDescriptor 4, Level289AE, 56 
+Level63:  MapDescriptor 4, Level28B06, 56 
+Level64:  MapDescriptor 4, Level28D33, 56 
+Level65:  MapDescriptor 4, Level28D96, 56 
+Level66:  MapDescriptor 4, Level28F30, 56 
+Level67:  MapDescriptor 4, Level29240, 56 
+Level68:  MapDescriptor 4, Level2959D, 48 
+Level69:  MapDescriptor 4, Level298C4, 56 
+Level70:  MapDescriptor 4, Level29D05, 56 
+Level71:  MapDescriptor 4, Level2A11A, 56 
+Level72:  MapDescriptor 4, Level2A39C, 48 
+Level73:  MapDescriptor 7, Level2A6D6, 56 
+Level74:  MapDescriptor 7, Level2AAB0, 56 
+Level75:  MapDescriptor 7, Level2AF4F, 56 
+Level76:  MapDescriptor 7, Level2B449, 56 
+Level77:  MapDescriptor 7, Level0B890, 56
+.ends
+
+; Finally the level data itself
+.unbackground $0B564 $0bece ; Two maps in here
+.unbackground $10000 $13fff ; Page 4 is all maps
+.unbackground $14000 $179b0 ; Page 5 is mostly maps
+.unbackground $1c000 $1f136 ; Page 7 is mostly maps
+.unbackground $278e6 $27d6c ; One map here (Mayhem 7)
+.unbackground $28000 $2b9cb ; Page 10 is mostly maps
+.unbackground $2d7e6 $2defb ; Two maps in here
+.unbackground $30000 $322da ; Page 12 is mostly maps
+
+.slot 2
+
+.macro LevelData args label, filename
+.section "Level data for {label}" superfree
+{label}: .incbin {"levels/{filename}"}
+.ends
+.endm
+
+  LevelData "Level0B564", "4Brick/WhatanAwesomeLevel.mlm"
+  LevelData "Level0B890", "7SEGA/SEGAFive.mlm"
+
+  LevelData "Level10006", "0Grass/JustDig.mlm"
+  LevelData "Level102AF", "0Grass/WatchOutTheresTrapsAbout.mlm"
+  LevelData "Level107B9", "0Grass/SteelWorks.mlm"
+  LevelData "Level10BD3", "0Grass/ThisShouldBeaDoddle.mlm"
+  LevelData "Level10F95", "0Grass/YouLiveandLem.mlm"
+  LevelData "Level114B7", "0Grass/HeresOneIPreparedEarlier.mlm"
+  LevelData "Level11904", "0Grass/RendezvousAtTheMountains.mlm"
+  LevelData "Level11D87", "0Grass/ALadderWouldBeHandy.mlm"
+  LevelData "Level120CB", "0Grass/UpsideDownWorld.mlm"
+  LevelData "Level12414", "0Grass/IslandoftheWickerPeople.mlm"
+  LevelData "Level127B3", "0Grass/LostSomething.mlm"
+  LevelData "Level12B99", "1Sand/LendaHelpingHand.mlm"
+  LevelData "Level13056", "1Sand/BeenThereSeenItDoneIt.mlm"
+  LevelData "Level134D0", "1Sand/TailorMadeForBlockers.mlm"
+  LevelData "Level13695", "1Sand/CallInTheBombSquad.mlm"
+  LevelData "Level13BB8", "4Brick/NowUseMinersandClimbers.mlm"
+
+  LevelData "Level14006", "2Fire/ThePrison.mlm"
+  LevelData "Level14298", "2Fire/LastOneOutIsaRottenEgg.mlm"
+  LevelData "Level1452B", "2Fire/LemmingSanctuaryinSight.mlm"
+  LevelData "Level1467C", "2Fire/TakeaRunningJump.mlm"
+  LevelData "Level14BD4", "2Fire/WithaTwistofLemming.mlm"
+  LevelData "Level14DD1", "2Fire/TheresaLotofThemAbout.mlm"
+  LevelData "Level150FB", "2Fire/LetsBlockandBlow.mlm"
+  LevelData "Level15285", "2Fire/TripleTrouble.mlm"
+  LevelData "Level15491", "2Fire/Menacing.mlm"
+  LevelData "Level15989", "2Fire/GoForIt.mlm"
+  LevelData "Level15D7D", "2Fire/MaryPoppinsLand.mlm"
+  LevelData "Level15F67", "2Fire/OneWayDiggingtoFreedom.mlm"
+  LevelData "Level16380", "2Fire/IveLostThatLemmingFeeling.mlm"
+  LevelData "Level16B21", "2Fire/SixesNot.mlm"
+  LevelData "Level16E6C", "2Fire/IfOnlyTheyCouldFly.mlm"
+  LevelData "Level172C9", "2Fire/LockUpYourLemmings.mlm"
+  LevelData "Level175CE", "6Sand2/DontLetYourEyesDeceiveYou.mlm"
+
+  LevelData "Level1C006", "3Ice/YouNeedBashersThisTime.mlm"
+  LevelData "Level1C3D9", "3Ice/WalktheWebRope.mlm"
+  LevelData "Level1C760", "3Ice/NearlyThere.mlm"
+  LevelData "Level1CC75", "3Ice/CarelessClickingCostsLives.mlm"
+  LevelData "Level1D1FE", "3Ice/LemmingsLemmingsEverywhere.mlm"
+  LevelData "Level1D5F5", "3Ice/PoorWeeCreatures.mlm"
+  LevelData "Level1DAE5", "3Ice/GoingUp.mlm"
+  LevelData "Level1DE56", "1Sand/LemmingDrops.mlm"
+  LevelData "Level1E450", "1Sand/NotasComplicatedasitLooks.mlm"
+  LevelData "Level1EA1C", "6Sand2/SmileifYouLoveLemmings.mlm"
+  LevelData "Level1EF84", "6Sand2/Patience.mlm"
+
+  LevelData "Level278E6", "4Brick/PolesApart.mlm"
+
+  LevelData "Level28006", "4Brick/BuildersWillHelpYouHere.mlm"
+  LevelData "Level2839D", "4Brick/PillarsofHercules.mlm"
+  LevelData "Level286AE", "4Brick/BitterLemmings.mlm"
+  LevelData "Level289AE", "4Brick/AsLongAsYouTryYourBest.mlm"
+  LevelData "Level28B06", "4Brick/PeaSoup.mlm"
+  LevelData "Level28D33", "4Brick/TightropeCity.mlm"
+  LevelData "Level28D96", "4Brick/KeepYourHairOnMrLemming.mlm"
+  LevelData "Level28F30", "4Brick/JustaMinute.mlm"
+  LevelData "Level29240", "4Brick/RainbowIsland.mlm"
+  LevelData "Level2959D", "4Brick/EasyWhenYouKnowHow.mlm"
+  LevelData "Level298C4", "4Brick/MindtheStep.mlm"
+  LevelData "Level29D05", "4Brick/TakeGoodCareofMyLemmings.mlm"
+  LevelData "Level2A11A", "4Brick/KonbanwaLemmingSan.mlm"
+  LevelData "Level2A39C", "4Brick/LetsBeCarefulOutThere.mlm"
+  LevelData "Level2A6D6", "7SEGA/SEGAOne.mlm"
+  LevelData "Level2AAB0", "7SEGA/SEGATwo.mlm"
+  LevelData "Level2AF4F", "7SEGA/SEGAThree.mlm"
+  LevelData "Level2B449", "7SEGA/SEGAFour.mlm"
+
+  LevelData "Level2D7E6", "6Sand2/OriginsandLemmings.mlm"
+  LevelData "Level2DB8F", "6Sand2/WorraLorraLemmings.mlm"
+
+  LevelData "Level30006", "0Grass/TheyJustKeepOnComing.mlm"
+  LevelData "Level30490", "0Grass/HunttheNessy.mlm"
+  LevelData "Level3078C", "1Sand/OnlyFloatersCanSurviveThis.mlm"
+  LevelData "Level309EC", "2Fire/WeAllFallDown.mlm"
+  LevelData "Level30E9B", "2Fire/DontDoAnythingTooHasty.mlm"
+  LevelData "Level31113", "2Fire/ATaskforBlockersandBombers.mlm"
+  LevelData "Level3140F", "2Fire/LivinontheEdge.mlm"
+  LevelData "Level31991", "2Fire/TheBoilerRoom.mlm"
+  LevelData "Level31CBE", "2Fire/Lemmingology.mlm"
+  LevelData "Level32009", "4Brick/LemmingsintheAttic.mlm"
