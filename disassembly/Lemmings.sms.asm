@@ -630,7 +630,7 @@ _RAM_DB82_ dsb $14
 .ende
 
 .enum $DB97 export
-_RAM_DB97_ db
+_RAM_DB97_TrapDataIndex db
 _RAM_DB98_ db
 _RAM_DB99_ db
 .ende
@@ -4169,10 +4169,10 @@ _LABEL_1EEA_:
 	ld (_RAM_DAEC_LevelLayoutTopLeft), hl
 	ret
 
-_LABEL_1F0C_:
+_LABEL_1F0C_InitTraps:
 	xor a
 	ld (_RAM_DB98_), a
-	ld (_RAM_DB97_), a
+	ld (_RAM_DB97_TrapDataIndex), a
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	and a
 	jp z, +
@@ -4185,98 +4185,100 @@ _LABEL_1F0C_:
 	ret
 
 +:
+  ; Fun trapped levels
 	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $01
 	cp $0E
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $02
 	cp $10
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $03
 	cp $14
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $04
 	cp $13
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $05
 	cp $19
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ret
 
 ++:
 	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $07
 	cp $18
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ret
 
 +++:
 	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $01
 	and a
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $02
 	cp $05
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $06
 	cp $01
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $08
 	cp $14
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ret
 
 _LABEL_1F78_:
 	ld a, (_RAM_DB9D_LevelNumber)
 	ld l, $04
 	cp $08
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $03
 	cp $19
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $08
 	cp $11
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $05
 	cp $0B
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ld l, $07
 	cp $0C
-	jp z, _LABEL_1F9F_
+	jp z, _LABEL_1F9F_SetTrapData
 	ret
 
-_LABEL_1F9F_:
+_LABEL_1F9F_SetTrapData:
 	ld a, l
-	ld (_RAM_DB97_), a
+	ld (_RAM_DB97_TrapDataIndex), a
+  ; Look up trap type
 	add a, a
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, $3B1B
+	ld hl, _DATA_3B1B_TrapData
 	add hl, de
 	ld a, (hl)
 	cp $01
 	jr nz, +
 	xor a
-	jp _LABEL_3BFC_
+	jp _LABEL_3BFC_LoadTrap1Crusher
 
 +:
 	cp $02
 	jp nz, +
 	xor a
-	jp _LABEL_3C3C_
+	jp _LABEL_3C3C_LoadTrap2Rope
 
 +:
 	cp $04
 	jp nz, +
 	xor a
-	jp _LABEL_3C64_
+	jp _LABEL_3C64_LoadTrap4Drip
 
 +:
 	cp $03
 	ret nz
 	xor a
-	jp _LABEL_3C8C_
+	jp _LABEL_3C8C_LoadTrap3BearTrap
 
 _LABEL_1FCE_:
 	ld a, $07
@@ -7924,20 +7926,29 @@ _LABEL_3AA2_TileFromVRAMToMemory:
 .db $DA $3A $D4 $DA $BD $CA $0D $3B $CD $CC $3A $CA $FC $3A $C9
 
 ; Data from 3B1B to 3B3E (36 bytes)
-_DATA_3B1B_:
-.db $00 $00 $00 $00 $02 $EC $02 $88 $01 $60 $01 $88 $03 $A0 $02 $80
-.db $04 $CC $00 $80 $04 $24 $02 $80 $03 $D0 $02 $38 $04 $34 $03 $70
+_DATA_3B1B_TrapData:
+; TrapType  db ; 1-4 only
+; X         dw
+; Y         db
+.db $00 $00 $00 $00 
+.db $02 $EC $02 $88 
+.db $01 $60 $01 $88 
+.db $03 $A0 $02 $80
+.db $04 $CC $00 $80 
+.db $04 $24 $02 $80 
+.db $03 $D0 $02 $38 
+.db $04 $34 $03 $70
 .db $04 $34 $00 $60
 
 _LABEL_3B3F_:
-	ld a, (_RAM_DB97_)
+	ld a, (_RAM_DB97_TrapDataIndex)
 	and a
 	ret z
 	add a, a
 	add a, a
 	ld e, a
 	ld d, $00
-	ld hl, _DATA_3B1B_
+	ld hl, _DATA_3B1B_TrapData
 	add hl, de
 	ld a, (_RAM_DB98_)
 	and a
@@ -8002,9 +8013,9 @@ _LABEL_3B97_:
 +:
 	ld (_RAM_DB98_), a
 	and a
-	jp z, _LABEL_3C8C_
+	jp z, _LABEL_3C8C_LoadTrap3BearTrap
 	dec a
-	jp _LABEL_3C8C_
+	jp _LABEL_3C8C_LoadTrap3BearTrap
 
 ++:
 	ld a, (_RAM_DB98_)
@@ -8015,9 +8026,9 @@ _LABEL_3B97_:
 +:
 	ld (_RAM_DB98_), a
 	and a
-	jp z, _LABEL_3C64_
+	jp z, _LABEL_3C64_LoadTrap4Drip
 	dec a
-	jp _LABEL_3C64_
+	jp _LABEL_3C64_LoadTrap4Drip
 
 +++:
 	ld a, (_RAM_DB98_)
@@ -8028,9 +8039,9 @@ _LABEL_3B97_:
 +:
 	ld (_RAM_DB98_), a
 	and a
-	jp z, _LABEL_3C3C_
+	jp z, _LABEL_3C3C_LoadTrap2Rope
 	dec a
-	jp _LABEL_3C3C_
+	jp _LABEL_3C3C_LoadTrap2Rope
 
 _LABEL_3BE8_:
 	ld a, (_RAM_DB98_)
@@ -8041,11 +8052,11 @@ _LABEL_3BE8_:
 +:
 	ld (_RAM_DB98_), a
 	and a
-	jp z, _LABEL_3BFC_
+	jp z, _LABEL_3BFC_LoadTrap1Crusher
 	dec a
-	jp _LABEL_3BFC_
+	jp _LABEL_3BFC_LoadTrap1Crusher
 
-_LABEL_3BFC_:
+_LABEL_3BFC_LoadTrap1Crusher:
 	add a, a
 	ld e, a
 	ld d, $00
@@ -8073,7 +8084,7 @@ _LABEL_3BFC_:
 	ld hl, _RAM_CDDA_
 	jp _LABEL_3CE4_
 
-_LABEL_3C3C_:
+_LABEL_3C3C_LoadTrap2Rope:
 	add a, a
 	ld e, a
 	ld d, $00
@@ -8093,7 +8104,7 @@ _LABEL_3C3C_:
 	ld hl, _RAM_CD95_
 	jp _LABEL_3CE4_
 
-_LABEL_3C64_:
+_LABEL_3C64_LoadTrap4Drip:
 	add a, a
 	ld e, a
 	ld d, $00
@@ -8113,7 +8124,7 @@ _LABEL_3C64_:
 	ld hl, _RAM_CD95_
 	jp _LABEL_3CE4_
 
-_LABEL_3C8C_:
+_LABEL_3C8C_LoadTrap3BearTrap:
 	add a, a
 	ld e, a
 	ld d, $00
@@ -8413,7 +8424,7 @@ _LABEL_3E7D_:
 	call _LABEL_20A9_
 	call _LABEL_1EEA_
 	call _LABEL_1FCE_
-	call _LABEL_1F0C_
+	call _LABEL_1F0C_InitTraps
 	call _LABEL_2122_
 	xor a
 	ld (_RAM_DACF_), a

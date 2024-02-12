@@ -27,6 +27,9 @@ banks 14
 .define LoadPalette   $0a31 
 
 ; Unused parts in the low bank
+.unbackground $0004 $0037
+.unbackground $003b $0065
+.unbackground $0069 $00af
 .unbackground $766d $79ff
 .unbackground $7f00 $7fff
 
@@ -174,8 +177,8 @@ intro_lemming:
   PatchW($47f8 + 2, intro_wheel + 32 * 12 * 1) ; 12 tiles per frame
   PatchW($47f8 + 4, intro_wheel + 32 * 12 * 2)
   ; Paging
-  PatchB($481b, :intro_wheel)
   PatchB($481d, :intro_wheel)
+  PatchB($47df, :intro_lemming)
   ; Load offsets
   PatchW($47DC, 240*32) ; matches tile offset for lemming in makefile
   PatchW($4818, 224*32) ; matches tile offset for wheel in makefile
@@ -1661,3 +1664,129 @@ Level77:  MapDescriptor 7, Level0B890, 56
   LevelData "Level31991", "2Fire/TheBoilerRoom.mlm"
   LevelData "Level31CBE", "2Fire/Lemmingology.mlm"
   LevelData "Level32009", "4Brick/LemmingsintheAttic.mlm"
+
+/*
+How to add custom levels
+
+1. Make a .mlm file in the levels directory
+2. Add a line above like this:
+  LevelData "MyCustomLevelData", "MyCustomLevel.mlm"
+3. Add a line to the levels table above, like this:
+Level77:  MapDescriptor 7, Level0B890, 56 ; <- Existing data, add after this
+MyCustomLevel:  MapDescriptor 1, MyCustomLevelData, 64
+                  Level type -^  ^- Same as in #2   ^- Maximum fall height
+4. *Edit* an entry in the LevelDescriptors tables, like this:
+  LevelDescriptor  10  10  50   5   0   0   0   0   0   0   0  10 MyCustomLevel NameFun1 ; Removed previous entry
+  You should amend the stats
+5. Optionally, change the level name; in the example above, it's the label NameFun1
+
+*/
+
+; Traps
+; The game deals with these in code, but to make it editable we need to make it more data-driven.
+; The original data is a table of 8 structs of { type, x, y } plus some code that selects from this table
+; for these levels:
+; Difficulty  Level number  Track traps data index
+; Fun         15            1 -> rope trap in Don't Let Your Eyes Deceive You
+; Fun         17            2 -> crusher in Easy When You Know How
+; Fun         21            3 -> ??? You Live And Lem
+; Fun         20            4 -> Drip in Sega One
+; Fun         26            5 -> ??? Sega Two
+; Tricky      25            7 -> Drip in Sega Three
+; Taxing      1             1 -> level reuse for If At First You Don't Suceed...
+; Taxing      6             2
+; Taxing      2             6 -> ??? Watch Out There's Traps About
+; Taxing      21            8
+; Mayhem      9             4
+; Mayhem      26            3
+; Mayhem      18            8
+; Mayhem      12            5
+; Mayhem      13            7
+; We replace it with a lookup table.
+.unbackground $1f0c $1fcd
+  ROMPosition $1f0c
+.section "Trap lookup" force
+  ; Init variables for no traps
+  xor a
+  ld ($db98),a
+  ld ($db9e),a
+  ; Look up in table
+  ld hl,traptable
+  ld b, _sizeof_traptable/3
+  
+-:ld a,($db9e) ; Difficulty 0-3
+  cp (hl)
+  inc hl
+  jr nz,+
+  ld a,($db9d) ; Level number 0-based
+  cp (hl)
+  inc hl
+  jr z,_match
+++:
+--:
+  inc hl
+  djnz -
+  ret
+
++:inc hl
+  jr --
+
+_match:
+  ; It's a match, load it
+  ld a,(hl)
+  ld ($db97),a ; RAM for trap index
+  ; Then load initial tiles
+  ld hl,trapdata
+  add a,a
+  add a,a
+  ld e,a
+  ld d,0
+  add hl,de
+  ld a,(hl) ; Get type: values are 1-4
+  dec a
+  jp z, $3bfc ; Load trap type 1
+  dec a
+  jp z, $3c3c ; Load trap type 2
+  dec a
+  jp z, $3c8c ; Load trap type 3
+  dec a
+  jp $3c64 ; Load trap type 4
+  
+  
+traptable:
+.db 0, 15-1, 1
+.db 0, 17-1, 2
+.db 0, 21-1, 3
+.db 0, 20-1, 4
+.db 0, 26-1, 5
+.db 1, 25-1, 7
+.db 2,  1-1, 1
+.db 2,  6-1, 2
+.db 2,  2-1, 6
+.db 2, 21-1, 8
+.db 3,  9-1, 4
+.db 3, 26-1, 3
+.db 3, 18-1, 8
+.db 3, 12-1, 5
+.db 3, 13-1, 7
+.ends
+
+; And then the trap data table itself. The first entry could used?
+.unbackground $3b1b $3b3e
+.bank 0 slot 0
+.section "Trap data" free
+trapdata:
+.table db, dw, db
+;    Type,     X,   Y
+.row    0,     0,   0
+.row    2, $02EC, $88 
+.row    1, $0160, $88 
+.row    3, $02A0, $80
+.row    4, $00CC, $80 
+.row    4, $0224, $80 
+.row    3, $02D0, $38 
+.row    4, $0334, $70
+.row    4, $0034, $60
+.ends
+  ; Patch the other place using this table
+  PatchW $3b4a trapdata
