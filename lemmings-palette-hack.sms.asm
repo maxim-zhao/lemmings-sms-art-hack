@@ -1389,7 +1389,7 @@ NameTricky6:  .db "LEMMINGOLOGY",0
 NameTricky7:  .db "BEEN THERE, SEEN IT, DONE IT",0
 NameTricky8:  .db "LEMMING SANCTUARY IN SIGHT",0
 NameTricky9:  .db "THEY JUST KEEP ON COMING",0
-NameTricky10: .db "THERES A LOT OF THEM ABOUT",0
+NameTricky10: .db "THERE'S A LOT OF THEM ABOUT",0
 NameTricky11: .db "LEMMINGS IN THE ATTIC",0
 NameTricky12: .db "BITTER LEMMING",0
 NameTricky13: .db "LEMMING DROPS",0
@@ -1410,8 +1410,8 @@ NameTricky27: .db "THE ISLAND OF THE WICKER PEOPLE",0
 NameTricky28: .db "LOST SOMETHING?",0
 NameTricky29: .db "RAINBOW ISLAND",0
 NameTricky30: .db "THE CRANKSHAFT",0
-NameTaxing1:  .db "IF AT FIRST YOU DON'T SUCEED..",0
-NameTaxing2:  .db "WATCH OUT, THERES TRAPS ABOUT",0
+NameTaxing1:  .db "IF AT FIRST YOU DON'T SUCCEED..",0
+NameTaxing2:  .db "WATCH OUT, THERE'S TRAPS ABOUT",0
 NameTaxing3:  .db "HEAVEN CAN WAIT WE HOPE",0
 NameTaxing4:  .db "LEND A HELPING HAND",0
 NameTaxing5:  .db "THE PRISON",0
@@ -1706,6 +1706,7 @@ MyCustomLevel:  MapDescriptor 1, MyCustomLevelData, 64
 .unbackground $1f0c $1fcd
   ROMPosition $1f0c
 .section "Trap lookup" force
+LoadTrapInfo:
   ; Init variables for no traps
   xor a
   ld ($db98),a
@@ -1769,24 +1770,36 @@ traptable:
 .db 3, 18-1, 8
 .db 3, 12-1, 5
 .db 3, 13-1, 7
+; Add any extras to this table, order doesn't matter
+;.db 0, 0, 9 ; Test: add to Just Dig
 .ends
 
 ; And then the trap data table itself. The first entry could used?
 .unbackground $3b1b $3b3e
 .bank 0 slot 0
 .section "Trap data" free
+.enum 1
+Crusher   db ; Marble
+Rope      db ; Pillars
+BearTrap  db ; Dirt
+Drip      db ; Sega
+.ende
 trapdata:
+; This is copied from the original ROM, but it is now possible to extend it.
 .table db, dw, db
-;    Type,     X,   Y
-.row    0,     0,   0
-.row    2, $02EC, $88 
-.row    1, $0160, $88 
-.row    3, $02A0, $80
-.row    4, $00CC, $80 
-.row    4, $0224, $80 
-.row    3, $02D0, $38 
-.row    4, $0334, $70
-.row    4, $0034, $60
+;    Type,         X,   Y
+.row    0,         0,   0
+.row Rope,     $02EC, $88 ; 1 
+.row Crusher,  $0160, $88 ; 2
+.row BearTrap, $02A0, $80 ; 3
+.row Drip,     $00CC, $80 ; 4 
+.row Drip,     $0224, $80 ; 5
+.row BearTrap, $02D0, $38 ; 6
+.row Drip,     $0334, $70 ; 7
+.row Drip,     $0034, $60 ; 8
+; Add any extras to this table, order doesn't matter
+;.row Crusher, 368, 72 ; 9
 .ends
   ; Patch the other place using this table
   PatchW $3b4a trapdata
+; Note however that it is necessary to place tiles in the level to draw the trap into. Without this, and matching data hard-coded in the original, the trap will be invisible!

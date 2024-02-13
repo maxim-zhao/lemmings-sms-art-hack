@@ -667,13 +667,13 @@ _RAM_DBC2_Intro1WheelAnimationCounter db
 _RAM_DBC3_ dw
 _RAM_DBC5_ db
 _RAM_DBC6_ dsb $8
-_RAM_DBCE_ db
+_RAM_DBCE_DirectionControls db
 _RAM_DBCF_ db
-_RAM_DBD0_ db
+_RAM_DBD0_Buttons db
 _RAM_DBD1_ db
 _RAM_DBD2_ dw
 _RAM_DBD4_ dw
-_RAM_DBD6_ db
+_RAM_DBD6_LevelSelectActive db
 _RAM_DBD7_ db
 _RAM_DBD8_ db
 _RAM_DBD9_ db
@@ -1501,7 +1501,8 @@ _LABEL_829_SetTextLocationToBC:
 	ld (_RAM_DAE5_TextLocationTilemapAddress), hl
 	ret
 
-_LABEL_840_:
+_LABEL_840_ProcessInputs:
+  ; Returns h = Y, l = X, b = button 2, c = button 1 
 	ld hl, $0000
 	ld bc, $0000
 	in a, (Port_IOPort1)
@@ -1534,8 +1535,8 @@ _LABEL_840_:
 	jr nz, +
 	ld b, $01
 +:
-	ld (_RAM_DBCE_), hl
-	ld (_RAM_DBD0_), bc
+	ld (_RAM_DBCE_DirectionControls), hl
+	ld (_RAM_DBD0_Buttons), bc
 	ret
 
 ; Data from 87E to 8B3 (54 bytes)
@@ -4602,7 +4603,7 @@ _DATA_21F2_:
 .dw _DATA_1F137_ _DATA_A_ _DATA_1F277_ _DATA_A_ _DATA_1F3B7_ _DATA_A_ _DATA_1F4F7_ _DATA_F_
 .dw _DATA_1F6D7_ _DATA_F_
 
-_LABEL_2206_:
+_LABEL_2206_LoadLevelTiles:
   ; Clear some memory
 	ld hl, _RAM_DC00_
 	ld de, _RAM_DC00_ + 1
@@ -5609,8 +5610,8 @@ _LABEL_2A5F_:
 +:
 	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld (_RAM_DAF0_), a
-	call _LABEL_840_
-	ld bc, (_RAM_DBCE_)
+	call _LABEL_840_ProcessInputs
+	ld bc, (_RAM_DBCE_DirectionControls)
 	ld hl, (_RAM_DBD2_)
 	ld (_RAM_DBD2_), bc
 	ld a, b
@@ -5694,7 +5695,7 @@ _LABEL_2A5F_:
 	ret
 
 _LABEL_2AF9_:
-	ld a, (_RAM_DBD0_)
+	ld a, (_RAM_DBD0_Buttons)
 	add a, a
 	add a, a
 	inc a
@@ -5704,7 +5705,7 @@ _LABEL_2AF9_:
 	jp z, ++
 	cp $F8
 	ret nz
-	ld a, (_RAM_DBCE_)
+	ld a, (_RAM_DBCE_DirectionControls)
 	cp $01
 	ret nz
 	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
@@ -5717,7 +5718,7 @@ _LABEL_2AF9_:
 	ret
 
 ++:
-	ld a, (_RAM_DBCE_)
+	ld a, (_RAM_DBCE_DirectionControls)
 	cp $FF
 	ret nz
 	ld a, (_RAM_DAEC_LevelLayoutTopLeft)
@@ -8067,6 +8068,7 @@ _LABEL_3BFC_LoadTrap1Crusher:
 	ld b, (hl)
 	ld a, $0D
 	ld (_RAM_FFFF_), a
+  ; These are all the tilemap "used tiles" table, being checked for the area where the trap tiles will be loaded. The code is arranged such that the addresses checked happen to be non-zero only for the levels needed (?) and thus the trap art won't be loaded
 	ld hl, _RAM_CDD5_
 	call _LABEL_3CE4_
 	ld hl, _RAM_CD68_
@@ -8161,21 +8163,26 @@ _DATA_3CD8_Tiles_Trap_Drip_Lookup:
 .dw _DATA_34C46_ _DATA_34FC6_ _DATA_35046_ _DATA_350C6_ _DATA_350C6_ _DATA_35146_
 
 _LABEL_3CE4_:
+  ; Check if pointed byte is non-zero
 	ld a, (hl)
 	and a
 	ret z
+  ; Load tiles accordingly
 	push bc
-	ld l, a
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	ld h, b
-	ld l, c
-	ld b, $01
-	call _LABEL_8B4_LoadBTilesToVRAM
-	ld hl, $0020
+    ; Look up a'th pointer
+    ld l, a
+    ld h, $7D
+    ld e, (hl)
+    inc h
+    ld d, (hl)
+    ; That's an address
+    ld h, b
+    ld l, c
+    ld b, $01
+    call _LABEL_8B4_LoadBTilesToVRAM
+    ld hl, $0020
 	pop bc
+  ; Then add £20 to bc
 	add hl, bc
 	ld b, h
 	ld c, l
@@ -8342,7 +8349,7 @@ _LABEL_3DCB_:
 	jp c, -
 	call _LABEL_A6D_
 	call _LABEL_9ED_UpdateNameTable
-	ld hl, (_RAM_DBD0_)
+	ld hl, (_RAM_DBD0_Buttons)
 	ld a, l
 	or h
 	jp z, _LABEL_3DCB_
@@ -8410,14 +8417,14 @@ _LABEL_3E7D_:
 	ld a, (_RAM_DAD4_)
 	cp l
 	jp z, -
-	call _LABEL_4166_
+	call _LABEL_4166_ShowLevelInfo
 	call _LABEL_94C_
 	xor a
 	ld (_RAM_DBA4_), a
 	ld hl, _DATA_1BE5E_MainPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
-	call _LABEL_2206_
+	call _LABEL_2206_LoadLevelTiles
 	call _LABEL_26E1_
 	call _LABEL_1ADD_
 	call _LABEL_203D_
@@ -8697,7 +8704,7 @@ _LABEL_412F_:
 	and a
 	ret
 
-_LABEL_4166_:
+_LABEL_4166_ShowLevelInfo:
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_LoadFontTiles
@@ -8817,7 +8824,7 @@ _LABEL_4255_:
 	xor a
 	ld (_RAM_DB9D_LevelNumber), a
 --:
-	call _LABEL_840_
+	call _LABEL_840_ProcessInputs
 	ld bc, $150D
 	call _LABEL_829_SetTextLocationToBC
 	call _LABEL_AB5_
@@ -8826,7 +8833,7 @@ _LABEL_4255_:
 	ld a, (_RAM_DB9D_LevelNumber)
 	inc a
 	call _LABEL_12D2_
-	ld hl, (_RAM_DBCE_)
+	ld hl, (_RAM_DBCE_DirectionControls)
 	ld a, (_RAM_DB9D_LevelNumber)
 	add a, l
 	cp $FF
@@ -8900,7 +8907,7 @@ _LABEL_4329_:
 	ld (hl), $41
 +:
 	push hl
-	call _LABEL_840_
+	call _LABEL_840_ProcessInputs
 	pop hl
 	ld a, (_RAM_DBCF_)
 	add a, (hl)
@@ -8931,7 +8938,7 @@ _LABEL_4329_:
 	ld a, (_RAM_DAD9_)
 	and $01
 	jr nz, _LABEL_4398_
-	ld hl, (_RAM_DBCE_)
+	ld hl, (_RAM_DBCE_DirectionControls)
 	ld a, l
 	and a
 	jp nz, +
@@ -8954,7 +8961,7 @@ _LABEL_4398_:
 
 +:
 	ld a, (_RAM_DBB5_)
-	ld hl, (_RAM_DBCE_)
+	ld hl, (_RAM_DBCE_DirectionControls)
 	add a, l
 	cp $08
 	jr nz, +
@@ -9110,7 +9117,7 @@ _LABEL_44B3_:
 	call _LABEL_AF5_
 	call _LABEL_8F2_
 	call _LABEL_4D8_TurnOffSprites
-	ld a, (_RAM_DBD6_)
+	ld a, (_RAM_DBD6_LevelSelectActive)
 	and a
 	jr nz, +
 	jp _LABEL_42D8_
@@ -9168,8 +9175,8 @@ _LABEL_455F_:
 	jp _LABEL_1988_
 
 _LABEL_4575_:
-	call _LABEL_840_
-	ld a, (_RAM_DBCE_)
+	call _LABEL_840_ProcessInputs
+	ld a, (_RAM_DBCE_DirectionControls)
 	and a
 	jp z, +
 	add a, a
@@ -9369,7 +9376,7 @@ _LABEL_4697_:
 	ld (_RAM_DBA7_), a
 	call _LABEL_47FE_
 	call _LABEL_47C4_
-	ld ix, _DATA_47B6_
+	ld ix, _DATA_47B6_LevelSelectInputs
 _LABEL_46E6_Intro1Loop:
 	push ix
 	ld hl, (_RAM_DAD4_)
@@ -9389,13 +9396,15 @@ _LABEL_46E6_Intro1Loop:
 	call _LABEL_47C4_
 +:
 	pop ix
-	call _LABEL_840_
-	ld hl, (_RAM_DBD0_)
+  ; Check for level select cheat
+	call _LABEL_840_ProcessInputs
+	ld hl, (_RAM_DBD0_Buttons)
 	ld a, l
 	add a, h
 	cp $02
 	jr nz, +
-	ld hl, (_RAM_DBCE_)
+  ; 1 + 2 pressed
+	ld hl, (_RAM_DBCE_DirectionControls)
 	ld a, (ix+0)
 	cp l
 	jr nz, +
@@ -9407,8 +9416,10 @@ _LABEL_46E6_Intro1Loop:
 	ld a, (ix+0)
 	cp $80
 	jr nz, +
+  ; Success!
 	ld a, $01
-	ld (_RAM_DBD6_), a
+	ld (_RAM_DBD6_LevelSelectActive), a
+  ; Play sound
 	ld a, $55
 	call _LABEL_97A_
 +:
@@ -9485,7 +9496,8 @@ _LABEL_46E6_Intro1Loop:
 	ret
 
 ; Data from 47B6 to 47C3 (14 bytes)
-_DATA_47B6_:
+_DATA_47B6_LevelSelectInputs:
+;   [L]     [R]     [U]     [D]     [L]     [R]
 .db $FF $00 $01 $00 $00 $FF $00 $01 $FF $00 $01 $00 $80 $80
 
 _LABEL_47C4_:
