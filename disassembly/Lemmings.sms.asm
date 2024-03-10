@@ -530,7 +530,7 @@ _RAM_DAD2_ db
 _RAM_DAD3_ db
 _RAM_DAD4_ db
 _RAM_DAD5_ db
-_RAM_DAD6_ db
+_RAM_DAD6_AnimationCounter db
 _RAM_DAD7_ db
 _RAM_DAD8_ db
 _RAM_DAD9_ db
@@ -5219,125 +5219,126 @@ _LABEL_26E1_:
 .db $10 $C9
 
 _LABEL_276B_:
-	ld a, (_RAM_DAD6_)
+	ld a, (_RAM_DAD6_AnimationCounter)
 	inc a
 	cp $03
 	jp c, +
 	xor a
 +:
-	ld (_RAM_DAD6_), a
+	ld (_RAM_DAD6_AnimationCounter), a
 	ld a, $0D
 	ld (_RAM_FFFF_), a
 	ld a, (_RAM_DB0B_LevelType)
 	and a
-	jp z, _LABEL_27CD_
+	jp z, _LABEL_27CD_Grass
 	cp $01
-	jp z, _LABEL_2804_
+	jp z, _LABEL_2804_Sand
 	cp $05
-	jp z, _LABEL_2829_
+	jp z, _LABEL_2829_Unused
 	cp $06
-	jp z, _LABEL_284E_
+	jp z, _LABEL_284E_Sand2
 	cp $02
-	jp z, _LABEL_2873_
+	jp z, _LABEL_2873_Fire
 	cp $03
-	jp z, _LABEL_28AE_
+	jp z, _LABEL_28AE_Ice
 	cp $04
-	jp z, _LABEL_28D3_
+	jp z, _LABEL_28D3_Brick
 	cp $07
-	jp z, +
+	jp z, _Sega
 	ret
 
-+:
-	ld bc, _DATA_35B86_
+_Sega:
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD66_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD69_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD94_
-	call _LABEL_290F_
-	ld bc, _DATA_35CA6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD98_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ret
 
-_LABEL_27CD_:
-	ld bc, _DATA_35B86_
+_LABEL_27CD_Grass:
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD4A_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD4D_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD6D_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDAD_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDAC_
-	call _LABEL_290F_
-	ld bc, _DATA_35CA6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD74_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ret
 
-_LABEL_2804_:
-	ld bc, _DATA_35B86_
+_LABEL_2804_Sand:
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD5B_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD5E_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDA3_
-	call _LABEL_290F_
-	ld bc, _DATA_35CA6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CDA4_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ret
 
-_LABEL_2829_:
-	ld bc, _DATA_35B86_
+_LABEL_2829_Unused:
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD47_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD4A_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDA6_
-	call _LABEL_290F_
-	ld bc, _DATA_35CA6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CDA7_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ret
 
-_LABEL_284E_:
-	ld bc, _DATA_35B86_
+_LABEL_284E_Sand2:
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD81_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD84_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD91_
-	call _LABEL_290F_
-	ld bc, _DATA_35CA6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD94_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ret
 
-_LABEL_2873_:
-	ld bc, _DATA_35E26_
+_LABEL_2873_Fire:
+	ld bc, _DATA_35E26_FireWater
 	ld hl, _RAM_CD70_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ld bc, _DATA_35E86_
 	ld hl, _RAM_CD71_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ld bc, _DATA_35E86_
 	ld hl, _RAM_CD8B_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
+  ; Animate flames too
 	ld a, (_RAM_DAD7_)
 	inc a
 	cp $05
@@ -5345,70 +5346,74 @@ _LABEL_2873_:
 	xor a
 +:
 	ld (_RAM_DAD7_), a
-	ld bc, _DATA_351C6_
+	ld bc, _DATA_351C6_FlameTrapTiles
 	ld hl, _RAM_CD29_
 	call _LABEL_292B_
-	ld bc, _DATA_35246_
+	ld bc, _DATA_35246_FlameTrapTilesPart2
 	ld hl, _RAM_CD35_
 	call _LABEL_292B_
 	ret
 
-_LABEL_28AE_:
-	ld bc, _DATA_35B86_
+_LABEL_28AE_Ice:
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD5E_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD61_
-	call _LABEL_290F_
-	ld bc, _DATA_35C46_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD7E_
-	call _LABEL_290F_
-	ld bc, _DATA_35CA6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD80_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ret
 
-_LABEL_28D3_:
+_LABEL_28D3_Brick:
 	ld a, (_RAM_DAD8_)
 	inc a
 	and $03
 	ld (_RAM_DAD8_), a
-	ld bc, _DATA_35B86_
+	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD2F_
-	call _LABEL_290F_
-	ld bc, _DATA_35BE6_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD32_
-	call _LABEL_290F_
-	ld bc, _DATA_35D06_
+	call _LABEL_290F_UpdateAnimatedTile
+	ld bc, _DATA_35D06_GreenWater
 	ld hl, _RAM_CD66_
-	call _LABEL_290F_
+	call _LABEL_290F_UpdateAnimatedTile
 	ld bc, _DATA_35D66_
 	ld hl, _RAM_CD67_
-	call _LABEL_290F_
-	ld a, $0D
+	call _LABEL_290F_UpdateAnimatedTile
+	ld a, :_DATA_357C6_Tiles_Trap_Spinner ; $0D
 	ld (_RAM_FFFF_), a
 	ld bc, _DATA_357C6_Tiles_Trap_Spinner
 	ld hl, _RAM_CD98_
 	call _LABEL_2955_
 	ret
 
-_LABEL_290F_:
+_LABEL_290F_UpdateAnimatedTile:
+; hl = a RAM location for an animation counter? >0
+; bc = tile data location
 	ld a, (hl)
 	and a
 	ret z
+  ; Multiply by 32
 	ld l, a
-	ld h, $7D
+	ld h, >_TABLE_7D00_MultiplyBy32Lo
 	ld e, (hl)
-	inc h
+	inc h ; for _TABLE_7E00_MultiplyBy32Hi
 	ld d, (hl)
+  ; now de = (hl)*32
 	ld h, b
 	ld l, c
-	ld a, (_RAM_DAD6_)
+	ld a, (_RAM_DAD6_AnimationCounter)
 	add a, a
 	add a, a
 	add a, a
 	add a, a
-	add a, a
+	add a, a ; *32
 	ld c, a
 	ld b, $00
 	add hl, bc
@@ -8182,7 +8187,7 @@ _LABEL_3CE4_:
     call _LABEL_8B4_LoadBTilesToVRAM
     ld hl, $0020
 	pop bc
-  ; Then add £20 to bc
+  ; Then add $20 to bc
 	add hl, bc
 	ld b, h
 	ld c, l
@@ -10522,39 +10527,27 @@ _DATA_7681_:
 .db $0B $8B $4B $CB $2B $AB $6B $EB $1B $9B $5B $DB $3B $BB $7B $FB
 .db $07 $87 $47 $C7 $27 $A7 $67 $E7 $17 $97 $57 $D7 $37 $B7 $77 $F7
 .db $0F $8F $4F $CF $2F $AF $6F $EF $1F $9F $5F $DF $3F $BF $7F $FF
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $20 $40 $60 $80 $A0 $C0 $E0 $00 $20 $40 $60 $80 $A0 $C0 $E0
-.db $00 $00 $00 $00 $00 $00 $00 $00 $01 $01 $01 $01 $01 $01 $01 $01
-.db $02 $02 $02 $02 $02 $02 $02 $02 $03 $03 $03 $03 $03 $03 $03 $03
-.db $04 $04 $04 $04 $04 $04 $04 $04 $05 $05 $05 $05 $05 $05 $05 $05
-.db $06 $06 $06 $06 $06 $06 $06 $06 $07 $07 $07 $07 $07 $07 $07 $07
-.db $08 $08 $08 $08 $08 $08 $08 $08 $09 $09 $09 $09 $09 $09 $09 $09
-.db $0A $0A $0A $0A $0A $0A $0A $0A $0B $0B $0B $0B $0B $0B $0B $0B
-.db $0C $0C $0C $0C $0C $0C $0C $0C $0D $0D $0D $0D $0D $0D $0D $0D
-.db $0E $0E $0E $0E $0E $0E $0E $0E $0F $0F $0F $0F $0F $0F $0F $0F
-.db $10 $10 $10 $10 $10 $10 $10 $10 $11 $11 $11 $11 $11 $11 $11 $11
-.db $12 $12 $12 $12 $12 $12 $12 $12 $13 $13 $13 $13 $13 $13 $13 $13
-.db $14 $14 $14 $14 $14 $14 $14 $14 $15 $15 $15 $15 $15 $15 $15 $15
-.db $16 $16 $16 $16 $16 $16 $16 $16 $17 $17 $17 $17 $17 $17 $17 $17
-.db $18 $18 $18 $18 $18 $18 $18 $18 $19 $19 $19 $19 $19 $19 $19 $19
-.db $1A $1A $1A $1A $1A $1A $1A $1A $1B $1B $1B $1B $1B $1B $1B $1B
-.db $1C $1C $1C $1C $1C $1C $1C $1C $1D $1D $1D $1D $1D $1D $1D $1D
-.db $1E $1E $1E $1E $1E $1E $1E $1E $1F $1F $1F $1F $1F $1F $1F $1F
-.dsb 240, $00
+
+_TABLE_7D00_MultiplyBy32Lo:
+; Offset n holds value n*32
+.repeat 256 index n
+.db n*32
+.endr
+
+_TABLE_7E00_MultiplyBy32Hi:
+; Offset n holds value n/8 = (n*32) >> 8
+.repeat 256 index n
+.db (n*32)>>8
+.endr
+
+; These combine to multiply by 32, i.e. n*32 = (byte)(n*32) | (byte)(n*8)<<8
+; e.g.
+;	ld l, a
+;	ld h, >_TABLE_7D00_MultiplyBy32Lo
+;	ld e, (hl)
+;	inc h
+;	ld d, (hl)
+
 
 .BANK 1 SLOT 1
 .ORG $0000
@@ -14615,7 +14608,7 @@ _DATA_35146_:
 .db $7F $67 $65 $00 $D9 $CB $CB $00 $FF $FD $A1 $00 $7A $7E $54 $00
 
 ; Data from 351C6 to 35245 (128 bytes)
-_DATA_351C6_:
+_DATA_351C6_FlameTrapTiles:
 .dsb 20, $00
 .db $01 $04 $05 $07 $04 $0B $0F $0F $07 $30 $35 $3F
 .dsb 21, $00
@@ -14623,7 +14616,7 @@ _DATA_351C6_:
 .dsb 64, $00
 
 ; Data from 35246 to 357C5 (1408 bytes)
-_DATA_35246_:
+_DATA_35246_FlameTrapTilesPart2:
 .db $1B $C0 $D8 $FD $00 $1F $1F $1F
 .dsb 24, $00
 .db $78 $02 $4A $EE $38 $84 $BC $FC
@@ -14744,7 +14737,7 @@ _DATA_357C6_Tiles_Trap_Spinner:
 .db $60 $90 $90 $00 $B0 $C8 $48 $00
 
 ; Data from 35B86 to 35BE5 (96 bytes)
-_DATA_35B86_:
+_DATA_35B86_ExitFlamesLeft:
 .db $EF $FF $FF $FF $AF $CF $EF $FF $27 $9F $9F $FF $67 $9F $DF $FF
 .db $FF $9F $9F $FF $E7 $07 $1F $07 $BF $9F $FF $9F $BF $8F $FF $8F
 .db $9F $FF $FF $FF $4F $9F $DF $FF $6F $9F $FF $FF $6F $9F $BF $FF
@@ -14753,7 +14746,7 @@ _DATA_35B86_:
 .db $7F $9F $BF $FF $E7 $07 $1F $07 $BF $9F $FF $9F $BF $8F $FF $8F
 
 ; Data from 35BE6 to 35C45 (96 bytes)
-_DATA_35BE6_:
+_DATA_35BE6_ExitFlamesRight:
 .db $FB $FF $FF $FF $F5 $FB $FF $FF $E5 $F3 $F3 $FF $ED $F3 $FB $FF
 .db $EF $F3 $F7 $FF $CE $C0 $F1 $C0 $FB $F3 $FF $F3 $FB $E3 $FF $E3
 .db $FD $FD $FD $FF $FB $F9 $FB $FF $F6 $F9 $FB $FF $E4 $F1 $F1 $FF
@@ -14762,7 +14755,7 @@ _DATA_35BE6_:
 .db $FF $F3 $F3 $FF $CE $C0 $F1 $C0 $FB $F3 $FF $F3 $FB $E3 $FF $E3
 
 ; Data from 35C46 to 35CA5 (96 bytes)
-_DATA_35C46_:
+_DATA_35C46_WaterTop:
 .db $00 $81 $81 $00 $85 $E3 $62 $00 $EF $F7 $10 $00 $FF $FF $00 $00
 .db $FF $FF $00 $00 $FF $FF $00 $00 $FF $FF $AA $00 $FF $FF $55 $00
 .db $00 $10 $10 $00 $10 $38 $28 $00 $3E $F9 $C1 $00 $FF $FF $00 $00
@@ -14771,7 +14764,7 @@ _DATA_35C46_:
 .db $FF $FF $00 $00 $FF $FF $00 $00 $FF $FF $AA $00 $FF $FF $55 $00
 
 ; Data from 35CA6 to 35D05 (96 bytes)
-_DATA_35CA6_:
+_DATA_35CA6_WaterBottom:
 .db $FF $FF $AA $00 $FF $FF $55 $00 $FF $FF $AA $00 $FF $FF $FF $00
 .db $FF $FF $55 $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00
 .db $FF $FF $55 $00 $FF $FF $AA $00 $FF $FF $55 $00 $FF $FF $FF $00
@@ -14780,7 +14773,7 @@ _DATA_35CA6_:
 .db $FF $FF $55 $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00
 
 ; Data from 35D06 to 35D65 (96 bytes)
-_DATA_35D06_:
+_DATA_35D06_GreenWater:
 .dsb 12, $00
 .db $01 $00 $40 $01 $02 $C1 $20 $00 $04 $EB $10 $04 $00 $FF $00 $00
 .db $00 $FD $02
@@ -14806,7 +14799,7 @@ _DATA_35D66_:
 .db $FC $00 $03 $FF $18 $41 $E7 $FF $10 $28 $EF $FF $00 $45 $FF $FF
 
 ; Data from 35E26 to 35E85 (96 bytes)
-_DATA_35E26_:
+_DATA_35E26_FireWater:
 .db $FF $FF $FF $FF $FF $FF $FF $FF $7F $7F $FF $FF $FD $FD $FF $FF
 .db $B9 $BB $FF $FF $90 $D6 $FF $FF $25 $11 $B5 $FF $FC $02 $9F
 .dsb 9, $FF

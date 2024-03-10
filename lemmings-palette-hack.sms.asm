@@ -1803,3 +1803,51 @@ trapdata:
   ; Patch the other place using this table
   PatchW $3b4a trapdata
 ; Note however that it is necessary to place tiles in the level to draw the trap into. Without this, and matching data hard-coded in the original, the trap will be invisible!
+
+
+
+; Additional water animations!
+; Have to be in bank $D
+.if 1
+.bank $d slot 2
+.section "Extra water animations 0" free
+WaterTilesType0:
+.incbin "animation-water.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $27e0 WaterTilesType0
+  PatchW $27e9 WaterTilesType0
+  PatchW $27f2 WaterTilesType0
+  PatchW $27fb WaterTilesType0+$60
+
+.bank $d slot 2
+.section "Extra water animations 1" free
+WaterTilesType1:
+.incbin "animation-water.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $2817 WaterTilesType1
+  PatchW $2820 WaterTilesType1+$60
+
+; Type 2 = fire already has its own "fire water"
+
+.bank $d slot 2
+.section "Extra water animations 3" free
+WaterTilesType3:
+.incbin "animation-water.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $28c1 WaterTilesType3
+  PatchW $28ca WaterTilesType3+$60
+
+; Type 4 = marble/brick aready has its own "green water"
+
+; Type 5 is unused
+
+.bank $d slot 2
+.section "Extra water animations 6" free
+WaterTilesType6:
+.incbin "animation-water.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $2861 WaterTilesType6
+  PatchW $286a WaterTilesType6+$60
+
+; We leave the default water tiles as above for type 7 = Sega
+.endif
