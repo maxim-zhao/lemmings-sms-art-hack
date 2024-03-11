@@ -108,7 +108,22 @@ LevelLoaderHack:
   .ends
 .endm
 
-
+.macro NopOut(offset, length)
+  ROMPosition offset
+  .section "Patch@\1" overwrite
+  .if length > 3
+  jp +
+  .repeat length-3
+  nop
+  .endr
++:
+  .else
+  .repeat length
+  nop
+  .endr
+  .endif
+  .ends
+.endm
 
 ; Main font
 ; This has a leading 8x8 blank that is a bit annoying...
@@ -1851,3 +1866,63 @@ WaterTilesType6:
 
 ; We leave the default water tiles as above for type 7 = Sega
 .endif
+
+; Note that each of these costs an extra 192 bytes of ROM space for the tiles, remove them if you have space issues.
+
+
+; Additional exit animations!
+; Used in level types 7 (Sega), 0 (grass), 1 (sand), 6 (sand2), 3 (ice), 4 (brick)
+; Have to be in bank $D
+.if 1
+.bank $d slot 2
+.section "Extra exit animations 0" free
+ExitTilesType0:
+.incbin "animation-exit-flames.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $27CE ExitTilesType0
+  PatchW $27D7 ExitTilesType0+$60
+
+.bank $d slot 2
+.section "Extra exit animations 1" free
+ExitTilesType1:
+.incbin "animation-exit-flames.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $2805 ExitTilesType1
+  PatchW $280E ExitTilesType1+$60
+
+; Type 2 = fire does not have the animation
+
+.bank $d slot 2
+.section "Extra exit animations 3" free
+ExitTilesType3:
+.incbin "animation-exit-flames.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $28AF ExitTilesType3
+  PatchW $28B8 ExitTilesType3+$60
+
+.bank $d slot 2
+.section "Extra exit animations 4" free
+ExitTilesType4:
+.incbin "animation-exit-flames.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $28DD ExitTilesType4
+  PatchW $28E6 ExitTilesType4+$60
+
+; Type 5 is unused
+
+.bank $d slot 2
+.section "Extra exit animations 6" free
+ExitTilesType6:
+.incbin "animation-exit-flames.bin" ; Change filename and add a PNG to replace
+.ends
+  PatchW $284F ExitTilesType6
+  PatchW $2858 ExitTilesType6+$60
+
+; We leave the default exit flame tiles as above for type 7 = Sega
+.endif
+
+; To disable exit animations, you can instead change each patched offset above from
+;   PatchW $284F ExitTilesType6
+; to
+;   NopOut $284F-1 9
+; and remove the .incbin. Each costs 192 bytes for the tile data.

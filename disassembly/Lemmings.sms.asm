@@ -5332,10 +5332,10 @@ _LABEL_2873_Fire:
 	ld bc, _DATA_35E26_FireWater
 	ld hl, _RAM_CD70_
 	call _LABEL_290F_UpdateAnimatedTile
-	ld bc, _DATA_35E86_
+	ld bc, _DATA_35E86_FireWaterBottom
 	ld hl, _RAM_CD71_
 	call _LABEL_290F_UpdateAnimatedTile
-	ld bc, _DATA_35E86_
+	ld bc, _DATA_35E86_FireWaterBottom
 	ld hl, _RAM_CD8B_
 	call _LABEL_290F_UpdateAnimatedTile
   ; Animate flames too
@@ -5348,10 +5348,10 @@ _LABEL_2873_Fire:
 	ld (_RAM_DAD7_), a
 	ld bc, _DATA_351C6_FlameTrapTiles
 	ld hl, _RAM_CD29_
-	call _LABEL_292B_
+	call _LABEL_292B_Update4AnimatedTiles
 	ld bc, _DATA_35246_FlameTrapTilesPart2
 	ld hl, _RAM_CD35_
-	call _LABEL_292B_
+	call _LABEL_292B_Update4AnimatedTiles
 	ret
 
 _LABEL_28AE_Ice:
@@ -5420,7 +5420,7 @@ _LABEL_290F_UpdateAnimatedTile:
 	ld b, $01
 	jp _LABEL_8B4_LoadBTilesToVRAM
 
-_LABEL_292B_:
+_LABEL_292B_Update4AnimatedTiles:
 	ld d, $04
 -:
 	push de
@@ -14810,7 +14810,7 @@ _DATA_35E26_FireWater:
 .db $02 $29 $EB $FF $1E $C1 $D9 $FF
 
 ; Data from 35E86 to 35EE5 (96 bytes)
-_DATA_35E86_:
+_DATA_35E86_FireWaterBottom:
 .db $FF $00 $AA $FF $FD $00 $DD $FF $70 $05 $75 $FF $00 $8F $8F $FF
 .db $00 $FA $FF $FF $00 $55 $FF $FF $00 $00 $FF $FF $AA $AA $FF $FF
 .db $FF $00 $3E $FF $D5 $00 $55 $FF $C0 $14 $D4 $FF $00 $2A $2A $FF
