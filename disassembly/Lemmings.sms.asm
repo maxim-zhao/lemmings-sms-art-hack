@@ -533,7 +533,7 @@ _RAM_DAD5_ db
 _RAM_DAD6_AnimationCounter db
 _RAM_DAD7_ db
 _RAM_DAD8_ db
-_RAM_DAD9_ db
+_RAM_DAD9_AnimationCounter db
 _RAM_DADA_ db
 _RAM_DADB_ dw
 _RAM_DADD_ dw
@@ -684,10 +684,10 @@ _RAM_DC00_ dsb $100
 .ende
 
 .enum $FFFC export
-_RAM_FFFC_ db
-_RAM_FFFD_ db
-_RAM_FFFE_ db
-_RAM_FFFF_ db
+PAGING_SRAM db
+PAGING_SLOT_0 db
+PAGING_SLOT_1 db
+PAGING_SLOT_2 db
 .ende
 
 ; Ports
@@ -813,7 +813,7 @@ _LABEL_408_:
 	pop af
 	retn
 
-_LABEL_424_:
+_LABEL_424_DoNothing:
 	ret
 
 -:
@@ -841,13 +841,13 @@ _LABEL_437_:
 	out (Port_IOPortControl), a
 	xor a
 	ld a, a
-	ld (_RAM_FFFC_), a
+	ld (PAGING_SRAM), a
 	ld a, a
-	ld (_RAM_FFFD_), a
+	ld (PAGING_SLOT_0), a
 	ld a, $01
-	ld (_RAM_FFFE_), a
+	ld (PAGING_SLOT_1), a
 	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	call -
 	ld b, $03
 --:
@@ -1268,21 +1268,21 @@ _LABEL_69B_:
 	ld a, (_RAM_DBC5_)
 	and a
 	jr z, +
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	inc a
-	ld (_RAM_DAD9_), a
+	ld (_RAM_DAD9_AnimationCounter), a
 	call _LABEL_1A24_
 +:
 	ld a, (_RAM_DBA4_)
 	and a
 	jr z, +
-	ld a, (_RAM_FFFF_)
+	ld a, (PAGING_SLOT_2)
 	push af
-	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld a, :_LABEL_B0E7_
+	ld (PAGING_SLOT_2), a
 	call _LABEL_B0E7_
 	pop af
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 +:
 	pop iy
 	pop ix
@@ -1419,7 +1419,7 @@ _LABEL_7AE_LoadFontHigh:
 
 _LABEL_7B4_LoadGreenBackground:
 	ld a, :_DATA_1B986_CompressedTiles_GreenBackground ; $06
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld de, _DATA_1B986_CompressedTiles_GreenBackground
 	ld ix, $2000
 	call _LABEL_3CFD_DecompressTiles
@@ -1625,13 +1625,13 @@ _LABEL_919_:
 
 _LABEL_94C_:
 	di
-	ld a, (_RAM_FFFF_)
+	ld a, (PAGING_SLOT_2)
 	push af
 	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	call _LABEL_AE30_
 	pop af
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ei
 	ret
 
@@ -1639,16 +1639,16 @@ _LABEL_95F_:
 	di
 	push bc
 	ld b, a
-	ld a, (_RAM_FFFF_)
+	ld a, (PAGING_SLOT_2)
 	push af
 	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld a, b
 	push ix
 	call _LABEL_AFFF_
 	pop ix
 	pop af
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	pop bc
 	ei
 	ret
@@ -1656,16 +1656,16 @@ _LABEL_95F_:
 _LABEL_97A_:
 	di
 	ld b, a
-	ld a, (_RAM_FFFF_)
+	ld a, (PAGING_SLOT_2)
 	push af
 	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld a, b
 	push ix
 	call _LABEL_B07B_
 	pop ix
 	pop af
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ei
 	ret
 
@@ -1687,7 +1687,7 @@ _LABEL_993_:
 	ret
 
 _LABEL_9AD_:
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $0F
 	cp $0F
 	ret nz
@@ -1782,10 +1782,10 @@ _LABEL_9ED_UpdateNameTable:
 
 _LABEL_A31_LoadPalette:
 	di
-	ld a, (_RAM_FFFF_)
+	ld a, (PAGING_SLOT_2)
 	push af
 	ld a, $06
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	xor a
 	out (Port_VDPAddress), a
 	nop
@@ -1800,7 +1800,7 @@ _LABEL_A31_LoadPalette:
 	pop hl
 	call +
 	pop af
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ei
 	ret
 
@@ -1973,7 +1973,7 @@ _LABEL_AFF_:
 
 _LABEL_B6A_:
 	ld a, $06
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, (_RAM_DBA5_)
 	ld de, _RAM_D650_
 	ld b, $10
@@ -2249,7 +2249,7 @@ _DATA_1086_:
 
 _LABEL_10AE_:
 	ld a, $08
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	xor a
 	ld (_RAM_DB6F_), a
 -:
@@ -2272,7 +2272,7 @@ _LABEL_10AE_:
 
 +:
 	ld a, $03
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld a, (_RAM_DB6F_)
 	and a
 	ret
@@ -2747,7 +2747,7 @@ _LABEL_13D7_UpdateHUDTime:
 	ld a, h
 	cp $03
 	jr nc, +
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $0F
 	cp $07
 	jr nc, +
@@ -3436,7 +3436,7 @@ _DATA_18D6_:
 
 _LABEL_1934_:
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld ix, $8006
 	ld c, $00
 --:
@@ -3515,7 +3515,7 @@ _LABEL_1988_:
 
 _LABEL_19B7_:
 	xor a
-	ld (_RAM_DAD9_), a
+	ld (_RAM_DAD9_AnimationCounter), a
 	ld hl, _DATA_F20_TitleScreenScrollerText
 	ld (_RAM_DBC3_), hl
 	ld hl, _RAM_CE00_
@@ -3578,7 +3578,7 @@ _DATA_1A20_:
 .db $00 $00 $00 $00
 
 _LABEL_1A24_:
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $07
 	call z, +
 	call _LABEL_1A8C_
@@ -3587,7 +3587,7 @@ _LABEL_1A24_:
 
 +:
 	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld ix, (_RAM_DBC3_)
 	ld a, (ix+0)
 	and a
@@ -3686,7 +3686,7 @@ _LABEL_1AF1_InitHUD:
 	call _LABEL_8B4_LoadBTilesToVRAM
   
 	ld a, :_DATA_17CB1_RateControlTiles ; $05
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_17CB1_RateControlTiles
 	ld de, $1EC0
 	ld b, $0A
@@ -3708,7 +3708,7 @@ _LABEL_1AF1_InitHUD:
 	call _LABEL_8B4_LoadBTilesToVRAM
   
 	ld a, :_DATA_2B9CC_HUDTextFont_Letters ; $0A
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_2B9CC_HUDTextFont_Letters
 	ld de, $3600
 	ld b, $10 ; 16 tiles = TIMENOU% for TIME, IN, OUT, %
@@ -4067,7 +4067,7 @@ _LABEL_1E0F_:
 	xor a
 	ld (_RAM_DAE4_), a
 	ld a, $CF
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, (_RAM_DB9D_LevelNumber)
 	ld h, $00
 	ld d, h
@@ -4283,7 +4283,7 @@ _LABEL_1F9F_SetTrapData:
 
 _LABEL_1FCE_:
 	ld a, $07
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	xor a
 	ld (_RAM_DB15_), a
 	ld iy, _RAM_DAF3_
@@ -4591,7 +4591,7 @@ _LABEL_217A_:
 	ex de, hl
 	ld de, $1CC0
 	ld a, $07
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	call _LABEL_8B4_LoadBTilesToVRAM
 	ld a, (_RAM_DB15_)
 	inc a
@@ -4618,7 +4618,7 @@ _LABEL_2206_LoadLevelTiles:
 	ldi
 	ldi
 	ldi
-  ; Then load something
+  ; Then load tiles for this level type
 	ld a, (_RAM_DB0B_LevelType)
 	add a, a
 	add a, a
@@ -4632,58 +4632,66 @@ _LABEL_2206_LoadLevelTiles:
 	ldi
 	ldi
 	ld a, (_RAM_DB0C_MapLayoutBank)
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, (_RAM_DB0D_MapLayoutAddress)
 	call _LABEL_3536_
+  
+  ; Bodges:
+  ; 1. Tricky 21 (Sixes Not!) level patch
+  ; Blank out upper half of level! I guess as censorship so it looks less like 666?
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $14
 	jr nz, +
+  ; Blank out lots of data!
 	ld hl, _RAM_CEF9_
 	ld de, _RAM_CEF9_ + 1
 	ld (hl), $00
 	ld bc, $01C0
 	ldir
 +:
+  ; 2. Mayhem 23: Going Up
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jp nz, _LABEL_22D1_
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $16
 	jr nz, _LABEL_22D1_
+  ; Move exit left 2 tiles?
 	ld de, _RAM_D05E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D0CE_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D13E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D1AE_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D21E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D28E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D2FE_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D36E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D3DE_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D44E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D4BE_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D52E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D59E_
-	call _LABEL_22C7_
+	call _moveRight2
 	ld de, _RAM_D60E_
-	call _LABEL_22C7_
+	call _moveRight2
 	jp _LABEL_22D1_
 
-_LABEL_22C7_:
+_moveRight2:
+  ; Move 14 bytes right two bytes
 	ld h, d
 	ld l, e
 	dec hl
@@ -4693,12 +4701,14 @@ _LABEL_22C7_:
 	ret
 
 _LABEL_22D1_:
+  ; 3. Mayhem 28: Mind The Step....
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1B
 	jr nz, +
+  ; Draw one of the steps higher up
 	ld a, $8D
 	ld (_RAM_D40C_), a
 	ld a, $8D
@@ -4709,18 +4719,22 @@ _LABEL_22D1_:
 	ld (_RAM_D4ED_), a
 	xor a
 	ld (_RAM_D4EC_), a
+  ; Blank out part of the sloped ceiling to make it easier to get into
 	xor a
 	ld (_RAM_D22D_), a
 	ld (_RAM_D1BD_), a
 	ld (_RAM_D1BE_), a
+  ; And next to the steel, making it easier again
 	ld (_RAM_D2B4_), a
 +:
+  ; 4. Taxing 13: upside down world
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0C
 	jr nz, +
+  ; Shorten one of the "log bridges" by drawing dirt over it
 	ld a, $02
 	ld (_RAM_D2A0_), a
 	ld (_RAM_D310_), a
@@ -4728,39 +4742,46 @@ _LABEL_22D1_:
 	ld (_RAM_D37F_), a
 	ld (_RAM_D37E_), a
 +:
+  ; 5. Mayhem 13: Sega Three
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0C
 	jr nz, +
+  ; Block off path under tap. This is to make the level harder vs. the earlier Tricky 25 with the same data.
 	ld a, $7B
 	ld (_RAM_D003_), a
 	ld (_RAM_D073_), a
 	ld (_RAM_D0E3_), a
 	ld (_RAM_D153_), a
 +:
+  ; 6. Mayhem 3: It's Hero Time!
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $03
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $02
 	jr nz, +
+  ; Fun 24 data minus some blocks to increase difficulty
 	xor a
 	ld (_RAM_D142_), a
 	ld (_RAM_D1B2_), a
 +:
+  ; 7. Taxing 24: Take a Running Jump
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $17
 	jr nz, +
+  ; Make gap smaller above exit
 	ld hl, $4749
 	ld (_RAM_CFF4_), hl
 	ld hl, $4846
 	ld (_RAM_D064_), hl
 +:
+  ; 8. Taxing 29
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jr nz, +
@@ -4768,7 +4789,7 @@ _LABEL_22D1_:
 	cp $1C
 	jr nz, +
 	ld hl, _RAM_D22E_
-	ld b, $06
+	ld b, $06 ; 2x6 drawn on right side of pit
 	ld de, $006F
 -:
 	ld (hl), $00
@@ -4777,12 +4798,14 @@ _LABEL_22D1_:
 	add hl, de
 	djnz -
 +:
+  ; 9. Taxing 12
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jp nz, ++
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0B
 	jp nz, ++
+  ; Move starting block left one tile
 	ld de, _RAM_D4BA_
 	call +
 	ld de, _RAM_D52A_
@@ -4802,20 +4825,22 @@ _LABEL_22D1_:
 	ret
 
 ++:
+  ; 10. Tricky 7 or taxing 11
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $06
 	jr z, ++
-+:
-	ld a, (_RAM_DB9E_DifficultyLevel)
++:ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $02
 	jp nz, +++
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $0A
 	jr nz, +++
 ++:
+  ; Same edit to both
+  ; Move start pillar left
 	ld de, _RAM_D4EA_
 	ld h, d
 	ld l, e
@@ -4832,12 +4857,14 @@ _LABEL_22D1_:
 	lddr
 	ld (de), a
 +++:
+  ; 11. Tricky 28 "Lost Something?"
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jp nz, ++
 	ld a, (_RAM_DB9D_LevelNumber)
 	cp $1B
 	jp nz, ++
+  ; Copy tiles over the hidden (?) exit
 	ld de, _RAM_DA8B_
 	ld hl, _RAM_D067_
 	ld c, $4A
@@ -4851,6 +4878,7 @@ _LABEL_22D1_:
 	jp ++
 
 +:
+  ; Copy 4 bytes from hl to de, and replace the source with c+
 	ld b, $04
 -:
 	ld a, (hl)
@@ -4863,6 +4891,7 @@ _LABEL_22D1_:
 	ret
 
 ++:
+  ; 13. Fun 9 and Tricky 22
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	and a
 	jr z, +
@@ -4878,6 +4907,7 @@ _LABEL_22D1_:
 	cp $08
 	jr nz, _LABEL_247E_
 ++:
+  ; Redraw spinner traps lower down
 	ld hl, $0000
 	ld (_RAM_D30B_), hl
 	xor a
@@ -4899,6 +4929,7 @@ _LABEL_22D1_:
 	jp +++
 
 _LABEL_247E_:
+  ; 14. Tricky 4 and Taxing 7
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	cp $01
 	jr z, +
@@ -4914,10 +4945,12 @@ _LABEL_247E_:
 	cp $03
 	jr nz, +++
 ++:
+  ; Add extra obstacle
 	ld hl, $7F7E
 	ld (_RAM_D0E2_), hl
 	ld (_RAM_D152_), hl
 +++:
+  ; All done
 	ld hl, _RAM_C400_
 	ld de, _RAM_C400_ + 1
 	ld bc, $00FF
@@ -4997,7 +5030,7 @@ _LABEL_247E_:
 	ld bc, $0100
 	ldir
 	ld a, (_RAM_DB13_TilesetBank)
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld b, $FF
 	ld iy, _RAM_C400_
 	ld de, $0000
@@ -5086,7 +5119,7 @@ _LABEL_247E_:
 
 _LABEL_2660_:
 	ld a, $09
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _RAM_C300_
 	ld de, _RAM_C300_ + 1
 	ld bc, $00FF
@@ -5218,7 +5251,7 @@ _LABEL_26E1_:
 .db $58 $DB $42 $16 $00 $19 $DD $21 $8B $DA $FD $21 $EA $BC $CD $AE
 .db $10 $C9
 
-_LABEL_276B_:
+_LABEL_276B_AnimateTiles:
 	ld a, (_RAM_DAD6_AnimationCounter)
 	inc a
 	cp $03
@@ -5227,7 +5260,7 @@ _LABEL_276B_:
 +:
 	ld (_RAM_DAD6_AnimationCounter), a
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld a, (_RAM_DB0B_LevelType)
 	and a
 	jp z, _LABEL_27CD_Grass
@@ -5387,7 +5420,7 @@ _LABEL_28D3_Brick:
 	ld hl, _RAM_CD67_
 	call _LABEL_290F_UpdateAnimatedTile
 	ld a, :_DATA_357C6_Tiles_Trap_Spinner ; $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld bc, _DATA_357C6_Tiles_Trap_Spinner
 	ld hl, _RAM_CD98_
 	call _LABEL_2955_
@@ -6679,7 +6712,7 @@ _LABEL_321F_:
 
 ; 8th entry of Jump Table from 2E1E (indexed by _RAM_D661_)
 _LABEL_3263_:
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $03
 	jp nz, _LABEL_33E3_
 	ld l, (ix+3)
@@ -7180,7 +7213,7 @@ _LABEL_35B0_:
 
 _LABEL_35E9_:
 	ld a, $03
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld ix, _RAM_D650_
 	ld b, $14
 _LABEL_35F4_:
@@ -7444,7 +7477,7 @@ _LABEL_37C1_:
 
 _LABEL_37CB_:
 	ld a, $03
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	exx
 	ld hl, (_RAM_DAEC_LevelLayoutTopLeft)
 	ld h, $00
@@ -7623,7 +7656,7 @@ _LABEL_38E6_:
 	ld (_RAM_DADB_), hl
 	ld (hl), $D0
 	ld a, $0C
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld ix, _RAM_D650_
 	ld a, $14
 _LABEL_38FF_:
@@ -8072,7 +8105,7 @@ _LABEL_3BFC_LoadTrap1Crusher:
 	inc hl
 	ld b, (hl)
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
   ; These are all the tilemap "used tiles" table, being checked for the area where the trap tiles will be loaded. The code is arranged such that the addresses checked happen to be non-zero only for the levels needed (?) and thus the trap art won't be loaded
 	ld hl, _RAM_CDD5_
 	call _LABEL_3CE4_
@@ -8101,7 +8134,7 @@ _LABEL_3C3C_LoadTrap2Rope:
 	inc hl
 	ld b, (hl)
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _RAM_CDE3_
 	call _LABEL_3CE4_
 	ld hl, _RAM_CDE1_
@@ -8121,7 +8154,7 @@ _LABEL_3C64_LoadTrap4Drip:
 	inc hl
 	ld b, (hl)
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _RAM_CD83_
 	call _LABEL_3CE4_
 	ld hl, _RAM_CD8F_
@@ -8141,7 +8174,7 @@ _LABEL_3C8C_LoadTrap3BearTrap:
 	inc hl
 	ld b, (hl)
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _RAM_CD67_
 	call _LABEL_3CE4_
 	ld hl, _RAM_CD68_
@@ -8341,11 +8374,11 @@ _LABEL_3DCB_:
 	cp $02
 	jp c, -
 	call _LABEL_148B_
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	inc a
-	ld (_RAM_DAD9_), a
+	ld (_RAM_DAD9_AnimationCounter), a
 	and $01
-	call nz, _LABEL_276B_
+	call nz, _LABEL_276B_AnimateTiles
 	ld hl, (_RAM_DAD4_)
 	inc l
 -:
@@ -8440,7 +8473,7 @@ _LABEL_3E7D_:
 	call _LABEL_2122_
 	xor a
 	ld (_RAM_DACF_), a
-	call _LABEL_276B_
+	call _LABEL_276B_AnimateTiles
 	ld a, $01
 	ld (_RAM_DB50_), a
 	ld hl, $4080
@@ -8495,13 +8528,13 @@ _LABEL_3F17_:
 
 +:
 	ld a, $03
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	call _LABEL_2B32_
 	call _LABEL_2DA3_
 	call _LABEL_35B0_
 	call _LABEL_35E9_
 	call _LABEL_34B0_
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $01
 	call nz, _LABEL_3B3F_
 	call _LABEL_9AD_
@@ -8513,12 +8546,12 @@ _LABEL_3F17_:
 	cp $03
 	jp c, -
 	call _LABEL_148B_
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	inc a
-	ld (_RAM_DAD9_), a
+	ld (_RAM_DAD9_AnimationCounter), a
 	and $01
-	call nz, _LABEL_276B_
-	call _LABEL_424_
+	call nz, _LABEL_276B_AnimateTiles
+	call _LABEL_424_DoNothing
 	xor a
 	ld (_RAM_DBA4_), a
 	ld hl, (_RAM_DAD4_)
@@ -8529,8 +8562,8 @@ _LABEL_3F17_:
 	jp c, -
 	call _LABEL_A6D_
 	call _LABEL_9ED_UpdateNameTable
-	ld a, $02
-	ld (_RAM_FFFF_), a
+	ld a, :_LABEL_B0E7_
+	ld (PAGING_SLOT_2), a
 	call _LABEL_B0E7_
 	ld a, $01
 	ld (_RAM_DBA4_), a
@@ -8573,7 +8606,7 @@ _LABEL_403A_:
 	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld bc, $0103
 	call _LABEL_829_SetTextLocationToBC
 	ld ix, _DATA_C45_LevelFinishedStatsText
@@ -8635,7 +8668,7 @@ _LABEL_403A_:
 	ld de, _RAM_DBAC_
 	ld bc, $0008
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	push hl
 	ldir
 	pop hl
@@ -8715,7 +8748,7 @@ _LABEL_4166_ShowLevelInfo:
 	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
 	ld a, $CF
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld b, $00
 	ld ix, (_RAM_DBA1_)
 	call _LABEL_745_
@@ -8928,7 +8961,7 @@ _LABEL_4329_:
 	push hl
 	ld a, (hl)
 	push af
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $01
 	jr z, +
 	ld (hl), $2D
@@ -8940,7 +8973,7 @@ _LABEL_4329_:
 	pop af
 	pop hl
 	ld (hl), a
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $01
 	jr nz, _LABEL_4398_
 	ld hl, (_RAM_DBCE_DirectionControls)
@@ -8957,9 +8990,9 @@ _LABEL_4329_:
 	jp +++
 
 _LABEL_4398_:
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	inc a
-	ld (_RAM_DAD9_), a
+	ld (_RAM_DAD9_AnimationCounter), a
 	ld b, $05
 	call _LABEL_ADD_Delay
 	jp _LABEL_4329_
@@ -8983,7 +9016,7 @@ _LABEL_4398_:
 
 +++:
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _RAM_DBAC_
 	call _LABEL_1934_
 	jp z, _LABEL_4412_
@@ -9033,7 +9066,7 @@ _LABEL_4412_:
 _LABEL_4432_TitleScreen:
 	call _LABEL_4B2_ScreenOff
 	ld a, $CE
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_1BE6E_
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -9055,7 +9088,7 @@ _LABEL_4432_TitleScreen:
 	ld bc, $0600
 	call _LABEL_49B3_LoadTilemap
 	ld a, $0E
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld de, _DATA_3A546_CompressedTiles_TitleScreenDifficulties
 	ld ix, $2700
 	call _LABEL_3CFD_DecompressTiles
@@ -9215,13 +9248,13 @@ _LABEL_4575_:
 	ret
 
 _LABEL_45B7_:
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and $0F
 	ret nz
 	ld a, (_RAM_DBB6_)
 	cp $04
 	jp c, +
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	and a
 	ret nz
 	call _LABEL_993_
@@ -9347,7 +9380,7 @@ _LABEL_467E_:
 
 _LABEL_4697_:
 	ld a, :_DATA_37852_Intro1_Tiles ; $0D ; Location of data
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
   ; Set register 0
 	di
 	ld a, $36
@@ -9372,7 +9405,7 @@ _LABEL_4697_:
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
 	ld a, $05
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_179D0_Intro1_Tilemap
 	ld (_RAM_DBAA_TilemapSourceData), hl
 	ld hl, $3800 ; Start of tilemap
@@ -9390,11 +9423,11 @@ _LABEL_46E6_Intro1Loop:
 	cp l
 	jp z, -
 	ld a, $05
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	call _LABEL_4639_
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	inc a
-	ld (_RAM_DAD9_), a
+	ld (_RAM_DAD9_AnimationCounter), a
 	and $03
 	jp nz, +
 	call _LABEL_47FE_
@@ -9506,7 +9539,7 @@ _DATA_47B6_LevelSelectInputs:
 .db $FF $00 $01 $00 $00 $FF $00 $01 $FF $00 $01 $00 $80 $80
 
 _LABEL_47C4_:
-	ld a, (_RAM_DAD9_)
+	ld a, (_RAM_DAD9_AnimationCounter)
 	srl a
 	srl a
 	srl a
@@ -9522,11 +9555,11 @@ _LABEL_47C4_:
 	ex de, hl
 	ld de, $0C00
 	ld a, $0C
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld b, $0F
 	jp _LABEL_8B4_LoadBTilesToVRAM
 
-; Pointer Table from 47E8 to 47F7 (8 entries, indexed by _RAM_DAD9_)
+; Pointer Table from 47E8 to 47F7 (8 entries, indexed by _RAM_DAD9_AnimationCounter)
 _DATA_47E8_Intro1LemmingFrames:
 .dw _DATA_3275B_Intro1Lemming1 _DATA_3293B_Intro1Lemming2 _DATA_32B1B_Intro1Lemming3 _DATA_32CFB_ _DATA_32EDB_ _DATA_330BB_ _DATA_3329B_ _DATA_3347B_
 
@@ -9554,12 +9587,12 @@ _LABEL_47FE_:
 	ld de, $0A00
 	ld b, $0C
 	ld a, $0C
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	jp _LABEL_8B4_LoadBTilesToVRAM
 
 _LABEL_4824_EndingSequence:
 	ld a, $CE
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_1BE8E_EndingPalette
 	ld (_RAM_DBA5_), hl
 	call _LABEL_A31_LoadPalette
@@ -9572,7 +9605,7 @@ _LABEL_4824_EndingSequence:
 	ld bc, $0300
 	call _LABEL_4965_
 	ld a, $0D
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld de, _DATA_35EE6_CompressedTiles_EndingLemmings
 	ld ix, $0800
 	call _LABEL_3CFD_DecompressTiles
@@ -9805,7 +9838,7 @@ _DATA_49D4_LemmingsTextTM:
 _LABEL_4A14_:
 	call _LABEL_4B2_ScreenOff
 	ld a, $0B
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld de, _DATA_2DEFC_LemmingsTextTiles
 	ld ix, $0000
 	call _LABEL_3CFD_DecompressTiles
@@ -9846,7 +9879,7 @@ _LABEL_4A14_:
 	ld b, $04
 	call _LABEL_8B4_LoadBTilesToVRAM
 	ld a, $07
-	ld (_RAM_FFFF_), a
+	ld (PAGING_SLOT_2), a
 	ld ix, $29C0
 	ld de, _DATA_1F8B7_LemmingsTextLemmingTiles
 	call _LABEL_3CFD_DecompressTiles
@@ -10421,7 +10454,7 @@ _LABEL_75F7_PlayLetsGo:
 	ld a, $01
 	ld (_RAM_C002_SampleNeedsDIEI), a ; Set "DI needed" flag (always set!)
 	ld a, $CF
-	ld (_RAM_FFFF_), a ; Page in data
+	ld (PAGING_SLOT_2), a ; Page in data
 	ld a, $FF
 	ld (_RAM_C001_SampleIsPlaying), a ; Set "sample playing" flag (not used?)
   ; Set tone channel tones to 0
@@ -13602,7 +13635,7 @@ _DATA_23CB6_:
 
 ; Pointer Table from 23CEA to 23CEB (1 entries, indexed by unknown)
 _DATA_23CEA_:
-.dw _RAM_FFFE_
+.dw $fffe
 
 ; Pointer Table from 23CEC to 23CED (1 entries, indexed by unknown)
 .dw _DATA_1F6_
@@ -13964,7 +13997,7 @@ _DATA_325DB_Intro1Wheel3:
 .db $12 $A8 $FE $F8 $44 $A0 $FC $E0 $98 $00 $F8 $00 $E0 $00 $E0
 .dsb 49, $00
 
-; 1st entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 1st entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 3275B to 3293A (480 bytes)
 _DATA_3275B_Intro1Lemming1:
 .dsb 16, $00
@@ -13999,7 +14032,7 @@ _DATA_3275B_Intro1Lemming1:
 .db $70 $70 $70 $70
 .dsb 12, $00
 
-; 2nd entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 2nd entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 3293B to 32B1A (480 bytes)
 _DATA_3293B_Intro1Lemming2:
 .dsb 16, $00
@@ -14034,7 +14067,7 @@ _DATA_3293B_Intro1Lemming2:
 .db $C0 $C0 $40 $00 $E0 $E0 $20 $00 $F0 $F0 $10 $00 $F8 $F8 $18 $08
 .db $FF $FF $FF $1F $FF $FD $F9 $F9 $FF $FF $FF $FF $FF $FF $FF $FF
 
-; 3rd entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 3rd entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 32B1B to 32CFA (480 bytes)
 _DATA_32B1B_Intro1Lemming3:
 .dsb 12, $00
@@ -14070,7 +14103,7 @@ _DATA_32B1B_Intro1Lemming3:
 .db $C0 $C0 $C0 $40 $F0 $F0 $F0 $F0 $F0 $D0 $90 $90 $F8 $F8 $F8 $F8
 .db $F8 $F8 $F8 $F8
 
-; 4th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 4th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 32CFB to 32EDA (480 bytes)
 _DATA_32CFB_:
 .dsb 12, $00
@@ -14108,7 +14141,7 @@ _DATA_32CFB_:
 .db $80 $80 $C0 $C0 $C0 $C0 $C0 $40 $40 $40 $E0 $E0 $E0 $E0 $E0 $E0
 .db $E0 $E0
 
-; 5th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 5th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 32EDB to 330BA (480 bytes)
 _DATA_32EDB_:
 .dsb 20, $00
@@ -14143,7 +14176,7 @@ _DATA_32EDB_:
 .db $FE $86 $02 $FF $FF $8D $05 $FF $FF $CF $8F $7F $7F $7F $5F $3E
 .db $3E $3E $3E $1C $1C $1C $1C $00 $00 $00 $00 $00 $00 $00 $00
 
-; 6th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 6th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 330BB to 3329A (480 bytes)
 _DATA_330BB_:
 .dsb 24, $00
@@ -14178,7 +14211,7 @@ _DATA_330BB_:
 .db $E0 $E0 $20 $20 $F0 $F0 $30 $00 $F0 $F0 $10 $00 $F8 $F8 $18 $00
 .db $FC $FC $FC $3C $FE $FA $F2 $F2 $FF $FF $FF $FF $FF $FF $FF $FF
 
-; 7th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 7th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 3329B to 3347A (480 bytes)
 _DATA_3329B_:
 .db $00 $00 $00 $00 $00 $00 $00 $00 $01 $01 $01 $01 $03 $03 $03 $03
@@ -14213,7 +14246,7 @@ _DATA_3329B_:
 .db $00 $C0 $C0 $C0 $C0 $E0 $A0 $20 $20 $F0 $F0 $F0 $F0 $F0 $F0 $F0
 .db $F0
 
-; 8th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_)
+; 8th entry of Pointer Table from 47E8 (indexed by _RAM_DAD9_AnimationCounter)
 ; Data from 3347B to 3365A (480 bytes)
 _DATA_3347B_:
 .db $00 $00 $00 $00 $01 $01 $01 $01 $03 $03 $03 $03 $0C $0F $08 $0C

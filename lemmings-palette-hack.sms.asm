@@ -1926,3 +1926,8 @@ ExitTilesType6:
 ; to
 ;   NopOut $284F-1 9
 ; and remove the .incbin. Each costs 192 bytes for the tile data.
+
+
+; The game patches lots of levels; this removes all of the patches
+  NopOut $2246 $24a2-$2246
+  
