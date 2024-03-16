@@ -22,6 +22,12 @@ banks 14
 
 .sdsctag 0.01, "Lemmings enhancement", "Base for future hacks", "Maxim"
 
+; Some options for non-standard behavior
+.define DisableEyeAnimation
+.define DisableLevelPatching
+.define PerThemeWaterAnimations
+.define PerThemeExitAnimations
+
 ; Some RAM and ROM locations we want to use
 .define RAM_LevelType $db0b 
 .define LoadPalette   $0a31 
@@ -367,6 +373,11 @@ TitleScreenExtras: .incbin {"title-screen-extras.{COMPRESSION}"}
   PatchB($462f, $f4) ; Left eye
   PatchB($4637, $f5) ; Right eye
 ; Screen positions can be changed too if needed
+
+.ifdef DisableEyeAnimation
+; Disable title screen eyes animation
+  PatchB($45b7, $c9)
+.endif
 
 ; Scroller
 .unbackground $0bed1 $0bfe8
@@ -1823,7 +1834,7 @@ trapdata:
 
 ; Additional water animations!
 ; Have to be in bank $D
-.if 1
+.ifdef PerThemeWaterAnimations
 .bank $d slot 2
 .section "Extra water animations 0" free
 WaterTilesType0:
@@ -1873,7 +1884,7 @@ WaterTilesType6:
 ; Additional exit animations!
 ; Used in level types 7 (Sega), 0 (grass), 1 (sand), 6 (sand2), 3 (ice), 4 (brick)
 ; Have to be in bank $D
-.if 1
+.ifdef PerThemeExitAnimations
 .bank $d slot 2
 .section "Extra exit animations 0" free
 ExitTilesType0:
@@ -1927,7 +1938,7 @@ ExitTilesType6:
 ;   NopOut $284F-1 9
 ; and remove the .incbin. Each costs 192 bytes for the tile data.
 
-
+.ifdef DisableLevelPatching
 ; The game patches lots of levels; this removes all of the patches
   NopOut $2246 $24a2-$2246
-  
+.endif
