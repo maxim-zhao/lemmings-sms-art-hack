@@ -1965,7 +1965,7 @@ EndingText:
 .bank 0 slot 0
 .section "Level limiter" free
 MaxLevelNumbers:
-.db 0, 0, 0, 0 ; Max for each difficulty, 0-based
+.db 1, 1, 1, 1 ; Max for each difficulty, 1-based
 IncrementLevel:
   ; Game wants us to return a = zero for next level
   ld hl,MaxLevelNumbers
@@ -1974,6 +1974,7 @@ IncrementLevel:
   ld d,0
   add hl,de
   ld a,(RAM_LevelNumber)
+  inc a
   cp (hl)
   jr nz,_belowMax
   ; Next difficulty
@@ -1981,7 +1982,7 @@ IncrementLevel:
   inc a
   ld (RAM_Difficulty),a
   ; If we get to 4 then it's the ending
-  cp 4
+  cp 4 ; Change to a lower number to end the game after an earlier difficulty
   jr z,_end
   ; Else reset level to 0
   xor a
@@ -2003,3 +2004,18 @@ _end:
 .section "Level limiter patch" overwrite
   jp IncrementLevel
 .ends
+
+; Difficulty level names
+.unbackground $ef8 $f1f
+  ROMPosition $ef8
+.section "Difficulty names" force
+.db "TAME  ",0,0 ; <- Changed here
+.db "TRICKY",0,0
+.db "TAXING",0,0
+.db "MAYHEM",0,0
+.db "SEGA  ",0,0
+.ends
+
+; Disable changing difficulty
+  PatchB $44ea $0
+  
