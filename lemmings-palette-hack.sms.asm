@@ -30,6 +30,8 @@ banks 14
 
 ; Some RAM and ROM locations we want to use
 .define RAM_LevelType $db0b 
+.define RAM_LevelNumber $db9d
+.define RAM_Difficulty $db9e
 .define LoadPalette   $0a31 
 
 ; Unused parts in the low bank
@@ -1736,7 +1738,7 @@ LoadTrapInfo:
   ; Init variables for no traps
   xor a
   ld ($db98),a
-  ld ($db9e),a
+  ld ($db97),a
   ; Look up in table
   ld hl,traptable
   ld b, _sizeof_traptable/3
@@ -1942,3 +1944,62 @@ ExitTilesType6:
 ; The game patches lots of levels; this removes all of the patches
   NopOut $2246 $24a2-$2246
 .endif
+
+.bank 0 slot 0
+.unbackground $e9a $ef7
+.section "Ending text" free
+EndingText:
+.db "   SEGA LEMMINGS",0
+.db "   THE PROBE TEAM",0
+.db " CODE DOMINIC WOOD ",0
+.db "  ART MARK KNOWLES",0
+.db "PRODUCER NEIL YOUNG",0
+.ends
+
+  PatchW $48cd EndingText
+
+; Skip dancing lemmings at end
+  PatchW $4157 $48a2
+
+; Control max levels per difficulty
+.bank 0 slot 0
+.section "Level limiter" free
+MaxLevelNumbers:
+.db 0, 0, 0, 0 ; Max for each difficulty, 0-based
+IncrementLevel:
+  ; Game wants us to return a = zero for next level
+  ld hl,MaxLevelNumbers
+  ld a,(RAM_LevelType)
+  ld e,a
+  ld d,0
+  add hl,de
+  ld a,(RAM_LevelNumber)
+  cp (hl)
+  jr nz,_belowMax
+  ; Next difficulty
+  ld a,(RAM_Difficulty)
+  inc a
+  ld (RAM_Difficulty),a
+  ; If we get to 4 then it's the ending
+  cp 4
+  jr z,_end
+  ; Else reset level to 0
+  xor a
+  ; fall through
+_belowMax:
+  ld (RAM_LevelNumber),a
+  ; Signal not the end
+  ld a,1
+  and a
+  ret
+
+_end:
+  call z,$48a2 ; Ending, skipping dancing
+  xor a ; signal the end
+  ret
+.ends
+
+  ROMPosition $4142
+.section "Level limiter patch" overwrite
+  jp IncrementLevel
+.ends

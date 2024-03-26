@@ -644,11 +644,11 @@ _RAM_DB9F_MapDescriptorAddress dw
 _RAM_DBA1_ dw
 _RAM_DBA3_ db
 _RAM_DBA4_ db
-_RAM_DBA5_ dw
+_RAM_DBA5_TargetPalette dw
 _RAM_DBA7_ db
 _RAM_DBA8_TilemapDestination dw
 _RAM_DBAA_TilemapSourceData dw
-_RAM_DBAC_ dsb $8
+_RAM_DBAC_PasswordBuffer dsb $8
 .ende
 
 .enum $DBB5 export
@@ -1089,7 +1089,7 @@ _LABEL_4F4_SetVDPRegisters:
 	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_4D8_TurnOffSprites
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	xor a
 	call _LABEL_736_
@@ -1892,7 +1892,7 @@ _LABEL_AEB_DelayALot:
 	djnz _LABEL_AEB_DelayALot
 	ret
 
-_LABEL_AF5_:
+_LABEL_AF5_FadeOut:
 	ld b, $0F
 	call _LABEL_ADD_Delay
 	call _LABEL_B6A_
@@ -1974,7 +1974,7 @@ _LABEL_AFF_:
 _LABEL_B6A_:
 	ld a, $06
 	ld (PAGING_SLOT_2), a
-	ld hl, (_RAM_DBA5_)
+	ld hl, (_RAM_DBA5_TargetPalette)
 	ld de, _RAM_D650_
 	ld b, $10
 -:
@@ -2569,7 +2569,7 @@ _LABEL_11E7_:
 	ld (_RAM_DB69_), bc
 	ret
 
-_LABEL_1289_:
+_LABEL_1289_DrawDigit:
 	add a, $1A
 	add a, a
 	ld e, a
@@ -2577,7 +2577,8 @@ _LABEL_1289_:
 	inc e
 	jp _LABEL_7D0_WriteOneLetter
 
-_LABEL_1293_:
+_LABEL_1293_DrawNumber:
+  ; Draws a 2-digit number. If a = 100 then it draws that one cell further left, assuming bc is the location
 	cp $64
 	jp z, +
 	ld c, $FF
@@ -3428,7 +3429,10 @@ _LABEL_18C9_:
 ; Data from 18D6 to 1933 (94 bytes)
 _DATA_18D6_:
 .db $01 $05 $0F $13 $18 $1B $21 $26 $2B $31 $36 $3B $5D $61 $66 $6F
-.db $74 $01 $05 $0F $13 $18 $1B $21 $26 $2B $31 $36 $3B $5D $3E $A9
+.db $74 $01 $05 $0F $13 $18 $1B $21 $26 $2B $31 $36 $3B $5D
+
+; Lost code? 18f4
+.db $3E $A9
 .db $32 $CC $DA $3E $AC $32 $CD $DA $3E $D0 $32 $CE $DA $06 $78 $DD
 .db $21 $00 $C2 $C5 $CD $71 $19 $C1 $10 $F9 $CD $16 $19 $C3 $B0 $00
 .db $21 $00 $C2 $06 $00 $C5 $E5 $CD $34 $19 $CA $2B $19 $CD $71 $19
@@ -8431,7 +8435,7 @@ _LABEL_3E59_:
 	call _LABEL_4A14_
 	xor a
 	ld (_RAM_DB9E_DifficultyLevel), a
-_LABEL_3E68_:
+_LABEL_3E68_TitleScreenReturn:
 	xor a
 	ld (_RAM_DB50_), a
 	ld a, $40
@@ -8441,13 +8445,13 @@ _LABEL_3E68_:
 	xor a
 	ld (_RAM_DB9D_LevelNumber), a
 	call _LABEL_4432_TitleScreen
-_LABEL_3E7D_:
+_LABEL_3E7D_StartNextLevel:
 	xor a
 	ld (_RAM_DB50_), a
 	call _LABEL_4A0_
 	call _LABEL_1DB3_
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_1E0F_
 	ld hl, (_RAM_DAD4_)
@@ -8460,7 +8464,7 @@ _LABEL_3E7D_:
 	xor a
 	ld (_RAM_DBA4_), a
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_2206_LoadLevelTiles
 	call _LABEL_26E1_
@@ -8586,12 +8590,12 @@ _LABEL_3F17_:
 ++:
 	xor a
 	ld (_RAM_DB50_), a
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_4A0_
-	call _LABEL_403A_
+	call _LABEL_403A_ShowLevelFinishedScreen
 	and a
-	jp nz, _LABEL_3E7D_
-	jp _LABEL_3E68_
+	jp nz, _LABEL_3E7D_StartNextLevel
+	jp _LABEL_3E68_TitleScreenReturn
 
 ; Data from 3FE8 to 4039 (82 bytes)
 .db $CD $B2 $04 $CD $A0 $04 $CD $D8 $04 $CD $A2 $07 $CD $B4 $07 $AF
@@ -8601,7 +8605,7 @@ _LABEL_3F17_:
 .db $4E $4B $00 $00 $20 $44 $49 $53 $43 $4F $4E $4E $45 $43 $54 $45
 .db $44 $00
 
-_LABEL_403A_:
+_LABEL_403A_ShowLevelFinishedScreen:
 	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
@@ -8643,11 +8647,12 @@ _LABEL_403A_:
 	cp $03
 	jr nz, +
 	ld a, (_RAM_DB9D_LevelNumber)
-	cp $1D
-	jp z, _LABEL_412F_
+	cp 29
+	jp z, _LABEL_412F_SkipLevelSummary
 +:
 	ld bc, $100C
 	call _LABEL_829_SetTextLocationToBC
+  ; Look up password
 	ld hl, (_RAM_DB9D_LevelNumber)
 	ld h, $00
 	add hl, hl
@@ -8663,9 +8668,9 @@ _LABEL_403A_:
 	jr -
 
 +:
-	ld de, $8006
+	ld de, Passwords
 	add hl, de
-	ld de, _RAM_DBAC_
+	ld de, _RAM_DBAC_PasswordBuffer
 	ld bc, $0008
 	ld a, $0D
 	ld (PAGING_SLOT_2), a
@@ -8675,13 +8680,13 @@ _LABEL_403A_:
 	ld de, _RAM_DBC6_
 	ld bc, $0008
 	ldir
-	ld ix, _RAM_DBAC_
+	ld ix, _RAM_DBAC_PasswordBuffer
 	call _LABEL_774_PrintString
 	ld bc, $0D17
 	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB9D_LevelNumber)
-	add a, $02
-	cp $1F
+	add a, $02 ; Next level
+	cp $1F ; Unless it wrapped
 	jr c, +
 	ld a, $01
 +:
@@ -8690,40 +8695,42 @@ _LABEL_40FC_:
 	ld bc, $0415
 	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB5C_LemmingsInPercent)
-	call _LABEL_1293_
+	call _LABEL_1293_DrawNumber
 	ld bc, $0715
 	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB55_)
-	call _LABEL_1293_
+	call _LABEL_1293_DrawNumber
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
+  ; Wait for button press
 -:
 	ld e, $01
 	in a, (Port_IOPort1)
 	bit 5, a
-	jp z, _LABEL_412F_
+	jp z, _LABEL_412F_SkipLevelSummary
 	ld e, $00
 	in a, (Port_IOPort1)
 	bit 4, a
 	jp nz, -
-_LABEL_412F_:
+_LABEL_412F_SkipLevelSummary:
 	push de
-	call _LABEL_AF5_
-	call _LABEL_4B2_ScreenOff
-	call _LABEL_6F2_BlankTilemapAndTile0
+    call _LABEL_AF5_FadeOut
+    call _LABEL_4B2_ScreenOff
+    call _LABEL_6F2_BlankTilemapAndTile0
 	pop de
 	ld a, (_RAM_DBA7_)
 	cp $4D
 	jp z, +++
+; Patch from here
 	ld a, (_RAM_DB9D_LevelNumber)
 	inc a
-	cp $1E
+	cp 30 ; past the max
 	jr nz, ++
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	inc a
 	ld (_RAM_DB9E_DifficultyLevel), a
-	cp $04
+	cp 4 ; past the max
 	jp nz, +
 	call _LABEL_4824_EndingSequence
 	xor a
@@ -8736,7 +8743,7 @@ _LABEL_412F_:
 	ld a, $01
 	and a
 	ret
-
+; end patch
 +++:
 	ld a, e
 	and a
@@ -8784,7 +8791,7 @@ _LABEL_4166_ShowLevelInfo:
 	push af
 	call _LABEL_829_SetTextLocationToBC
 	pop af
-	call _LABEL_1293_
+	call _LABEL_1293_DrawNumber
 	ld bc, $0917
 	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DB5F_)
@@ -8792,7 +8799,7 @@ _LABEL_4166_ShowLevelInfo:
 	ld bc, $0C10
 	call _LABEL_829_SetTextLocationToBC
 	ld a, (_RAM_DAD1_)
-	call _LABEL_1289_
+	call _LABEL_1289_DrawDigit
 	ld ix, _DATA_C34_MinuteText
 	ld a, (_RAM_DAD1_)
 	cp $01
@@ -8809,7 +8816,7 @@ _LABEL_4166_ShowLevelInfo:
 	inc a
 	call _LABEL_12D2_
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_ScreenOn
 -:
@@ -8836,7 +8843,7 @@ _LABEL_4166_ShowLevelInfo:
 +:
 	ld a, l
 	ld (_RAM_DBD7_), a
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_BlankTilemapAndTile0
 	ret
@@ -8845,7 +8852,7 @@ _LABEL_4255_:
 	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_LoadFontTiles
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_ScreenOn
 	ld bc, $0002
@@ -8902,7 +8909,7 @@ _LABEL_42D8_:
 	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_7A2_LoadFontTiles
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_7B4_LoadGreenBackground
 	call _LABEL_4C5_ScreenOn
@@ -8922,7 +8929,7 @@ _LABEL_42D8_:
 	call _LABEL_768_PrintStringAtBCSpaced
 	call _LABEL_768_PrintStringAtBCSpaced
 	ld hl, _RAM_DBC6_
-	ld de, _RAM_DBAC_
+	ld de, _RAM_DBAC_PasswordBuffer
 	ld bc, $0008
 	ldir
 	xor a
@@ -8937,7 +8944,7 @@ _LABEL_4329_:
 +:
 	ld de, (_RAM_DBB5_)
 	ld d, $00
-	ld hl, _RAM_DBAC_
+	ld hl, _RAM_DBAC_PasswordBuffer
 	add hl, de
 	ld a, (hl)
 	cp $2E
@@ -8966,7 +8973,7 @@ _LABEL_4329_:
 	jr z, +
 	ld (hl), $2D
 +:
-	ld ix, _RAM_DBAC_
+	ld ix, _RAM_DBAC_PasswordBuffer
 	ld bc, $060C
 	call _LABEL_829_SetTextLocationToBC
 	call _LABEL_774_PrintString
@@ -9017,7 +9024,7 @@ _LABEL_4398_:
 +++:
 	ld a, $0D
 	ld (PAGING_SLOT_2), a
-	ld hl, _RAM_DBAC_
+	ld hl, _RAM_DBAC_PasswordBuffer
 	call _LABEL_1934_
 	jp z, _LABEL_4412_
 	ld b, $00
@@ -9042,7 +9049,7 @@ _LABEL_4398_:
 	call _LABEL_829_SetTextLocationToBC
 	call _LABEL_774_PrintString
 	call _LABEL_AB5_
-	ld hl, _RAM_DBAC_
+	ld hl, _RAM_DBAC_PasswordBuffer
 	ld de, _RAM_DBC6_
 	ld bc, $0008
 	ldir
@@ -9055,7 +9062,7 @@ _LABEL_4412_:
 	call _LABEL_829_SetTextLocationToBC
 	ld ix, _DATA_E8F_PasswordWrongText
 	call _LABEL_774_PrintString
-	ld hl, _RAM_DBAC_
+	ld hl, _RAM_DBAC_PasswordBuffer
 	ld de, _RAM_DBC6_
 	ld bc, $0008
 	ldir
@@ -9068,7 +9075,7 @@ _LABEL_4432_TitleScreen:
 	ld a, $CE
 	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_1BE6E_
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	ld hl, $0000
 	ld (_RAM_DBB6_), hl
@@ -9152,7 +9159,7 @@ _LABEL_44B3_:
 	jp nz, _LABEL_44B3_
 	xor a
 	ld (_RAM_DBC5_), a
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_8F2_
 	call _LABEL_4D8_TurnOffSprites
 	ld a, (_RAM_DBD6_LevelSelectActive)
@@ -9170,7 +9177,7 @@ _LABEL_44B3_:
 _LABEL_4524_:
 	xor a
 	ld (_RAM_DBC5_), a
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
 	call _LABEL_4D8_TurnOffSprites
@@ -9179,7 +9186,7 @@ _LABEL_4524_:
 _LABEL_4535_:
 	xor a
 	ld (_RAM_DBC5_), a
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_8F2_
 	call _LABEL_4D8_TurnOffSprites
@@ -9399,7 +9406,7 @@ _LABEL_4697_:
 	call _LABEL_6F2_BlankTilemapAndTile0
 	call _LABEL_4C5_ScreenOn
 	ld hl, _DATA_1BE7E_Intro1_Palette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	ld de, _DATA_37852_Intro1_Tiles
 	ld ix, $0000
@@ -9468,7 +9475,7 @@ _LABEL_46E6_Intro1Loop:
 	ld b, $50
 	call _LABEL_ADD_Delay
 	call _LABEL_75F7_PlayLetsGo
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_4B2_ScreenOff
 	call _LABEL_6F2_BlankTilemapAndTile0
 	di
@@ -9594,7 +9601,7 @@ _LABEL_4824_EndingSequence:
 	ld a, $CE
 	ld (PAGING_SLOT_2), a
 	ld hl, _DATA_1BE8E_EndingPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_5BC_
 	ld de, _DATA_3A2B9_CompressedTiles_EndingCurtains
@@ -9653,10 +9660,10 @@ _LABEL_48A2_Ending_ShowText:
 	bit 5, a ; Button 2
 	jp z, _LABEL_48A2_Ending_ShowText
 +:
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_4B2_ScreenOff
 	ld hl, _DATA_1BE5E_MainPalette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_7A2_LoadFontTiles
 	call _LABEL_7B4_LoadGreenBackground
@@ -9884,7 +9891,7 @@ _LABEL_4A14_:
 	ld de, _DATA_1F8B7_LemmingsTextLemmingTiles
 	call _LABEL_3CFD_DecompressTiles
 	ld hl, _DATA_1BE9E_intro2_palette
-	ld (_RAM_DBA5_), hl
+	ld (_RAM_DBA5_TargetPalette), hl
 	call _LABEL_A31_LoadPalette
 	call _LABEL_4C5_ScreenOn
 	ld a, $4C
@@ -9911,7 +9918,7 @@ _LABEL_4A14_:
 	ld b, $1E
 	call _LABEL_ADD_Delay
 	call _LABEL_94C_
-	call _LABEL_AF5_
+	call _LABEL_AF5_FadeOut
 	call _LABEL_8F2_
 	call _LABEL_4D8_TurnOffSprites
 	call _LABEL_4B2_ScreenOff
@@ -14311,71 +14318,129 @@ _DATA_336D3_:
 .BANK 13
 .ORG $0000
 
-; Data from 34000 to 34005 (6 bytes)
-.db $50 $41 $47 $45 $31 $33
+.db "PAGE13"
 
-; Data from 34006 to 343C5 (960 bytes)
-_DATA_34006_:
-.db $54 $47 $4E $42 $56 $4C $57 $4D $5A $54 $47 $4E $42 $55 $49 $51
-.db $42 $44 $47 $4D $5A $53 $45 $4A $54 $47 $4D $5A $53 $46 $4B $55
-.db $4A $53 $46 $4B $56 $4C $57 $4E $42 $55 $49 $51 $42 $43 $46 $4B
-.db $55 $4A $54 $47 $4D $59 $52 $44 $48 $4F $44 $59 $52 $43 $46 $4B
-.db $56 $4B $56 $4C $57 $4D $5A $53 $46 $4C $58 $50 $47 $47 $47 $47
-.db $47 $46 $45 $43 $58 $50 $47 $46 $44 $5A $53 $45 $4A $53 $46 $4B
-.db $55 $49 $51 $41 $41 $42 $43 $45 $4A $53 $45 $4A $54 $47 $4D $59
-.db $51 $41 $42 $44 $47 $4E $42 $55 $49 $52 $43 $45 $49 $51 $41 $41
-.db $42 $43 $46 $4C $57 $4D $5A $54 $47 $4D $5A $53 $46 $4C $57 $4D
-.db $5A $53 $45 $49 $52 $43 $46 $4B $55 $4A $53 $46 $4B $56 $4B $55
-.db $4A $53 $45 $4A $53 $45 $49 $52 $44 $47 $4E $43 $57 $4D $59 $52
-.db $44 $48 $50 $46 $44 $59 $51 $41 $41 $41 $42 $44 $48 $4F $44 $59
-.db $51 $42 $44 $48 $50 $47 $46 $45 $43 $58 $4F $44 $59 $51 $42 $44
-.db $48 $50 $47 $47 $46 $45 $43 $58 $4F $44 $5A $53 $45 $4A $54 $48
-.db $50 $46 $45 $43 $58 $4F $44 $59 $52 $43 $45 $4A $54 $48 $4F $44
-.db $59 $51 $42 $44 $47 $4E $42 $55 $4A $54 $48 $50 $47 $46 $44 $59
-.db $52 $44 $48 $50 $47 $46 $45 $43 $57 $4D $5A $53 $45 $4A $54 $47
-.db $4D $5A $54 $48 $50 $47 $47 $46 $44 $5A $53 $45 $49 $52 $43 $45
-.db $49 $51 $42 $43 $46 $4B $56 $4C $57 $4D $59 $52 $44 $47 $4D $59
-.db $52 $44 $47 $4D $5A $53 $46 $4B $56 $4C $58 $4F $44 $5A $54 $48
-.db $50 $46 $45 $43 $58 $50 $46 $45 $42 $55 $4A $54 $48 $4F $45 $43
-.db $58 $4F $45 $43 $57 $4E $42 $55 $4A $53 $46 $4B $56 $4B $55 $4A
-.db $54 $48 $4F $44 $5A $54 $47 $4D $59 $51 $42 $43 $45 $49 $52 $44
-.db $48 $50 $46 $44 $5A $54 $48 $50 $46 $45 $42 $56 $4C $57 $4E $42
-.db $55 $4A $54 $48 $50 $46 $45 $43 $57 $4E $43 $57 $4E $42 $56 $4C
-.db $57 $4D $59 $52 $43 $45 $4A $54 $47 $4E $42 $55 $49 $51 $41 $41
-.db $41 $42 $44 $47 $4D $5A $54 $48 $4F $44 $59 $52 $43 $45 $4A $53
-.db $46 $4B $55 $49 $51 $42 $44 $47 $4E $42 $56 $4C $58 $50 $47 $47
-.db $46 $44 $59 $51 $42 $44 $47 $4E $42 $56 $4C $57 $4D $5A $54 $47
-.db $4E $42 $55 $49 $52 $44 $48 $4F $45 $43 $57 $4D $5A $54 $47 $4D
-.db $5A $53 $46 $4B $55 $4A $53 $46 $4C $58 $50 $47 $46 $44 $59 $52
-.db $43 $46 $4B $56 $4B $55 $4A $54 $47 $4D $59 $52 $43 $46 $4B $55
-.db $4A $54 $48 $50 $46 $45 $43 $58 $50 $46 $44 $5A $53 $46 $4C $58
-.db $4F $45 $43 $57 $4D $5A $54 $47 $4E $42 $55 $4A $53 $46 $4C $57
-.db $4D $5A $53 $46 $4C $57 $4D $59 $52 $43 $46 $4B $55 $4A $53 $45
-.db $49 $52 $43 $45 $4A $53 $45 $4A $53 $45 $4A $54 $48 $4F $45 $43
-.db $57 $4D $59 $51 $42 $44 $47 $4D $59 $51 $41 $41 $41 $41 $41 $42
-.db $44 $48 $4F $44 $59 $52 $44 $47 $4E $43 $57 $4E $43 $57 $4D $59
-.db $51 $41 $41 $42 $44 $48 $50 $47 $47 $47 $47 $46 $44 $59 $51 $41
-.db $41 $41 $42 $44 $47 $4D $59 $52 $44 $48 $4F $44 $59 $51 $41 $42
-.db $44 $48 $4F $44 $59 $51 $42 $44 $47 $4E $43 $58 $50 $47 $47 $47
-.db $47 $46 $44 $5A $54 $48 $50 $47 $47 $46 $45 $43 $57 $4D $59 $52
-.db $43 $45 $49 $51 $41 $42 $44 $47 $4E $43 $57 $4D $59 $52 $43 $45
-.db $49 $52 $44 $48 $4F $44 $5A $53 $45 $4A $54 $47 $4D $59 $51 $42
-.db $44 $48 $4F $44 $5A $54 $48 $50 $47 $47 $46 $44 $59 $51 $42 $43
-.db $46 $4C $57 $4E $43 $58 $50 $47 $46 $45 $43 $57 $4D $59 $52 $44
-.db $48 $4F $45 $42 $56 $4B $55 $49 $51 $42 $43 $45 $4A $53 $45 $49
-.db $52 $44 $48 $50 $47 $47 $46 $45 $43 $58 $4F $45 $42 $56 $4B $55
-.db $49 $51 $41 $42 $44 $48 $50 $46 $44 $59 $52 $43 $45 $4A $54 $47
-.db $4E $43 $58 $4F $45 $42 $55 $4A $54 $48 $4F $45 $43 $58 $50 $46
-.db $44 $59 $52 $43 $45 $49 $52 $44 $47 $4E $42 $55 $4A $54 $48 $4F
-.db $44 $5A $53 $46 $4C $58 $50 $46 $44 $5A $54 $48 $4F $44 $5A $53
-.db $45 $4A $54 $48 $50 $46 $44 $5A $53 $46 $4B $56 $4C $57 $4E $43
-.db $58 $50 $46 $44 $59 $51 $42 $44 $47 $4E $43 $57 $4D $5A $54 $48
-.db $4F $44 $59 $51 $42 $43 $46 $4C $58 $4F $45 $43 $57 $4D $59 $51
-.db $42 $43 $46 $4C $58 $50 $47 $46 $45 $42 $56 $4B $56 $4C $57 $4D
-.db $59 $52 $44 $47 $4E $42 $56 $4B $56 $4B $55 $4A $53 $46 $4C $58
-.db $50 $46 $44 $5A $54 $48 $50 $46 $44 $5A $54 $48 $50 $47 $46 $44
-.db $59 $52 $43 $46 $4B $56 $4C $57 $4E $43 $57 $4E $43 $57 $4E $43
-.db $57 $4D $5A $54 $48 $50 $46 $45 $57 $4D $5A $54 $48 $50 $46 $45
+Passwords:
+.db "TGNBVLWM"
+.db "ZTGNBUIQ"
+.db "BDGMZSEJ"
+.db "TGMZSFKU"
+.db "JSFKVLWN"
+.db "BUIQBCFK"
+.db "UJTGMYRD"
+.db "HODYRCFK"
+.db "VKVLWMZS"
+.db "FLXPGGGG"
+.db "GFECXPGF"
+.db "DZSEJSFK"
+.db "UIQAABCE"
+.db "JSEJTGMY"
+.db "QABDGNBU"
+.db "IRCEIQAA"
+.db "BCFLWMZT"
+.db "GMZSFLWM"
+.db "ZSEIRCFK"
+.db "UJSFKVKU"
+.db "JSEJSEIR"
+.db "DGNCWMYR"
+.db "DHPFDYQA"
+.db "AABDHODY"
+.db "QBDHPGFE"
+.db "CXODYQBD"
+.db "HPGGFECX"
+.db "ODZSEJTH"
+.db "PFECXODY"
+.db "RCEJTHOD"
+.db "YQBDGNBU"
+.db "JTHPGFDY"
+.db "RDHPGFEC"
+.db "WMZSEJTG"
+.db "MZTHPGGF"
+.db "DZSEIRCE"
+.db "IQBCFKVL"
+.db "WMYRDGMY"
+.db "RDGMZSFK"
+.db "VLXODZTH"
+.db "PFECXPFE"
+.db "BUJTHOEC"
+.db "XOECWNBU"
+.db "JSFKVKUJ"
+.db "THODZTGM"
+.db "YQBCEIRD"
+.db "HPFDZTHP"
+.db "FEBVLWNB"
+.db "UJTHPFEC"
+.db "WNCWNBVL"
+.db "WMYRCEJT"
+.db "GNBUIQAA"
+.db "ABDGMZTH"
+.db "ODYRCEJS"
+.db "FKUIQBDG"
+.db "NBVLXPGG"
+.db "FDYQBDGN"
+.db "BVLWMZTG"
+.db "NBUIRDHO"
+.db "ECWMZTGM"
+.db "ZSFKUJSF"
+.db "LXPGFDYR"
+.db "CFKVKUJT"
+.db "GMYRCFKU"
+.db "JTHPFECX"
+.db "PFDZSFLX"
+.db "OECWMZTG"
+.db "NBUJSFLW"
+.db "MZSFLWMY"
+.db "RCFKUJSE"
+.db "IRCEJSEJ"
+.db "SEJTHOEC"
+.db "WMYQBDGM"
+.db "YQAAAAAB"
+.db "DHODYRDG"
+.db "NCWNCWMY"
+.db "QAABDHPG"
+.db "GGGFDYQA"
+.db "AABDGMYR"
+.db "DHODYQAB"
+.db "DHODYQBD"
+.db "GNCXPGGG"
+.db "GFDZTHPG"
+.db "GFECWMYR"
+.db "CEIQABDG"
+.db "NCWMYRCE"
+.db "IRDHODZS"
+.db "EJTGMYQB"
+.db "DHODZTHP"
+.db "GGFDYQBC"
+.db "FLWNCXPG"
+.db "FECWMYRD"
+.db "HOEBVKUI"
+.db "QBCEJSEI"
+.db "RDHPGGFE"
+.db "CXOEBVKU"
+.db "IQABDHPF"
+.db "DYRCEJTG"
+.db "NCXOEBUJ"
+.db "THOECXPF"
+.db "DYRCEIRD"
+.db "GNBUJTHO"
+.db "DZSFLXPF"
+.db "DZTHODZS"
+.db "EJTHPFDZ"
+.db "SFKVLWNC"
+.db "XPFDYQBD"
+.db "GNCWMZTH"
+.db "ODYQBCFL"
+.db "XOECWMYQ"
+.db "BCFLXPGF"
+.db "EBVKVLWM"
+.db "YRDGNBVK"
+.db "VKUJSFLX"
+.db "PFDZTHPF"
+.db "DZTHPGFD"
+.db "YRCFKVLW"
+.db "NCWNCWNC"
+.db "WMZTHPFE"
+.db "WMZTHPFE" ; One extra for luck...
 
 ; 1st entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
 ; Data from 343C6 to 344C5 (256 bytes)
