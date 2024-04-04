@@ -1980,10 +1980,10 @@ IncrementLevel:
   ; Next difficulty
   ld a,(RAM_Difficulty)
   inc a
-  ld (RAM_Difficulty),a
   ; If we get to 4 then it's the ending
   cp 4 ; Change to a lower number to end the game after an earlier difficulty
   jr z,_end
+  ld (RAM_Difficulty),a
   ; Else reset level to 0
   xor a
   ; fall through

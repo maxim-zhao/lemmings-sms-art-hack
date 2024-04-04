@@ -2256,9 +2256,9 @@ _LABEL_10AE_:
 	ld e, (iy+0)
 	ld d, (iy+1)
 	ld a, e
-	cp $80
+	cp $80 ; Terminator
 	jr z, +
-	add hl, de
+	add hl, de ; add data to hl, b
 	ld a, (iy+2)
 	add a, b
 	ld b, a
@@ -13274,14 +13274,20 @@ _DATA_C200_:
 .BANK 4
 .ORG $0000
 
-; Data from 10000 to 13FFF (16384 bytes)
-.incbin "Lemmings.sms_DATA_10000_.inc"
+.db "PAGE04"
+
+; Data from 10004 to 13FFF (16384 bytes)
+; Map layouts
+.incbin "Lemmings.sms_DATA_10000_.inc" skip 6
 
 .BANK 5
 .ORG $0000
 
-; Data from 14000 to 179CF (14800 bytes)
-.incbin "Lemmings.sms_DATA_14000_.inc"
+.db "PAGE05"
+
+; Data from 14004 to 179CF (14800 bytes)
+; Map layouts
+.incbin "Lemmings.sms_DATA_14000_.inc" skip 6
 
 ; Data from 179D0 to 17CB0 (737 bytes)
 _DATA_179D0_Intro1_Tilemap:
@@ -13343,8 +13349,12 @@ _DATA_17CB1_RateControlTiles:
 .BANK 6
 .ORG $0000
 
+.db "PAGE06"
+
 ; Data from 18000 to 1B985 (14726 bytes)
-.incbin "Lemmings.sms_DATA_18000_.inc"
+; Dirt tiles
+; Fire tiles
+.incbin "Lemmings.sms_DATA_18000_.inc" skip 6
 
 ; Data from 1B986 to 1BB5D (472 bytes)
 _DATA_1B986_CompressedTiles_GreenBackground:
@@ -13454,8 +13464,10 @@ _DATA_1BE9E_intro2_palette:
 .BANK 7
 .ORG $0000
 
-; Data from 1C000 to 1F136 (12599 bytes)
-.incbin "Lemmings.sms_DATA_1C000_.inc"
+.db "PAGE07"
+
+; Data from 1C006 to 1F136 (12599 bytes)
+.incbin "Lemmings.sms_DATA_1C000_.inc" skip 6
 
 ; 1st entry of Pointer Table from 21F2 (indexed by _RAM_DB15_)
 ; Data from 1F137 to 1F276 (320 bytes)
@@ -13604,14 +13616,31 @@ _DATA_1F8B7_LemmingsTextLemmingTiles:
 .BANK 8
 .ORG $0000
 
+.db "PAGE08"
+
 ; Data from 20000 to 23BC5 (15302 bytes)
-.incbin "Lemmings.sms_DATA_20000_.inc"
+; Crystal tiles
+; Pillar 1 tiles
+.incbin "Lemmings.sms_DATA_20000_.inc" skip 6
 
 ; Data from 23BC6 to 23BED (40 bytes)
 _DATA_23BC6_:
-.db $FD $FF $00 $01 $00 $00 $01 $00 $00 $01 $00 $00 $01 $00 $00 $01
-.db $00 $00 $01 $00 $00 $FB $FF $01 $01 $00 $00 $01 $00 $00 $01 $00
-.db $00 $01 $00 $00 $01 $00 $00 $80
+.table word, byte
+.row $fffd, $00
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.row $fffb, $01 
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.row $0001, $00
+.endt
+.db $80
 
 ; Data from 23BEE to 23C81 (148 bytes)
 _DATA_23BEE_:
