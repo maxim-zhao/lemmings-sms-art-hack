@@ -961,9 +961,8 @@ EmitBTiles:
 ; Cursor sprite update
 ; Profile 357c to 35af
 ; Before: 229 cycles
-; After: 157 cycles
-; Saving: 0.3 scanlines!
-; Note that it may access the VDP too fast on the first update of a level.
+; After: 176 cycles
+; Saving: 0.23 scanlines!
 .unbackground $357c $35af
   ROMPosition $357c
 .section "Set cursor sprite table entries" force
@@ -982,10 +981,14 @@ EmitBTiles:
   ld b, 0               ; 7
   out ($be),a           ; 11 -> 26 since last write
 
+  ld a,0                ; 7
+  nop                   ; 4
   xor a                 ; 4
-  out ($bf),a           ; 11 -> 19 since last write
-  ld a,$7f
-  out ($bf),a
+  out ($bf),a           ; 11 -> 26 since last write
+  ld a,$7f              ; 7
+  nop                   ; 4
+  nop                   ; 4
+  out ($bf),a           ; 11 -> 26 since last write
   ld a, (_RAM_DB59_CursorY) ; 13
   sub 8                 ; 7
   out ($be),a           ; 11 -> 31 since address set
