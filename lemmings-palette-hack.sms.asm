@@ -1972,7 +1972,7 @@ MaxLevelNumbers:
 IncrementLevel:
   ; Game wants us to return a = zero for next level
   ld hl,MaxLevelNumbers
-  ld a,(RAM_LevelType)
+  ld a,(RAM_Difficulty)
   ld e,a
   ld d,0
   add hl,de
