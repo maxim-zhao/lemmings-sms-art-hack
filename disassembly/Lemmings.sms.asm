@@ -566,7 +566,7 @@ _RAM_DB06_ dw
 _RAM_DB08_ db
 _RAM_DB09_ db
 _RAM_DB0A_ db
-_RAM_DB0B_LevelType db ; Following 3 must be together
+_RAM_DB0B_LevelType db ; 0-7, not 5. ; Following 3 must be together
 _RAM_DB0C_MapLayoutBank db
 _RAM_DB0D_MapLayoutAddress dw
 _RAM_DB0F_MaximumSafeFallDistance db
@@ -631,7 +631,7 @@ _RAM_DB82_ dsb $14
 
 .enum $DB97 export
 _RAM_DB97_TrapDataIndex db
-_RAM_DB98_ db
+_RAM_DB98_TrapFrameIndex db
 _RAM_DB99_ db
 .ende
 
@@ -2748,6 +2748,7 @@ _LABEL_13D7_UpdateHUDTime:
 	ld a, h
 	cp $03
 	jr nc, +
+  ; If under 30s, flash digits
 	ld a, (_RAM_DAD9_AnimationCounter)
 	and $0F
 	cp $07
@@ -4176,7 +4177,7 @@ _LABEL_1EEA_:
 
 _LABEL_1F0C_InitTraps:
 	xor a
-	ld (_RAM_DB98_), a
+	ld (_RAM_DB98_TrapFrameIndex), a
 	ld (_RAM_DB97_TrapDataIndex), a
 	ld a, (_RAM_DB9E_DifficultyLevel)
 	and a
@@ -4339,16 +4340,17 @@ _LABEL_1FE3_:
 	ret
 
 ; Data from 2035 to 2038 (8 bytes, indexed by _RAM_DB0B_LevelType)
-_DATA_2035:
+_DATA_2035_TileIndexOfEntrance:
 .db $1E $13 $21 $1E $25 $6c $2d $0b
 
 _LABEL_203D_:
+  ; Look up entrance tile
 	ld de, (_RAM_DB0B_LevelType)
 	ld d, $00
-	ld hl, _DATA_2035
+	ld hl, _DATA_2035_TileIndexOfEntrance
 	add hl, de
 	ld e, (hl)
-	ld d, $CD
+	ld d, >_RAM_CD00_ ; Look up in _RAM_CD00_
 	ld a, (de)
 	ld e, a
 	ld d, $00
@@ -4404,19 +4406,17 @@ _LABEL_203D_:
 	ret
 
 ; Pointer Table from 20A0 to 20A7 (4 entries, indexed by _RAM_DB0B_LevelType)
-_DATA_20A0_:
-.dw _DATA_5B4A_ _DATA_5E57_ _DATA_662F_ _DATA_7681_
-
-; Data from 20A8 to 20A8 (1 bytes)
-.db $FF
+_DATA_20A0_TileIndexOfExit:
+;.dw _DATA_5B4A_ _DATA_5E57_ _DATA_662F_ _DATA_7681_
+.db $4A $5B $57 $5E $2F $66 $81 $76 $FF
 
 _LABEL_20A9_:
-	ld de, (_RAM_DB0B_LevelType)
+	ld de, (_RAM_DB0B_LevelType) ; Only really loading e!
 	ld d, $00
-	ld hl, _DATA_20A0_
+	ld hl, _DATA_20A0_TileIndexOfExit
 	add hl, de
 	ld e, (hl)
-	ld d, $CD
+	ld d, $CD ; Look up in _RAM_CD00_
 	ld a, (de)
 	ld e, a
 	ld d, $00
@@ -4436,11 +4436,11 @@ _LABEL_20C3_:
 	add hl, hl
 	add hl, hl
 	add hl, hl
-	ld de, $0010
+	ld de, $0010 ; Size of exit
 	ld a, (_RAM_DB0B_LevelType)
 	cp $02
 	jr nz, +
-	ld e, $14
+	ld e, $14 ; Fire theme has a bigger exit
 +:
 	add hl, de
 	ld (iy+0), l
@@ -5137,45 +5137,48 @@ _LABEL_2660_:
 	ld (hl), $04
 	ldir
 	ld a, (_RAM_DB0B_LevelType)
-	add a, a
+	add a, a ; Multiply by 8
 	add a, a
 	add a, a
 	add a, a
 	ld e, a
 	ld d, $00
-	ld ix, _DATA_27D6D_
+	ld ix, _DATA_27D6D_SpecialTiles ; Look up in table
 	add ix, de
-	ld e, (ix+0)
+	ld e, (ix+0) ; Table consists of 6 pointers, read each in turn
 	ld d, (ix+1)
 	ld h, $C3
-	ld c, $06
+	ld c, $06 ; Non-solid art (lemmings can pass through it)
 	call _LABEL_26D8_
 	ld e, (ix+2)
 	ld d, (ix+3)
-	ld c, $01
+	ld c, $01 ; Metal (not destructible)
 	call _LABEL_26D8_
 	ld e, (ix+4)
 	ld d, (ix+5)
-	ld c, $02
+	ld c, $02 ; Water (lemmings drown)
 	call _LABEL_26D8_
 	ld e, (ix+6)
 	ld d, (ix+7)
-	ld c, $07
+	ld c, $07 ; ???
 	call _LABEL_26D8_
 	ld e, (ix+8)
 	ld d, (ix+9)
-	ld c, $10
+	ld c, $10 ; Right arrow
 	call _LABEL_26D8_
 	ld e, (ix+10)
 	ld d, (ix+11)
-	ld c, $11
+	ld c, $11 ; Left arrow
 	call _LABEL_26D8_
 	ret
 
 _LABEL_26D8_:
+  ; Read a byte
 	ld a, (de)
 	and a
+  ; End if 0
 	ret z
+  ; Write c to each tile index (?) in the list
 	ld l, a
 	ld (hl), c
 	inc de
@@ -7993,7 +7996,7 @@ _LABEL_3B3F_:
 	ld d, $00
 	ld hl, _DATA_3B1B_TrapData
 	add hl, de
-	ld a, (_RAM_DB98_)
+	ld a, (_RAM_DB98_TrapFrameIndex)
 	and a
 	jp nz, _LABEL_3B97_
 	ld ix, _RAM_D650_
@@ -8024,7 +8027,7 @@ _LABEL_3B3F_:
 	jp nz, +
 	call _LABEL_34A4_
 	ld a, $01
-	ld (_RAM_DB98_), a
+	ld (_RAM_DB98_TrapFrameIndex), a
 	ret
 
 +:
@@ -8048,52 +8051,52 @@ _LABEL_3B97_:
 	ret
 
 +:
-	ld a, (_RAM_DB98_)
+	ld a, (_RAM_DB98_TrapFrameIndex)
 	inc a
 	cp $07
 	jr nz, +
 	xor a
 +:
-	ld (_RAM_DB98_), a
+	ld (_RAM_DB98_TrapFrameIndex), a
 	and a
 	jp z, _LABEL_3C8C_LoadTrap3BearTrap
 	dec a
 	jp _LABEL_3C8C_LoadTrap3BearTrap
 
 ++:
-	ld a, (_RAM_DB98_)
+	ld a, (_RAM_DB98_TrapFrameIndex)
 	inc a
 	cp $06
 	jr nz, +
 	xor a
 +:
-	ld (_RAM_DB98_), a
+	ld (_RAM_DB98_TrapFrameIndex), a
 	and a
 	jp z, _LABEL_3C64_LoadTrap4Drip
 	dec a
 	jp _LABEL_3C64_LoadTrap4Drip
 
 +++:
-	ld a, (_RAM_DB98_)
+	ld a, (_RAM_DB98_TrapFrameIndex)
 	inc a
 	cp $05
 	jr nz, +
 	xor a
 +:
-	ld (_RAM_DB98_), a
+	ld (_RAM_DB98_TrapFrameIndex), a
 	and a
 	jp z, _LABEL_3C3C_LoadTrap2Rope
 	dec a
 	jp _LABEL_3C3C_LoadTrap2Rope
 
 _LABEL_3BE8_:
-	ld a, (_RAM_DB98_)
+	ld a, (_RAM_DB98_TrapFrameIndex)
 	inc a
 	cp $05
 	jr nz, +
 	xor a
 +:
-	ld (_RAM_DB98_), a
+	ld (_RAM_DB98_TrapFrameIndex), a
 	and a
 	jp z, _LABEL_3BFC_LoadTrap1Crusher
 	dec a
@@ -8188,19 +8191,19 @@ _LABEL_3C8C_LoadTrap3BearTrap:
 	ld hl, _RAM_CD6F_
 	jp _LABEL_3CE4_
 
-; Pointer Table from 3CB4 to 3CBF (6 entries, indexed by _RAM_DB98_)
+; Pointer Table from 3CB4 to 3CBF (6 entries, indexed by _RAM_DB98_TrapFrameIndex)
 _DATA_3CB4_Tiles_Trap_Crusher_Lookup:
 .dw _DATA_343C6_Tiles_Trap_Crusher_1 _DATA_344C6_Tiles_Crusher_2 _DATA_345C6_Tiles_Crusher_3 _DATA_346C6_Tiles_Crusher_4 _DATA_347C6_Tiles_Crusher_5 _DATA_348C6_Tiles_Crusher_6
 
-; Pointer Table from 3CC0 to 3CC9 (5 entries, indexed by _RAM_DB98_)
+; Pointer Table from 3CC0 to 3CC9 (5 entries, indexed by _RAM_DB98_TrapFrameIndex)
 _DATA_3CC0_Tiles_Trap_Rope_Lookup:
 .dw _DATA_349C6_ _DATA_34A46_ _DATA_34AC6_ _DATA_34B46_ _DATA_34BC6_
 
-; Pointer Table from 3CCA to 3CD7 (7 entries, indexed by _RAM_DB98_)
+; Pointer Table from 3CCA to 3CD7 (7 entries, indexed by _RAM_DB98_TrapFrameIndex)
 _DATA_3CCA_Tiles_Trap_Beartrap_Lookup:
 .dw _DATA_34C46_ _DATA_34CC6_ _DATA_34D46_ _DATA_34DC6_ _DATA_34E46_ _DATA_34EC6_ _DATA_34F46_
 
-; Pointer Table from 3CD8 to 3CE3 (6 entries, indexed by _RAM_DB98_)
+; Pointer Table from 3CD8 to 3CE3 (6 entries, indexed by _RAM_DB98_TrapFrameIndex)
 _DATA_3CD8_Tiles_Trap_Drip_Lookup:
 .dw _DATA_34C46_ _DATA_34FC6_ _DATA_35046_ _DATA_350C6_ _DATA_350C6_ _DATA_35146_
 
@@ -13728,113 +13731,111 @@ _DATA_23CEA_:
 ; Data from 24000 to 27D6C (15725 bytes)
 .incbin "Lemmings.sms_DATA_24000_.inc"
 
-; Pointer Table from 27D6D to 27D6E (1 entries, indexed by _RAM_DB0B_LevelType)
-_DATA_27D6D_:
-.dw _DATA_27DED_
+_DATA_27D6D_SpecialTiles:
+; 16 bytes per entry
+; 6 pointers to following data, plus 4B padding
 
-; Data from 27D6F to 27D7C (14 bytes)
-.db $0A $BE $1C $BE $21 $BE $22 $BE $24 $BE $00 $00 $00 $00
+.dw _DATA_27DED_DirtNonSolidTiles _DATA_27E0A_DirtMetaltiles _DATA_27E1C_DirtWaterTiles _DATA_27E21_DirtFireTiles _DATA_27E22_DirtRightTiles _DATA_27E24_DirtLeftTiles $0000 $0000
 
-; Pointer Table from 27D7D to 27D7E (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27E26_
+.dw _DATA_27E26_Pillar1NonSolidTiles _DATA_27E3F_Pillar1MetalTiles _DATA_27E49_Pillar1WaterTiles _DATA_27E4C_Pillar1FireTiles _DATA_27E4D_Pillar1RightTiles _DATA_27E4E_Pillar1LeftTiles $0000 $0000
 
-; Data from 27D7F to 27D8C (14 bytes)
-.db $3F $BE $49 $BE $4C $BE $4D $BE $4E $BE $00 $00 $00 $00
+.dw _DATA_27E80_FireNonSolidTiles _DATA_27EA9_FireMetalTiles _DATA_27EB5_FireWaterTiles _DATA_27EB6_FireFireTiles _DATA_27EC2_FireRightTiles _DATA_27EC3_FireLeftTiles $0000 $0000
 
-; Pointer Table from 27D8D to 27D8E (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27E80_
+.dw _DATA_27EC5_CrystalNonSolidTiles _DATA_27EDE_CrystalMetalTiles _DATA_27EE8_CrystalWaterTiles _DATA_27EEB_CrystalFireTiles _DATA_27EEC_CrystalRightTiles _DATA_27EED_CrystalLeftTiles $0000 $0000
 
-; Data from 27D8F to 27D9C (14 bytes)
-.db $A9 $BE $B5 $BE $B6 $BE $C2 $BE $C3 $BE $00 $00 $00 $00
+.dw _DATA_27EF2_MarbleNonSolidTiles _DATA_27F13_MarbleMetalTiles _DATA_27F1D_MarbleWaterTiles _DATA_27F20_MarbleFireTiles _DATA_27F29_MarbleRightTiles _DATA_27F2B_MarbleLeftTiles $0000 $0000
 
-; Pointer Table from 27D9D to 27D9E (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27EC5_
+.dw _DATA_27E4F_UnusedNonSolidTiles _DATA_27E50_UnusedMetalTiles _DATA_27E51_UnusedWaterTiles _DATA_27E52_UnusedFireTiles _DATA_27E53_UnusedRightTiles _DATA_27E54_UnusedLeftTiles $0000 $0000
 
-; Data from 27D9F to 27DAC (14 bytes)
-.db $DE $BE $E8 $BE $EB $BE $EC $BE $ED $BE $00 $00 $00 $00
+.dw _DATA_27E55_Pillar2NonSolidTiles _DATA_27E72_Pillar2MetalTiles _DATA_27E7A_Pillar2WaterTiles _DATA_27E7D_Pillar2FireTiles _DATA_27E7E_Pillar2RightTiles _DATA_27E7F_Pillar2LeftTiles $0000 $0000
 
-; Pointer Table from 27DAD to 27DAE (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27EF2_
+.dw _DATA_27F2D_SegaNonSolidTiles _DATA_27F4E_SegaMetalTiles _DATA_27F58_SegaWaterTiles _DATA_27F5B_SegaFireTiles _DATA_27F5C_SegaRightTiles _DATA_27F5D_SegaLeftTiles $0000 $0000
 
-; Data from 27DAF to 27DBC (14 bytes)
-.db $13 $BF $1D $BF $20 $BF $29 $BF $2B $BF $00 $00 $00 $00
+_DATA_27DED_DirtNonSolidTiles: ; Dirt tiles changed to 6
+.db $67 $68 ; Red and blue tiles for trap
+.db $5D $6F ; Green and orange tiles used for trap
+.db $2C $2D ; Entrace
+.db $1E $1F $20 $21 $22 ; Entrance
+.db $24 $25 $26 $27 $28 ; Entrance
+.db $4A $4B $4C $4D $4E $4F $50 $51 $54 $55 $56 $57 ; Exit
+.db $00 
 
-; Pointer Table from 27DBD to 27DBE (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27E4F_
+_DATA_27E0A_DirtMetaltiles: ; Dirt tiles changed to 1
+.db $A1 $A2 $A3 $A4 $A5 $A6 $A7 $A8 ; Orange dots steel
+.db $6B $6C $72 $73 ; Blue dots steel 
+.dn $90 $91 $92 $93 $94 ; Blue dots steel 
+.db $00 
 
-; Data from 27DBF to 27DCC (14 bytes)
-.db $50 $BE $51 $BE $52 $BE $53 $BE $54 $BE $00 $00 $00 $00
+_DATA_27E1C_DirtWaterTiles: ; Dirt tiles changed to 2
+.db $6D $74 $AC $AD $00 ; Water
 
-; Pointer Table from 27DCD to 27DCE (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27E55_
+_DATA_27E21_DirtFireTiles:
+.db $00 ; ???
 
-; Data from 27DCF to 27DDC (14 bytes)
-.db $72 $BE $7A $BE $7D $BE $7E $BE $7F $BE $00 $00 $00 $00
+_DATA_27E22_DirtRightTiles:
+.db $AE $00 ; Right arrow
 
-; Pointer Table from 27DDD to 27DDE (1 entries, indexed by _RAM_DB0B_LevelType)
-.dw _DATA_27F2D_
+_DATA_27E24_DirtLeftTiles:
+.db $A9 $00 ; Left arrow
 
-; Data from 27DDF to 27DEC (14 bytes)
-.db $4E $BF $58 $BF $5B $BF $5C $BF $5D $BF $00 $00 $00 $00
+_DATA_27E26_Pillar1NonSolidTiles: 
+.db $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 $65 $66 ; entrance
+.db $13 $14 $15 $16 $17 $18 $19 $1A $1B $1C $20 $21 $00 ; Exit
+_DATA_27E3F_Pillar1MetalTiles: .db $86 $87 $8C $8D $8E $8F $90 $97 $A0 $00 
+_DATA_27E49_Pillar1WaterTiles: .db $A3 $A4 $00 
+_DATA_27E4C_Pillar1FireTiles: .db $00 
+_DATA_27E4D_Pillar1RightTiles: .db $00 
+_DATA_27E4E_Pillar1LeftTiles: .db $00
 
-; 1st entry of Pointer Table from 27D6D (indexed by _RAM_DB0B_LevelType)
-; Data from 27DED to 27E25 (57 bytes)
-_DATA_27DED_:
-.db $67 $68 $5D $6F $2C $2D $1E $1F $20 $21 $22 $24 $25 $26 $27 $28
-.db $4A $4B $4C $4D $4E $4F $50 $51 $54 $55 $56 $57 $00 $A1 $A2 $A3
-.db $A4 $A5 $A6 $A7 $A8 $6B $6C $72 $73 $90 $91 $92 $93 $94 $00 $6D
-.db $74 $AC $AD $00 $00 $AE $00 $A9 $00
+_DATA_27E4F_UnusedNonSolidTiles: .db $00
+_DATA_27E50_UnusedMetalTiles: .db $00
+_DATA_27E51_UnusedWaterTiles: .db $00
+_DATA_27E52_UnusedFireTiles: .db $00
+_DATA_27E53_UnusedRightTiles: .db $00
+_DATA_27E54_UnusedLeftTiles: .db $00
 
-; 1st entry of Pointer Table from 27D7D (indexed by _RAM_DB0B_LevelType)
-; Data from 27E26 to 27E4E (41 bytes)
-_DATA_27E26_:
-.db $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 $65 $66 $13 $14 $15 $16
-.db $17 $18 $19 $1A $1B $1C $20 $21 $00 $86 $87 $8C $8D $8E $8F $90
-.db $97 $A0 $00 $A3 $A4 $00 $00 $00 $00
+_DATA_27E55_Pillar2NonSolidTiles: .db $2D $2E $2F $30 $31 $3F $40 $41 $42 $43 $81 $82 $83 $84 $87 $88 $89 $8A $8D $8E $8F $90 $47 $48 $E3 $E1 $E0 $95 $00 
+_DATA_27E72_Pillar2MetalTiles: .db $85 $86 $8B $8C $92 $93 $BE $00 
+_DATA_27E7A_Pillar2WaterTiles: .db $91 $94 $00 
+_DATA_27E7D_Pillar2FireTiles: .db $00 
+_DATA_27E7E_Pillar2RightTiles: .db $00 
+_DATA_27E7F_Pillar2LeftTiles: .db $00
 
-; 1st entry of Pointer Table from 27DBD (indexed by _RAM_DB0B_LevelType)
-; Data from 27E4F to 27E54 (6 bytes)
-_DATA_27E4F_:
-.db $00 $00 $00 $00 $00 $00
+_DATA_27E80_FireNonSolidTiles: 
+.db $43 $44 $45 $4B $4C $4D $4E $4F $50 $52 $53 $54 $55 $56 $57 $58 $59 $5A $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 ; Exit
+.db $21 $22 $23 $24 $25 $2D $2E $2F $30 $31 $3D $3E $00 ;  Entrance
+_DATA_27EA9_FireMetalTiles: .db $28 $34 $65 $66 $67 $68 $69 $6A $6B $6C $6D $00 
+_DATA_27EB5_FireWaterTiles: .db $00 
+_DATA_27EB6_FireFireTiles: 
+.db $70 $71 $8B ; Lava
+.db $29 $2A $2B $2C $35 $36 $37 $38 $00 ; Flames
+_DATA_27EC2_FireRightTiles: .db $00 
+_DATA_27EC3_FireLeftTiles: .db $D7 $00
 
-; 1st entry of Pointer Table from 27DCD (indexed by _RAM_DB0B_LevelType)
-; Data from 27E55 to 27E7F (43 bytes)
-_DATA_27E55_:
-.db $2D $2E $2F $30 $31 $3F $40 $41 $42 $43 $81 $82 $83 $84 $87 $88
-.db $89 $8A $8D $8E $8F $90 $47 $48 $E3 $E1 $E0 $95 $00 $85 $86 $8B
-.db $8C $92 $93 $BE $00 $91 $94 $00 $00 $00 $00
+_DATA_27EC5_CrystalNonSolidTiles: .db $5E $5F $60 $61 $63 $64 $65 $66 $68 $69 $6A $6B $1E $1F $20 $21 $22 $23 $24 $25 $26 $27 $2D $2E $00
+_DATA_27EDE_CrystalMetalTiles: .db $54 $78 $55 $59 $7D $5A $5C $7F $5D $00 
+_DATA_27EE8_CrystalWaterTiles: .db $7E $80 $00 
+_DATA_27EEB_CrystalFireTiles: .db $00 
+_DATA_27EEC_CrystalRightTiles: .db $00 
+_DATA_27EED_CrystalLeftTiles: .db $00 
 
-; 1st entry of Pointer Table from 27D8D (indexed by _RAM_DB0B_LevelType)
-; Data from 27E80 to 27EC4 (69 bytes)
-_DATA_27E80_:
-.db $43 $44 $45 $4B $4C $4D $4E $4F $50 $52 $53 $54 $55 $56 $57 $58
-.db $59 $5A $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 $21 $22 $23 $24
-.db $25 $2D $2E $2F $30 $31 $3D $3E $00 $28 $34 $65 $66 $67 $68 $69
-.db $6A $6B $6C $6D $00 $00 $70 $71 $8B $29 $2A $2B $2C $35 $36 $37
-.db $38 $00 $00 $D7 $00
+.db $30 $2F $1C $00 ; Unused data
 
-; 1st entry of Pointer Table from 27D9D (indexed by _RAM_DB0B_LevelType)
-; Data from 27EC5 to 27EF1 (45 bytes)
-_DATA_27EC5_:
-.db $5E $5F $60 $61 $63 $64 $65 $66 $68 $69 $6A $6B $1E $1F $20 $21
-.db $22 $23 $24 $25 $26 $27 $2D $2E $00 $54 $78 $55 $59 $7D $5A $5C
-.db $7F $5D $00 $7E $80 $00 $00 $00 $00 $30 $2F $1C $00
+_DATA_27EF2_MarbleNonSolidTiles: .db $2F $30 $31 $32 $35 $36 $37 $38 $3B $3C $3D $3E $D5 $68 $D6 $E7 $D7 $D8 $D9 $DA $25 $26 $27 $28 $29 $2A $2B $2C $2D $2E $33 $34 $00 
+_DATA_27F13_MarbleMetalTiles: .db $5C $64 $65 $06 $07 $12 $13 $1C $1D $00
+_DATA_27F1D_MarbleWaterTiles: .db $66 $67 $00
+_DATA_27F20_MarbleFireTiles: .db $98 $99 $9A $9B $9C $9D $9F $A0 $00
+_DATA_27F29_MarbleRightTiles: .db $E6 $00 
+_DATA_27F2B_MarbleLeftTiles: .db $C6 $00
 
-; 1st entry of Pointer Table from 27DAD (indexed by _RAM_DB0B_LevelType)
-; Data from 27EF2 to 27F2C (59 bytes)
-_DATA_27EF2_:
-.db $2F $30 $31 $32 $35 $36 $37 $38 $3B $3C $3D $3E $D5 $68 $D6 $E7
-.db $D7 $D8 $D9 $DA $25 $26 $27 $28 $29 $2A $2B $2C $2D $2E $33 $34
-.db $00 $5C $64 $65 $06 $07 $12 $13 $1C $1D $00 $66 $67 $00 $98 $99
-.db $9A $9B $9C $9D $9F $A0 $00 $E6 $00 $C6 $00
+_DATA_27F2D_SegaNonSolidTiles: .db $66 $67 $68 $69 $76 $77 $78 $79 $7F $80 $81 $82 $8B $8C $8D $8E $1D $1E $0B $0C $0D $0E $0F $12 $13 $14 $15 $16 $83 $8F $92 $95 $00
+_DATA_27F4E_SegaMetalTiles: .db $21 $22 $23 $2E $2F $30 $3B $3C $3D $00 
+_DATA_27F58_SegaWaterTiles: .db $94 $98
+_DATA_27F5B_SegaFireTiles: .db $00
+_DATA_27F5C_SegaRightTiles: .db $00
+_DATA_27F5D_SegaLeftTiles: .db $00
 
-; 1st entry of Pointer Table from 27DDD (indexed by _RAM_DB0B_LevelType)
-; Data from 27F2D to 27FFF (211 bytes)
-_DATA_27F2D_:
-.db $66 $67 $68 $69 $76 $77 $78 $79 $7F $80 $81 $82 $8B $8C $8D $8E
-.db $1D $1E $0B $0C $0D $0E $0F $12 $13 $14 $15 $16 $83 $8F $92 $95
-.db $00 $21 $22 $23 $2E $2F $30 $3B $3C $3D $00 $94 $98
-.dsb 166, $00
+; Blank to end of bank
 
 .BANK 10
 .ORG $0000
@@ -14471,12 +14472,12 @@ Passwords:
 .db "WMZTHPFE"
 .db "WMZTHPFE" ; One extra for luck...
 
-; 1st entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
+; 1st entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 343C6 to 344C5 (256 bytes)
 _DATA_343C6_Tiles_Trap_Crusher_1:
 .dsb 256, $00
 
-; 2nd entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
+; 2nd entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 344C6 to 345C5 (256 bytes)
 _DATA_344C6_Tiles_Crusher_2:
 .db $01 $06 $00 $06 $07 $08 $00 $0B $0E $11 $00 $17 $1C $23 $00 $2F
@@ -14494,7 +14495,7 @@ _DATA_344C6_Tiles_Crusher_2:
 .db $80 $80 $00 $00 $80 $80 $00 $00 $80 $80 $00 $00 $40
 .dsb 35, $00
 
-; 3rd entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
+; 3rd entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 345C6 to 346C5 (256 bytes)
 _DATA_345C6_Tiles_Crusher_3:
 .dsb 20, $00
@@ -14515,7 +14516,7 @@ _DATA_345C6_Tiles_Crusher_3:
 .db $00 $FF
 .dsb 15, $00
 
-; 4th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
+; 4th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 346C6 to 347C5 (256 bytes)
 _DATA_346C6_Tiles_Crusher_4:
 .dsb 32, $00
@@ -14533,7 +14534,7 @@ _DATA_346C6_Tiles_Crusher_4:
 .db $80 $40 $C0 $00 $E0 $10 $30 $00 $F0 $08 $18 $00 $F8 $04 $0C $00
 .db $FC $02 $06 $00 $FE $01 $07 $00 $FE $01 $03 $00 $FF $00 $00 $00
 
-; 5th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
+; 5th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 347C6 to 348C5 (256 bytes)
 _DATA_347C6_Tiles_Crusher_5:
 .dsb 20, $00
@@ -14556,7 +14557,7 @@ _DATA_347C6_Tiles_Crusher_5:
 .db $FF
 .dsb 15, $00
 
-; 6th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_)
+; 6th entry of Pointer Table from 3CB4 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 348C6 to 349C5 (256 bytes)
 _DATA_348C6_Tiles_Crusher_6:
 .db $01 $06 $00 $06 $07 $08 $00 $0B $0E $11 $00 $17 $1C $23 $00 $2F
@@ -14569,7 +14570,7 @@ _DATA_348C6_Tiles_Crusher_6:
 .db $FC $02 $06 $00 $FE $01 $07 $00 $FE $01 $03 $00 $FF
 .dsb 131, $00
 
-; 1st entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_)
+; 1st entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 349C6 to 34A45 (128 bytes)
 _DATA_349C6_:
 .db $00 $00 $00 $00 $00 $3C $00 $3C $30 $4E $00 $7E $20 $5E $04 $7E
@@ -14581,7 +14582,7 @@ _DATA_349C6_:
 .db $10 $00 $08 $00 $10 $00 $08 $00 $10 $00 $08 $00 $10 $00 $08 $00
 .db $10 $00 $18 $00 $30 $0C $04 $3C $00 $78 $06 $7E $60 $9F $01 $FF
 
-; 2nd entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_)
+; 2nd entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34A46 to 34AC5 (128 bytes)
 _DATA_34A46_:
 .db $00 $00 $00 $00 $E1 $FF $E1 $FF $D8 $E7 $C0 $FF $D0 $EF $C2 $FF
@@ -14593,7 +14594,7 @@ _DATA_34A46_:
 .db $FB $C3 $C7 $C3 $FB $B3 $87 $83 $FF $F3 $C3 $C3 $FB $F1 $C5 $C1
 .db $FB $F3 $CF $C3 $F9 $F7 $C3 $CF $C8 $B4 $83 $B7 $B0 $CF $80 $FF
 
-; 3rd entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_)
+; 3rd entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34AC6 to 34B45 (128 bytes)
 _DATA_34AC6_:
 .db $00 $00 $00 $00 $E1 $FF $E1 $FF $D8 $E7 $C0 $FF $D0 $EF $C2 $FF
@@ -14605,7 +14606,7 @@ _DATA_34AC6_:
 .db $FB $B3 $B7 $B3 $FB $F3 $F7 $F3 $FB $F3 $F7 $F3 $FB $F3 $F7 $F3
 .db $FB $F3 $FF $F3 $F9 $E7 $E3 $FF $C0 $FC $C3 $FF $B0 $CF $80 $FF
 
-; 4th entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_)
+; 4th entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34B46 to 34BC5 (128 bytes)
 _DATA_34B46_:
 .db $00 $00 $00 $00 $E1 $FF $E1 $FF $D8 $E7 $C0 $FF $D0 $EF $C2 $FF
@@ -14617,7 +14618,7 @@ _DATA_34B46_:
 .db $FB $F3 $F7 $F3 $FB $F3 $F7 $F3 $FB $F3 $F7 $F3 $FB $F3 $F7 $F3
 .db $FB $F3 $FF $F3 $F9 $E7 $E3 $FF $C0 $FC $C3 $FF $B0 $CF $80 $FF
 
-; 5th entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_)
+; 5th entry of Pointer Table from 3CC0 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34BC6 to 34C45 (128 bytes)
 _DATA_34BC6_:
 .db $00 $00 $00 $00 $E1 $FF $E1 $FF $D8 $E7 $C0 $FF $D0 $EF $C2 $FF
@@ -14629,12 +14630,12 @@ _DATA_34BC6_:
 .db $FB $F3 $F7 $F3 $FB $F3 $F7 $F3 $FB $F3 $F7 $F3 $FB $F3 $F7 $F3
 .db $FB $F3 $FF $F3 $F9 $E7 $E3 $FF $C0 $FC $C3 $FF $B0 $CF $80 $FF
 
-; 1st entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_)
+; 1st entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34C46 to 34CC5 (128 bytes)
 _DATA_34C46_:
 .dsb 128, $00
 
-; 2nd entry of Pointer Table from 3CCA (indexed by _RAM_DB98_)
+; 2nd entry of Pointer Table from 3CCA (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34CC6 to 34D45 (128 bytes)
 _DATA_34CC6_:
 .dsb 25, $00
@@ -14646,7 +14647,7 @@ _DATA_34CC6_:
 .db $80 $00 $00 $A0 $80 $00 $00 $87 $00 $0B $00 $9E $00 $AF $00 $30
 .db $00 $BF $00 $40 $00 $BF $00
 
-; 3rd entry of Pointer Table from 3CCA (indexed by _RAM_DB98_)
+; 3rd entry of Pointer Table from 3CCA (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34D46 to 34DC5 (128 bytes)
 _DATA_34D46_:
 .dsb 13, $00
@@ -14660,7 +14661,7 @@ _DATA_34D46_:
 .db $98 $00 $14 $00 $94 $00 $8C $00 $20 $00 $BC $00 $40 $00 $F8 $00
 .db $40 $40 $E0 $40 $00 $00 $C0 $00
 
-; 4th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_)
+; 4th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34DC6 to 34E45 (128 bytes)
 _DATA_34DC6_:
 .dsb 21, $00
@@ -14672,7 +14673,7 @@ _DATA_34DC6_:
 .db $00 $F0 $00 $40 $40 $F0 $40 $40 $40 $E0 $40 $40 $40 $E0 $40 $40
 .db $40 $E0 $40 $00 $00 $C0 $00 $00 $00 $C0 $00
 
-; 5th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_)
+; 5th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34E46 to 34EC5 (128 bytes)
 _DATA_34E46_:
 .dsb 64, $00
@@ -14681,7 +14682,7 @@ _DATA_34E46_:
 .db $B0 $00 $50 $00 $A0 $00 $F0 $00 $40 $40 $F0 $40 $40 $40 $E0 $40
 .db $40 $40 $E0 $40 $40 $40 $E0 $40 $00 $00 $C0 $00 $00 $00 $C0 $00
 
-; 6th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_)
+; 6th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34EC6 to 34F45 (128 bytes)
 _DATA_34EC6_:
 .dsb 72, $00
@@ -14691,7 +14692,7 @@ _DATA_34EC6_:
 .db $98 $00 $14 $00 $94 $00 $8C $00 $20 $00 $BC $00 $40 $00 $F8 $00
 .db $40 $40 $E0 $40 $00 $00 $C0 $00
 
-; 7th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_)
+; 7th entry of Pointer Table from 3CCA (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34F46 to 34FC5 (128 bytes)
 _DATA_34F46_:
 .dsb 80, $00
@@ -14699,7 +14700,7 @@ _DATA_34F46_:
 .dsb 17, $00
 .db $87 $00 $0B $00 $9E $00 $AF $00 $30 $00 $BF $00 $40 $00 $BF $00
 
-; 2nd entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_)
+; 2nd entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 34FC6 to 35045 (128 bytes)
 _DATA_34FC6_:
 .db $08 $08 $08 $00 $08 $08 $08 $00 $08 $08 $08 $00 $08 $08 $08 $00
@@ -14708,7 +14709,7 @@ _DATA_34FC6_:
 .db $44 $46 $02 $00 $4C $4A $02 $00 $60 $6C $6C $00 $3C $3C $30
 .dsb 65, $00
 
-; 3rd entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_)
+; 3rd entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 35046 to 350C5 (128 bytes)
 _DATA_35046_:
 .dsb 32, $00
@@ -14718,7 +14719,7 @@ _DATA_35046_:
 .db $44 $46 $02 $00 $4C $4A $02 $00 $60 $6C $6C $00 $3C $3C $30
 .dsb 33, $00
 
-; 4th entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_)
+; 4th entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 350C6 to 35145 (128 bytes)
 _DATA_350C6_:
 .dsb 64, $00
@@ -14727,7 +14728,7 @@ _DATA_350C6_:
 .db $3C $34 $10 $00 $3E $36 $34 $00 $DD $7A $22 $00 $1C $5E $42 $00
 .db $5C $5E $02 $00 $5C $5A $02 $00 $70 $7C $6C $00 $3C $3C $30 $00
 
-; 6th entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_)
+; 6th entry of Pointer Table from 3CD8 (indexed by _RAM_DB98_TrapFrameIndex)
 ; Data from 35146 to 351C5 (128 bytes)
 _DATA_35146_:
 .dsb 96, $00

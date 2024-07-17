@@ -29,10 +29,11 @@ banks 14
 .define PerThemeExitAnimations
 
 ; Some RAM and ROM locations we want to use
-.define RAM_LevelType $db0b 
+.define RAM_LevelType   $db0b 
 .define RAM_LevelNumber $db9d
-.define RAM_Difficulty $db9e
-.define LoadPalette   $0a31 
+.define RAM_Difficulty  $db9e
+
+.define LoadPalette     $0a31 
 
 ; Unused parts in the low bank
 .unbackground $0004 $0037
@@ -1724,7 +1725,7 @@ MyCustomLevel:  MapDescriptor 1, MyCustomLevelData, 64
 ; Fun         20            4 -> Drip in Sega One
 ; Fun         26            5 -> ??? Sega Two
 ; Tricky      25            7 -> Drip in Sega Three
-; Taxing      1             1 -> level reuse for If At First You Don't Suceed...
+; Taxing      1             1 -> level reuse for If At First You Don't Succeed...
 ; Taxing      6             2
 ; Taxing      2             6 -> ??? Watch Out There's Traps About
 ; Taxing      21            8
@@ -1746,11 +1747,11 @@ LoadTrapInfo:
   ld hl,traptable
   ld b, _sizeof_traptable/3
   
--:ld a,($db9e) ; Difficulty 0-3
+-:ld a,(RAM_Difficulty) ; Difficulty 0-3
   cp (hl)
   inc hl
   jr nz,+
-  ld a,($db9d) ; Level number 0-based
+  ld a,(RAM_LevelNumber) ; Level number 0-based
   cp (hl)
   inc hl
   jr z,_match
