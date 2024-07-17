@@ -5160,7 +5160,7 @@ _LABEL_2660_:
 	call _LABEL_26D8_
 	ld e, (ix+6)
 	ld d, (ix+7)
-	ld c, $07 ; ???
+	ld c, $07 ; Fire
 	call _LABEL_26D8_
 	ld e, (ix+8)
 	ld d, (ix+9)
@@ -13728,8 +13728,13 @@ _DATA_23CEA_:
 .BANK 9
 .ORG $0000
 
+.asc "PAGE09"
+
 ; Data from 24000 to 27D6C (15725 bytes)
-.incbin "Lemmings.sms_DATA_24000_.inc"
+; Pillar 2 tileset
+; Marble tileset
+; Level layouts
+.incbin "Lemmings.sms_DATA_24000_.inc" skip 6
 
 _DATA_27D6D_SpecialTiles:
 ; 16 bytes per entry
