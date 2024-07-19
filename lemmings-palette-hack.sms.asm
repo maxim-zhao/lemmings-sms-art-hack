@@ -2022,4 +2022,19 @@ _end:
 
 ; Disable changing difficulty
   PatchB $44ea $0
-  
+
+; Tile index of the exit for each difficulty
+; This is usually the top left tile of the exit, except for Fire where the exit is bigger.
+; The actual exit position is calculated as the top-left of that tile,
+; then down 24px and right 16px (20px for Fire).
+  ROMPosition $20a0
+.section "Exit tile indices" overwrite
+.db $4A ; Dirt
+.db $5B ; Pillar 1
+.db $57 ; Fire
+.db $5E ; Crystal
+.db $2F ; Marble
+.db $66 ; (Unused)
+.db $81 ; Pillar 2
+.db $76 ; Sega
+.ends

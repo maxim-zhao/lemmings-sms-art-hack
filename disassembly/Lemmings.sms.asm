@@ -171,8 +171,7 @@ _RAM_C200_ db
 .ende
 
 .enum $C300 export
-_RAM_C300_ db
-_RAM_C301_ db
+_RAM_C300_TileTypes dsb 256 ; table of 256B for tile types
 .ende
 
 .enum $C400 export
@@ -182,8 +181,7 @@ _RAM_C600_ db
 .ende
 
 .enum $CD00 export
-_RAM_CD00_ dsb $29
-_RAM_CD29_ db
+_RAM_CD00_ dsb $100
 .ende
 
 .enum $CD2F export
@@ -498,7 +496,25 @@ _RAM_D60E_ dsb $14
 .ende
 
 .enum $D650 export
-_RAM_D650_ dsb $154
+.struct Lemming
+State           db ; 0 Lemming state. 0 = inactive, $13 = entering exit, ...
+Skills          db ; 1 Lemming skills (1 = climber, 2 = umbrella)
+AnimationFrame  db ; 2 Cycles through animation?
+X               dw ; 3 World X
+Y               db ; 5 World Y
+Direction       db ; 6 1 or -1. Setting to higher values make slemmings go faster but may miss the exit.
+AnimationFrame2 db ; 7 Seems to also count like an animation?
+ScreenX         db ; 8 X position on screen
+Unknown1        db ; 9 ???
+BombCounter     db ; 10 Counts down oddly when exploding
+Unknown2        db ; 11 ???
+Unknown3        db ; 12 ???
+Unknown4        db ; 13 ???
+Unknown5        db ; 14 ???
+Unknown6        db ; 15 ???
+Unknown7        db ; 16 ???
+.endst
+_RAM_D650_LemmingStates dsb $154 ; 17 byte struct * 20 = 340 bytes up to $d7a4
 .ende
 
 .enum $D800 export
@@ -558,13 +574,13 @@ _RAM_DAF3_ dw
 
 .enum $DAFF export
 _RAM_DAFF_ db
-_RAM_DB00_ dw
-_RAM_DB02_ db
-_RAM_DB03_ dw
-_RAM_DB05_ db
-_RAM_DB06_ dw
-_RAM_DB08_ db
-_RAM_DB09_ db
+_RAM_DB00_Exit1X dw
+_RAM_DB02_Exit1Y db
+_RAM_DB03_Exit2X dw ; In world coordinates
+_RAM_DB05_Exit2Y db
+_RAM_DB06_Exit3X dw
+_RAM_DB08_Exit3Y db
+_RAM_DB09_NumExits db
 _RAM_DB0A_ db
 _RAM_DB0B_LevelType db ; 0-7, not 5. ; Following 3 must be together
 _RAM_DB0C_MapLayoutBank db
@@ -688,6 +704,17 @@ PAGING_SRAM db
 PAGING_SLOT_0 db
 PAGING_SLOT_1 db
 PAGING_SLOT_2 db
+.ende
+
+.enum 0 ; Level types
+LEVEL_DIRT    db ; 0
+LEVEL_PILLAR1 db ; 1
+LEVEL_FIRE    db ; 2
+LEVEL_CRYSTAL db ; 3
+LEVEL_MARBLE  db ; 4
+LEVEL_UNUSED  db ; 5
+LEVEL_PILLAR2 db ; 6
+LEVEL_SEGA    db ; 7
 .ende
 
 ; Ports
@@ -1918,7 +1945,7 @@ _LABEL_AFF_:
 	ei
 	ld b, $01
 	call _LABEL_ADD_Delay
-	ld hl, _RAM_D650_
+	ld hl, _RAM_D650_LemmingStates
 	ld b, $60
 -:
 	ld a, (hl)
@@ -1942,7 +1969,7 @@ _LABEL_AFF_:
 	ret
 
 ++:
-	ld hl, _RAM_D650_
+	ld hl, _RAM_D650_LemmingStates
 	ld b, $10
 -:
 	ld a, (hl)
@@ -1975,7 +2002,7 @@ _LABEL_B6A_:
 	ld a, $06
 	ld (PAGING_SLOT_2), a
 	ld hl, (_RAM_DBA5_TargetPalette)
-	ld de, _RAM_D650_
+	ld de, _RAM_D650_LemmingStates
 	ld b, $10
 -:
 	ld a, (hl)
@@ -3279,7 +3306,7 @@ _LABEL_16AC_:
 	ldi
 	ldi
 	jp pe, _LABEL_16AC_
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld b, $14
 	ld de, $0011
 -:
@@ -3301,7 +3328,7 @@ _LABEL_16AC_:
 +:
 	add ix, de
 	djnz -
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld b, $14
 	ld de, $0011
 _LABEL_1721_:
@@ -3670,12 +3697,12 @@ _LABEL_1A8C_:
 .db $7C $D3 $BE $32 $07 $00 $FB $C9
 
 _LABEL_1ADD_:
-	ld hl, _RAM_D650_
-	ld de, _RAM_D650_ + 1
+	ld hl, _RAM_D650_LemmingStates
+	ld de, _RAM_D650_LemmingStates + 1
 	ld bc, $0153
 	ld (hl), $00
 	ldir
-	ld hl, _RAM_D650_
+	ld hl, _RAM_D650_LemmingStates
 	ld (_RAM_DAF1_), hl
 	ret
 
@@ -4407,79 +4434,91 @@ _LABEL_203D_:
 
 ; Pointer Table from 20A0 to 20A7 (4 entries, indexed by _RAM_DB0B_LevelType)
 _DATA_20A0_TileIndexOfExit:
-;.dw _DATA_5B4A_ _DATA_5E57_ _DATA_662F_ _DATA_7681_
-.db $4A $5B $57 $5E $2F $66 $81 $76 $FF
+.db $4A $5B $57 $5E $2F $66 $81 $76
+
+; Unused byte
+.db $FF
 
 _LABEL_20A9_:
+  ; Look up tile index of exit
 	ld de, (_RAM_DB0B_LevelType) ; Only really loading e!
 	ld d, $00
 	ld hl, _DATA_20A0_TileIndexOfExit
 	add hl, de
 	ld e, (hl)
-	ld d, $CD ; Look up in _RAM_CD00_
+  ; Convert to the used tile index in the level, put that in de
+	ld d, >_RAM_CD00_ ; Look up in _RAM_CD00_
 	ld a, (de)
 	ld e, a
-	ld d, $00
-	ld iy, _RAM_DB00_
+	ld d, $00 ; Exit counter
+  ; Point to the first exit info
+	ld iy, _RAM_DB00_Exit1X
+  ; And then to the level layout
 	ld hl, _RAM_CE00_
-	ld b, $00
-_LABEL_20C3_:
-	ld c, $00
+	ld b, $00 ; Y tile counter
+--:
+	ld c, $00 ; X tile counter
 -:
+  ; Check if the tile is a match
 	ld a, (hl)
 	cp e
 	jp nz, ++
 	push hl
 	push de
-	ld l, c
-	ld h, $00
-	add hl, hl
-	add hl, hl
-	add hl, hl
-	ld de, $0010 ; Size of exit
-	ld a, (_RAM_DB0B_LevelType)
-	cp $02
-	jr nz, +
-	ld e, $14 ; Fire theme has a bigger exit
-+:
-	add hl, de
-	ld (iy+0), l
-	ld (iy+1), h
-	ld a, b
-	add a, a
-	add a, a
-	add a, a
-	add a, $18
-	ld (iy+2), a
-	ld de, $0003
-	add iy, de
-	pop de
-	pop hl
-	inc d
-	ld a, d
-	cp $03
-	jp z, +++
+    ; Multiply X by 8
+    ld l, c
+    ld h, $00
+    add hl, hl
+    add hl, hl
+    add hl, hl
+    ; Add on half-width of exit
+    ld de, 16
+    ld a, (_RAM_DB0B_LevelType)
+    cp LEVEL_FIRE
+    jr nz, +
+    ld e, 20
++:	add hl, de
+    ld (iy+0), l ; Write to the pointed exit's screen X
+    ld (iy+1), h
+    ; Multiply Y by 8 and add 24
+    ld a, b
+    add a, a
+    add a, a
+    add a, a
+    add a, 24
+    ld (iy+2), a ; Write to the pointed exit's screen Y
+    ; Point to next exit
+    ld de, $0003
+    add iy, de
+  pop de
+  pop hl
+  ; Check for exit limit
+  inc d
+  ld a, d
+  cp $03
+  jp z, +++
 ++:
 	inc hl
 	inc c
 	ld a, c
-	cp $70
+	cp $70 ; Level width
 	jp nz, -
 	inc b
 	ld a, b
-	cp $13
-	jp nz, _LABEL_20C3_
+	cp $13 ; Level height
+	jp nz, --
 +++:
 	ld a, d
-	ld (_RAM_DB09_), a
+	ld (_RAM_DB09_NumExits), a
 	and a
 	ret nz
+  ; Defaults if no exit found (Lost Something?)
 	ld a, $01
-	ld (_RAM_DB09_), a
+	ld (_RAM_DB09_NumExits), a
 	ld hl, $01C8
-	ld (_RAM_DB00_), hl
+	ld (_RAM_DB00_Exit1X), hl
 	ld a, $40
-	ld (_RAM_DB02_), a
+	ld (_RAM_DB02_Exit1Y), a
 	ret
 
 _LABEL_2122_:
@@ -5074,12 +5113,12 @@ _LABEL_247E_:
 	pop bc
 	djnz -
 	call _LABEL_2660_
-	ld hl, _RAM_C300_
+	ld hl, _RAM_C300_TileTypes
 	ld de, _RAM_D800_LevelLayoutAmendments
 	ld bc, $0100
 	ldir
-	ld hl, _RAM_C300_
-	ld de, _RAM_C300_ + 1
+	ld hl, _RAM_C300_TileTypes
+	ld de, _RAM_C300_TileTypes + 1
 	ld bc, $0100
 	ld (hl), $00
 	ldir
@@ -5122,19 +5161,21 @@ _LABEL_247E_:
 .db $00 $00 $FF $FF $FF $00 $FF $FF $00 $FF $FF $FF $FF $FF $FF $FF
 
 _LABEL_2660_:
-	ld a, $09
+	ld a, :_DATA_27D6D_SpecialTiles ; $09
 	ld (PAGING_SLOT_2), a
-	ld hl, _RAM_C300_
-	ld de, _RAM_C300_ + 1
+  ; Set all to 0
+	ld hl, _RAM_C300_TileTypes
+	ld de, _RAM_C300_TileTypes + 1
 	ld bc, $00FF
-	ld (hl), $00
+	ld (hl), $00 ; Unused tile
 	ldir
-	ld hl, _RAM_C300_
-	ld de, _RAM_C301_
+  ; Then set the actualy used ones to 4
+	ld hl, _RAM_C300_TileTypes
+	ld de, _RAM_C300_TileTypes + 1
 	ld bc, (_RAM_DB12_TilesetTileCount)
 	ld b, $00
 	dec c
-	ld (hl), $04
+	ld (hl), $04 ; Normal tile
 	ldir
 	ld a, (_RAM_DB0B_LevelType)
 	add a, a ; Multiply by 8
@@ -5230,7 +5271,7 @@ _LABEL_26E1_:
 	or d
 	jp nz, -
 	ei
-	ld de, _RAM_C300_
+	ld de, _RAM_C300_TileTypes
 --:
 	ld a, (de)
 	cp $06
@@ -5784,7 +5825,7 @@ _LABEL_2B32_:
 	ld bc, (_RAM_DB58_CursorX)
 	ld hl, $0606
 	ld de, $0011
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld a, $14
 _LABEL_2B52_:
 	ex af, af'
@@ -6114,7 +6155,7 @@ _LABEL_2D79_:
 	ld (_RAM_DB7F_), a
 	cp $01
 	ret z
-	ld hl, _RAM_D650_
+	ld hl, _RAM_D650_LemmingStates
 	ld (_RAM_DB80_), hl
 	call _LABEL_75EF_PlayOhNo
 	ret
@@ -6128,7 +6169,7 @@ _LABEL_2D98_:
 	ret
 
 _LABEL_2DA3_:
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld b, $14
 _LABEL_2DA9_:
 	push bc
@@ -7044,49 +7085,51 @@ _LABEL_34A4_:
 	ret
 
 _LABEL_34B0_:
-	ld hl, (_RAM_DB00_)
-	ld a, (_RAM_DB02_)
+	ld hl, (_RAM_DB00_Exit1X)
+	ld a, (_RAM_DB02_Exit1Y)
 	call +
-	ld a, (_RAM_DB09_)
+	ld a, (_RAM_DB09_NumExits)
 	cp $01
 	ret z
-	ld hl, (_RAM_DB03_)
-	ld a, (_RAM_DB05_)
+	ld hl, (_RAM_DB03_Exit2X) ; Exit X
+	ld a, (_RAM_DB05_Exit2Y) ; Exit Y
 	call +
-	ld a, (_RAM_DB09_)
+	ld a, (_RAM_DB09_NumExits)
 	cp $02
 	ret z
-	ld hl, (_RAM_DB06_)
-	ld a, (_RAM_DB08_)
+	ld hl, (_RAM_DB06_Exit3X)
+	ld a, (_RAM_DB08_Exit3Y)
 +:
-	ld ix, _RAM_D650_
-	ld b, $14
+	ld ix, _RAM_D650_LemmingStates
+	ld b, $14 ; 20 lemmings
 	ld c, a
-	ld de, $0011
+	ld de, _sizeof_Lemming ; $0011
 -:
-	ld a, (ix+0)
+	ld a, (ix+Lemming.State)
 	and a
 	jp z, ++
 	cp $13
 	jp z, ++
-	ld a, (ix+5)
+	ld a, (ix+Lemming.Y)
 	sub c
 	jr nc, +
 	neg
 +:
 	cp $08
 	jp nc, ++
-	ld a, (ix+4)
+  ; Compare world location to hl = exit X location
+	ld a, (ix+Lemming.WorldX+1)
 	cp h
 	jp nz, ++
-	ld a, (ix+3)
+	ld a, (ix+Lemming.WorldX)
 	sub l
+  ; Equal to or +1 or +2 or 3 => OK
 	jp z, +
 	cp $03
 	jr nc, ++
 +:
-	ld (ix+0), $13
-	ld (ix+7), $00
+	ld (ix+Lemming.State), $13 ; Going into exit
+	ld (ix+Lemming.AnimationFrame2), $00 ; ???
 	push bc
 	push de
 	ld a, $5C
@@ -7221,7 +7264,7 @@ _LABEL_35B0_:
 _LABEL_35E9_:
 	ld a, $03
 	ld (PAGING_SLOT_2), a
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld b, $14
 _LABEL_35F4_:
 	ld a, (ix+0)
@@ -7236,13 +7279,13 @@ _LABEL_35F4_:
 	ex de, hl
 	jp (hl)
 
-; Jump Table from 3604 to 362B (20 entries, indexed by _RAM_D650_)
+; Jump Table from 3604 to 362B (20 entries, indexed by _RAM_D650_LemmingStates)
 _DATA_3604_:
 .dw _LABEL_37C1_ _LABEL_362C_ _LABEL_3648_ _LABEL_3656_ _LABEL_366D_ _LABEL_37C1_ _LABEL_367F_ _LABEL_36A1_
 .dw _LABEL_36AF_ _LABEL_36F9_ _LABEL_371E_ _LABEL_373C_ _LABEL_37C1_ _LABEL_37C1_ _LABEL_37C1_ _LABEL_37C1_
 .dw _LABEL_374D_ _LABEL_3763_ _LABEL_3779_ _LABEL_378F_
 
-; 2nd entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 2nd entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_362C_:
 	ld a, (ix+7)
 	add a, (ix+6)
@@ -7255,7 +7298,7 @@ _LABEL_362C_:
 	ld e, $08
 	jp _LABEL_37BD_
 
-; 3rd entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 3rd entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_3648_:
 	ld a, (ix+7)
 	inc a
@@ -7264,7 +7307,7 @@ _LABEL_3648_:
 	ld e, $98
 	jp _LABEL_37BD_
 
-; 4th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 4th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_3656_:
 	ld a, (ix+7)
 	inc a
@@ -7276,7 +7319,7 @@ _LABEL_3656_:
 	ld e, $34
 	jp _LABEL_37BD_
 
-; 5th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 5th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_366D_:
 	ld a, (ix+7)
 	inc a
@@ -7288,7 +7331,7 @@ _LABEL_366D_:
 	ld e, $DA
 	jp _LABEL_37BD_
 
-; 7th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 7th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_367F_:
 	ld a, (_RAM_DACF_)
 	and a
@@ -7309,7 +7352,7 @@ _LABEL_367F_:
 	ld e, $E2
 	jp _LABEL_37BD_
 
-; 8th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 8th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_36A1_:
 	ld a, (ix+7)
 	inc a
@@ -7318,7 +7361,7 @@ _LABEL_36A1_:
 	ld e, $A0
 	jp _LABEL_37BD_
 
-; 9th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 9th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_36AF_:
 	ld a, (ix+12)
 	cp $0C
@@ -7353,7 +7396,7 @@ _DATA_36D2_:
 	ld e, $E3
 	jp _LABEL_37BD_
 
-; 10th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 10th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_36F9_:
 	ld a, (_RAM_DACF_)
 	and a
@@ -7374,7 +7417,7 @@ _LABEL_36F9_:
 	ld e, $58
 	jp _LABEL_37BD_
 
-; 11th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 11th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_371E_:
 	ld a, (ix+7)
 	inc a
@@ -7391,7 +7434,7 @@ _LABEL_371E_:
 	ld e, $86
 	jp _LABEL_37BD_
 
-; 12th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 12th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_373C_:
 	ld a, (ix+7)
 	inc a
@@ -7403,7 +7446,7 @@ _LABEL_373C_:
 	ld e, $10
 	jp _LABEL_37BD_
 
-; 17th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 17th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_374D_:
 	ld a, (ix+7)
 	inc a
@@ -7417,7 +7460,7 @@ _LABEL_374D_:
 	ld e, $C8
 	jp _LABEL_37BD_
 
-; 18th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 18th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_3763_:
 	ld a, (ix+7)
 	inc a
@@ -7431,7 +7474,7 @@ _LABEL_3763_:
 	ld e, $1C
 	jp _LABEL_37BD_
 
-; 19th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 19th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_3779_:
 	ld a, (ix+7)
 	inc a
@@ -7445,7 +7488,7 @@ _LABEL_3779_:
 	ld e, $F9
 	jp _LABEL_37BD_
 
-; 20th entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 20th entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_378F_:
 	ld a, (ix+7)
 	inc a
@@ -7474,7 +7517,7 @@ _LABEL_378F_:
 _LABEL_37BD_:
 	add a, e
 	ld (ix+2), a
-; 1st entry of Jump Table from 3604 (indexed by _RAM_D650_)
+; 1st entry of Jump Table from 3604 (indexed by _RAM_D650_LemmingStates)
 _LABEL_37C1_:
 	ld de, $0011
 	add ix, de
@@ -7499,7 +7542,7 @@ _LABEL_37CB_:
 	ld de, (_RAM_DAE1_)
 	set 6, d
 	exx
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld b, $14
 	ld a, (_RAM_DAE3_)
 	ld c, a
@@ -7664,7 +7707,7 @@ _LABEL_38E6_:
 	ld (hl), $D0
 	ld a, $0C
 	ld (PAGING_SLOT_2), a
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld a, $14
 _LABEL_38FF_:
 	push af
@@ -7999,7 +8042,7 @@ _LABEL_3B3F_:
 	ld a, (_RAM_DB98_TrapFrameIndex)
 	and a
 	jp nz, _LABEL_3B97_
-	ld ix, _RAM_D650_
+	ld ix, _RAM_D650_LemmingStates
 	ld b, $14
 	ld c, $00
 	ld de, $0011
@@ -10100,7 +10143,6 @@ _DATA_5546_:
 .incbin "Lemmings.sms_DATA_554A_.inc"
 
 ; Data from 5B4A to 5B9C (83 bytes)
-_DATA_5B4A_:
 .db $00 $00 $00 $FF $FF $FF $00 $AF $F3 $D1 $00 $A7 $FF $FD $00 $FF
 .db $FF $FF
 .dsb 13, $00
@@ -10155,9 +10197,6 @@ _DATA_5B9D_SkillTiles:
 .db $7A $63 $E6 $66 $FE $67 $E6 $66 $FE $7B $FA $7A $E7 $65 $7D $7D
 .db $E3 $63 $7F $7E $E3 $63 $7E $7E $E3 $63 $7E $7C $E7 $67 $FC $7C
 .db $6F $6F $FD $79 $FF $79 $79 $79 $FF $3F
-
-; Data from 5E57 to 5F9C (326 bytes)
-_DATA_5E57_:
 .db $FF $3F $37 $10 $FC $10 $F7 $04 $1E $04 $FE $FE $FF $FE $FF $FF
 .db $FF $FF $27 $E7 $3F $3F $23 $E3 $3F $3F $63 $A3 $3F $3F $F3 $13
 .db $1F $1F $E3 $E3 $FF $FF $F3 $F3 $7F $3F $FB $EB $2F $2F $FF $F7
@@ -10301,7 +10340,6 @@ _DATA_64DD_:
 .db $7C $C7
 
 ; Data from 662F to 6C24 (1526 bytes)
-_DATA_662F_:
 .incbin "Lemmings.sms_DATA_662F_.inc"
 
 ; Data from 6C25 to 7173 (1359 bytes)
@@ -10538,7 +10576,6 @@ _LABEL_763B_SampleLoop:
 .dsb 20, $00
 
 ; Data from 7681 to 7FEF (2415 bytes)
-_DATA_7681_:
 .dsb 1023, $00
 .db $81 $81 $00 $81 $00 $00 $00 $81 $81 $81 $81 $00 $00 $00 $00 $00
 .db $82 $82 $82 $00 $00 $00 $00 $82 $82 $82 $82 $00 $00 $00 $00 $00
