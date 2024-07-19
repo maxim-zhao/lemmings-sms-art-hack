@@ -2038,3 +2038,89 @@ _end:
 .db $81 ; Pillar 2
 .db $76 ; Sega
 .ends
+
+
+; "Special" tiles data
+; This is how the game marks certain tiles as having special behaviour.
+.unbackground $27D6D $27fff
+  ROMPosition $27D6D
+.section "Special tiles" force
+; Leave this part alone...
+.dw DirtNonSolidTiles DirtMetaltiles DirtWaterTiles DirtFireTiles DirtRightTiles DirtLeftTiles $0000 $0000
+.dw Pillar1NonSolidTiles Pillar1MetalTiles Pillar1WaterTiles Pillar1FireTiles Pillar1RightTiles Pillar1LeftTiles $0000 $0000
+.dw FireNonSolidTiles FireMetalTiles FireWaterTiles FireFireTiles FireRightTiles FireLeftTiles $0000 $0000
+.dw CrystalNonSolidTiles CrystalMetalTiles CrystalWaterTiles CrystalFireTiles CrystalRightTiles CrystalLeftTiles $0000 $0000
+.dw MarbleNonSolidTiles MarbleMetalTiles MarbleWaterTiles MarbleFireTiles MarbleRightTiles MarbleLeftTiles $0000 $0000
+; Unused type 5 is here
+.dsw 8, $0000
+.dw Pillar2NonSolidTiles Pillar2MetalTiles Pillar2WaterTiles Pillar2FireTiles Pillar2RightTiles Pillar2LeftTiles $0000 $0000
+.dw SegaNonSolidTiles SegaMetalTiles SegaWaterTiles SegaFireTiles SegaRightTiles SegaLeftTiles $0000 $0000
+
+DirtNonSolidTiles: ; Tiles which have art but do no collision
+.db $67 $68 $5D $6F ; Trap
+.db $2C $2D $1E $1F $20 $21 $22 $24 $25 $26 $27 $28 ; Entrance
+.db $4A $4B $4C $4D $4E $4F $50 $51 $54 $55 $56 $57 ; Exit
+.db $00 
+
+DirtMetaltiles: ; Tiles that are indestructible
+.db $A1 $A2 $A3 $A4 $A5 $A6 $A7 $A8 ; Orange dots steel
+.db $6B $6C $72 $73 $90 $91 $92 $93 $94 ; Blue dots steel 
+.db $00 
+
+DirtWaterTiles: ; Tiles that cause drowning
+.db $6D $74 $AC $AD $00 ; Water
+
+DirtFireTiles: ; Tiles that cause burning
+.db $00 ; None
+
+DirtRightTiles:
+.db $AE $00 ; Right arrow
+
+DirtLeftTiles:
+.db $A9 $00 ; Left arrow
+
+Pillar1NonSolidTiles: .db $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 $65 $66 ; Entrance
+                      .db $13 $14 $15 $16 $17 $18 $19 $1A $1B $1C $20 $21 $00 ; Exit
+Pillar1MetalTiles:    .db $86 $87 $8C $8D $8E $8F $90 $97 $A0 $00 
+Pillar1WaterTiles:    .db $A3 $A4 $00 
+Pillar1FireTiles:     .db $00 
+Pillar1RightTiles:    .db $00 
+Pillar1LeftTiles:     .db $00
+
+Pillar2NonSolidTiles: .db $2D $2E $2F $30 $31 $3F $40 $41 $42 $43 $81 $82 $83 $84 $87 $88 $89 $8A $8D $8E $8F $90 $47 $48 $E3 $E1 $E0 $95 $00 
+Pillar2MetalTiles:    .db $85 $86 $8B $8C $92 $93 $BE $00 
+Pillar2WaterTiles:    .db $91 $94 $00 
+Pillar2FireTiles:     .db $00 
+Pillar2RightTiles:    .db $00 
+Pillar2LeftTiles:     .db $00
+
+FireNonSolidTiles:    .db $43 $44 $45 $4B $4C $4D $4E $4F $50 $52 $53 $54 $55 $56 $57 $58 $59 $5A $5B $5C $5D $5E $5F $60 $61 $62 $63 $64 ; Exit
+                      .db $21 $22 $23 $24 $25 $2D $2E $2F $30 $31 $3D $3E $00 ;  Entrance
+FireMetalTiles:       .db $28 $34 $65 $66 $67 $68 $69 $6A $6B $6C $6D $00 
+FireWaterTiles:       .db $00 
+FireFireTiles:        .db $70 $71 $8B ; Lava
+                      .db $29 $2A $2B $2C $35 $36 $37 $38 $00 ; Flames
+FireRightTiles:       .db $00 
+FireLeftTiles:        .db $D7 $00
+
+CrystalNonSolidTiles: .db $5E $5F $60 $61 $63 $64 $65 $66 $68 $69 $6A $6B $1E $1F $20 $21 $22 $23 $24 $25 $26 $27 $2D $2E $00
+CrystalMetalTiles:    .db $54 $78 $55 $59 $7D $5A $5C $7F $5D $00 
+CrystalWaterTiles:    .db $7E $80 $00 
+CrystalFireTiles:     .db $00 
+CrystalRightTiles:    .db $00 
+CrystalLeftTiles:     .db $00 
+
+MarbleNonSolidTiles:  .db $2F $30 $31 $32 $35 $36 $37 $38 $3B $3C $3D $3E $D5 $68 $D6 $E7 $D7 $D8 $D9 $DA $25 $26 $27 $28 $29 $2A $2B $2C $2D $2E $33 $34 $00
+MarbleMetalTiles:     .db $5C $64 $65 $06 $07 $12 $13 $1C $1D $00
+MarbleWaterTiles:     .db $66 $67 $00
+MarbleFireTiles:      .db $98 $99 $9A $9B $9C $9D $9F $A0 $00
+MarbleRightTiles:     .db $E6 $00 
+MarbleLeftTiles:      .db $C6 $00
+
+SegaNonSolidTiles:    .db $66 $67 $68 $69 $76 $77 $78 $79 $7F $80 $81 $82 $8B $8C $8D $8E $1D $1E $0B $0C $0D $0E $0F $12 $13 $14 $15 $16 $83 $8F $92 $95 $00
+SegaMetalTiles:       .db $21 $22 $23 $2E $2F $30 $3B $3C $3D $00 
+SegaWaterTiles:       .db $94 $98
+SegaFireTiles:        .db $00
+SegaRightTiles:       .db $00
+SegaLeftTiles:        .db $00
+.ends

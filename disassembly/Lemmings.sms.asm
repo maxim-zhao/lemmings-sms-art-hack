@@ -222,7 +222,7 @@ _RAM_CD61_ db
 .ende
 
 .enum $CD66 export
-_RAM_CD66_ db
+_RAM_CD66_ db ; 
 _RAM_CD67_ db
 _RAM_CD68_ db
 _RAM_CD69_ db
@@ -546,9 +546,9 @@ _RAM_DAD2_ db
 _RAM_DAD3_ db
 _RAM_DAD4_ db
 _RAM_DAD5_ db
-_RAM_DAD6_AnimationCounter db
-_RAM_DAD7_ db
-_RAM_DAD8_ db
+_RAM_DAD6_AnimationCounter4 db
+_RAM_DAD7_AnimationCounter6 db
+_RAM_DAD8_AnimationCounter4_Spinner db
 _RAM_DAD9_AnimationCounter db
 _RAM_DADA_ db
 _RAM_DADB_ dw
@@ -5300,13 +5300,13 @@ _LABEL_26E1_:
 .db $10 $C9
 
 _LABEL_276B_AnimateTiles:
-	ld a, (_RAM_DAD6_AnimationCounter)
+	ld a, (_RAM_DAD6_AnimationCounter4)
 	inc a
 	cp $03
 	jp c, +
 	xor a
 +:
-	ld (_RAM_DAD6_AnimationCounter), a
+	ld (_RAM_DAD6_AnimationCounter4), a
 	ld a, $0D
 	ld (PAGING_SLOT_2), a
 	ld a, (_RAM_DB0B_LevelType)
@@ -5323,7 +5323,7 @@ _LABEL_276B_AnimateTiles:
 	cp $03
 	jp z, _LABEL_28AE_Ice
 	cp $04
-	jp z, _LABEL_28D3_Brick
+	jp z, _LABEL_28D3_Marble
 	cp $07
 	jp z, _Sega
 	ret
@@ -5331,156 +5331,157 @@ _LABEL_276B_AnimateTiles:
 _Sega:
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD66_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD69_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD94_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD98_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ret
 
 _LABEL_27CD_Grass:
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD4A_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD4D_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD6D_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDAD_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDAC_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD74_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ret
 
 _LABEL_2804_Sand:
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD5B_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD5E_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDA3_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CDA4_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ret
 
 _LABEL_2829_Unused:
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD47_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD4A_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CDA6_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CDA7_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ret
 
 _LABEL_284E_Sand2:
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD81_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD84_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD91_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD94_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ret
 
 _LABEL_2873_Fire:
 	ld bc, _DATA_35E26_FireWater
 	ld hl, _RAM_CD70_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35E86_FireWaterBottom
 	ld hl, _RAM_CD71_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35E86_FireWaterBottom
 	ld hl, _RAM_CD8B_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
+
   ; Animate flames too
-	ld a, (_RAM_DAD7_)
+	ld a, (_RAM_DAD7_AnimationCounter6)
 	inc a
 	cp $05
 	jp c, +
 	xor a
 +:
-	ld (_RAM_DAD7_), a
+	ld (_RAM_DAD7_AnimationCounter6), a
 	ld bc, _DATA_351C6_FlameTrapTiles
 	ld hl, _RAM_CD29_
-	call _LABEL_292B_Update4AnimatedTiles
+	call _LABEL_292B_Update4AnimatedTiles_6Frames
 	ld bc, _DATA_35246_FlameTrapTilesPart2
 	ld hl, _RAM_CD35_
-	call _LABEL_292B_Update4AnimatedTiles
+	call _LABEL_292B_Update4AnimatedTiles_6Frames
 	ret
 
 _LABEL_28AE_Ice:
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD5E_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD61_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35C46_WaterTop
 	ld hl, _RAM_CD7E_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35CA6_WaterBottom
 	ld hl, _RAM_CD80_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ret
 
-_LABEL_28D3_Brick:
-	ld a, (_RAM_DAD8_)
+_LABEL_28D3_Marble:
+	ld a, (_RAM_DAD8_AnimationCounter4_Spinner)
 	inc a
 	and $03
-	ld (_RAM_DAD8_), a
+	ld (_RAM_DAD8_AnimationCounter4_Spinner), a
 	ld bc, _DATA_35B86_ExitFlamesLeft
 	ld hl, _RAM_CD2F_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld bc, _DATA_35BE6_ExitFlamesRight
 	ld hl, _RAM_CD32_
-	call _LABEL_290F_UpdateAnimatedTile
-	ld bc, _DATA_35D06_GreenWater
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
+	ld bc, _DATA_35D06_GreenWater_Top
 	ld hl, _RAM_CD66_
-	call _LABEL_290F_UpdateAnimatedTile
-	ld bc, _DATA_35D66_
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
+	ld bc, _DATA_35D66_GreenWater_Bottom
 	ld hl, _RAM_CD67_
-	call _LABEL_290F_UpdateAnimatedTile
+	call _LABEL_290F_UpdateAnimatedTile_4Frames
 	ld a, :_DATA_357C6_Tiles_Trap_Spinner ; $0D
 	ld (PAGING_SLOT_2), a
 	ld bc, _DATA_357C6_Tiles_Trap_Spinner
 	ld hl, _RAM_CD98_
-	call _LABEL_2955_
+	call _LABEL_2955_Update6AnimatedTiles_4Frames
 	ret
 
-_LABEL_290F_UpdateAnimatedTile:
-; hl = a RAM location for an animation counter? >0
-; bc = tile data location
-	ld a, (hl)
+_LABEL_290F_UpdateAnimatedTile_4Frames:
+; hl = RAM location of the tile, = $CD00 + tile index in tileset
+; bc = animated tile data location
+	ld a, (hl) ; Get index of tile in VRAM
 	and a
-	ret z
-  ; Multiply by 32
+	ret z ; Zero means unused in this level
+  ; Multiply by 32 to make it a VRAM address
 	ld l, a
 	ld h, >_TABLE_7D00_MultiplyBy32Lo
 	ld e, (hl)
@@ -5489,7 +5490,7 @@ _LABEL_290F_UpdateAnimatedTile:
   ; now de = (hl)*32
 	ld h, b
 	ld l, c
-	ld a, (_RAM_DAD6_AnimationCounter)
+	ld a, (_RAM_DAD6_AnimationCounter4) ; Global counter for animations. Cycles 0..3
 	add a, a
 	add a, a
 	add a, a
@@ -5501,32 +5502,36 @@ _LABEL_290F_UpdateAnimatedTile:
 	ld b, $01
 	jp _LABEL_8B4_LoadBTilesToVRAM
 
-_LABEL_292B_Update4AnimatedTiles:
+_LABEL_292B_Update4AnimatedTiles_6Frames:
 	ld d, $04
 -:
 	push de
 	push hl
-	push bc
-	ld a, (hl)
-	and a
-	jp z, +
-	ld l, a
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	ld a, (_RAM_DAD7_)
-	add a, b
-	ld h, a
-	ld l, c
-	ld b, $01
-	call _LABEL_8B4_LoadBTilesToVRAM
+    push bc
+      ; Same as above
+      ld a, (hl)
+      and a
+      jp z, +
+      ld l, a
+      ld h, >_TABLE_7D00_MultiplyBy32Lo
+      ld e, (hl)
+      inc h
+      ld d, (hl)
+      
+      ; Add _RAM_DAD7_AnimationCounter6*256 to the source address.
+      ; This selects 8 tiles further on.
+      ld a, (_RAM_DAD7_AnimationCounter6)
+      add a, b
+      ld h, a
+      ld l, c
+      ld b, $01
+      call _LABEL_8B4_LoadBTilesToVRAM
 +:
-	pop bc
-	ld hl, $0020
-	add hl, bc
-	ld c, l
-	ld b, h
+    pop bc
+    ld hl, $0020
+    add hl, bc
+    ld c, l
+    ld b, h
 	pop hl
 	pop de
 	inc hl
@@ -5534,36 +5539,38 @@ _LABEL_292B_Update4AnimatedTiles:
 	jp nz, -
 	ret
 
-_LABEL_2955_:
+_LABEL_2955_Update6AnimatedTiles_4Frames:
   ; Only called for spinner trap
-  ; hl = _RAM_CD98_
+  ; hl = _RAM_CD98_ = tile $98 lookup = spinner trap
   ; bc points to tile data
 	ld d, $06
 -:
 	push de
 	push hl
-	push bc
-	ld a, (hl)
-	and a
-	jp z, + ; If zero, skip
-  ; Else look up in table
-	ld l, a
-	ld h, $7D
-	ld e, (hl)
-	inc h
-	ld d, (hl)
-	ld a, (_RAM_DAD8_) ; ??? Adds to high byte of tile data pointer
-	add a, b
-	ld h, a
-	ld l, c
-	ld b, $01
-	call _LABEL_8B4_LoadBTilesToVRAM
+    push bc
+      ld a, (hl)
+      and a
+      jp z, + ; If zero, skip
+      ; Else look up in table
+      ld l, a
+      ld h, >_TABLE_7D00_MultiplyBy32Lo
+      ld e, (hl)
+      inc h
+      ld d, (hl)
+      ; Look up tile by index of animation frame
+      ; We skip 8 tiles so the last 2 tiles in the data for each chunk are unused
+      ld a, (_RAM_DAD8_AnimationCounter4_Spinner)
+      add a, b
+      ld h, a
+      ld l, c
+      ld b, $01
+      call _LABEL_8B4_LoadBTilesToVRAM
 +:
-	pop bc
-	ld hl, $0020 ; Next tile
-	add hl, bc
-	ld c, l
-	ld b, h
+    pop bc
+    ld hl, $0020 ; Next tile
+    add hl, bc
+    ld c, l
+    ld b, h
 	pop hl
 	pop de
 	inc hl
@@ -5573,11 +5580,13 @@ _LABEL_2955_:
 
 _LABEL_297F_:
 	ld a, (_RAM_DB9E_DifficultyLevel)
-	cp $01
+	cp $01 ; Tricky
 	ret nz
 	ld a, (_RAM_DB9D_LevelNumber)
-	cp $1B
+	cp $1B ; 27
 	ret nz
+  ; Tricky 28 "Lost Something?"
+  ; I think this is responsible for "showing" the exit when the earth is removed?
 	ld hl, _RAM_D067_
 	ld c, $4A
 	call +
@@ -5588,11 +5597,13 @@ _LABEL_297F_:
 	ld c, $54
 +:
 	ld b, $04
-	ld d, $CD
+	ld d, >_RAM_CD00_ ; $CD
 -:
+  ; Read tile index
 	ld a, (hl)
 	and a
 	jp nz, +
+  ; If zero, apply tile c via lookup at _RAM_CD00_
 	ld e, c
 	ld a, (de)
 	ld (hl), a
@@ -14943,7 +14954,7 @@ _DATA_35CA6_WaterBottom:
 .db $FF $FF $55 $00 $FF $FF $FF $00 $FF $FF $FF $00 $FF $FF $FF $00
 
 ; Data from 35D06 to 35D65 (96 bytes)
-_DATA_35D06_GreenWater:
+_DATA_35D06_GreenWater_Top:
 .dsb 12, $00
 .db $01 $00 $40 $01 $02 $C1 $20 $00 $04 $EB $10 $04 $00 $FF $00 $00
 .db $00 $FD $02
@@ -14954,7 +14965,7 @@ _DATA_35D06_GreenWater:
 .db $08 $EB $1C $08 $00 $FF $00 $00
 
 ; Data from 35D66 to 35E25 (192 bytes)
-_DATA_35D66_:
+_DATA_35D66_GreenWater_Bottom:
 .db $00 $FF $00 $00 $00 $FF $00 $00 $08 $AA $5D $08 $1C $FF $1C $1C
 .db $08 $49 $BE $08 $00 $AA $55 $00 $00 $55 $AA $00 $00 $AA $55 $00
 .db $1C $FF $1C $1C $08 $EB $1C $08 $00 $55 $AA $00 $00 $FF $00 $00
